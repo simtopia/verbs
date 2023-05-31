@@ -1,9 +1,6 @@
-pub mod conract;
-pub mod network;
-
-use crate::conract::ContractDefinition;
-use crate::network::SimulationEnvironment;
 use ethers_core::types::{Address, U256};
+use rust_sim::conract::ContractDefinition;
+use rust_sim::network::SimulationEnvironment;
 
 fn main() {
     let contract_abi_path = String::from("./contracts/basic_erc20_contract/basic_erc20.abi");

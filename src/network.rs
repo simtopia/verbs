@@ -7,13 +7,13 @@ use revm::{
 };
 
 pub struct SimulationEnvironment {
-    pub(crate) evm: EVM<CacheDB<EmptyDB>>,
+    pub evm: EVM<CacheDB<EmptyDB>>,
     admin_address: Address,
     contracts: Vec<DeployedContract>,
 }
 
 impl SimulationEnvironment {
-    pub(crate) fn new(start_balance: u128, n_users: u64) -> Self {
+    pub fn new(start_balance: u128, n_users: u64) -> Self {
         let mut evm = EVM::new();
         let mut db = CacheDB::new(EmptyDB {});
 
@@ -37,7 +37,7 @@ impl SimulationEnvironment {
         }
     }
 
-    pub(crate) fn execute(&mut self, tx: TxEnv) -> ExecutionResult {
+    pub fn execute(&mut self, tx: TxEnv) -> ExecutionResult {
         self.evm.env.tx = tx;
 
         let execution_result = match self.evm.transact_commit() {
