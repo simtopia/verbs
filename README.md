@@ -1,6 +1,6 @@
 # Rust Ethereum ABM
 
-Built around [Rust Etheruem Virtual Machine](https://github.com/bluealloy/revm)
+Built around [Rust Ethereum Virtual Machine](https://github.com/bluealloy/revm)
 
 ## Examples
 

@@ -6,6 +6,13 @@ use revm::{
     EVM,
 };
 
+pub struct ContractCall<'a, T: Tokenize> {
+    pub callee: Address,
+    pub contract_idx: usize,
+    pub function_name: &'a str,
+    pub args: T,
+}
+
 pub struct SimulationEnvironment {
     pub evm: EVM<CacheDB<EmptyDB>>,
     admin_address: Address,
@@ -85,19 +92,18 @@ impl SimulationEnvironment {
         return address;
     }
 
-    pub fn call_contract<D: Detokenize, T: Tokenize>(
+    pub fn call_contract<'a, D: Detokenize, T: Tokenize>(
         &mut self,
-        callee_idx: u64,
-        contract_idx: usize,
-        function_name: &str,
-        args: T,
+        call_params: ContractCall<'a, T>,
     ) -> D {
-        let abi = self.contracts[contract_idx].abi.clone();
-        let address = self.contracts[contract_idx].address.clone();
-        let encoded = abi.encode(function_name, args).unwrap();
+        let abi = self.contracts[call_params.contract_idx].abi.clone();
+        let address = self.contracts[call_params.contract_idx].address.clone();
+        let encoded = abi
+            .encode(call_params.function_name, call_params.args)
+            .unwrap();
 
         let tx = TxEnv {
-            caller: Address::from(callee_idx),
+            caller: call_params.callee,
             gas_limit: u64::MAX,
             gas_price: U256::ZERO,
             gas_priority_fee: None,
@@ -118,7 +124,9 @@ impl SimulationEnvironment {
         };
 
         let output_data = output.into_data();
-        let output = abi.decode_output(function_name, output_data).unwrap();
+        let output = abi
+            .decode_output(call_params.function_name, output_data)
+            .unwrap();
 
         return output;
     }
