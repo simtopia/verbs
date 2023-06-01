@@ -40,7 +40,7 @@ impl Agent for SimpleAgent {
     }
 }
 
-pub fn basic_sim() {
+pub fn main() {
     let contract_abi_path = String::from("./contracts/basic_erc20_contract/basic_erc20.abi");
     let contract_params_path =
         String::from("./contracts/basic_erc20_contract/basic_erc20_params.json");
