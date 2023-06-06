@@ -7,5 +7,5 @@ Built around [Rust Ethereum Virtual Machine](https://github.com/bluealloy/revm)
 Examples can be run using cargo. For example:
 
 ```
-cargo run --example basic_sim
+cargo run --example basic_sim 200
 ```
