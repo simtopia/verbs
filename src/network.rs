@@ -146,4 +146,13 @@ impl SimulationEnvironment {
             output_data,
         )
     }
+
+    pub fn process_calls<D: Detokenize, T: Tokenize>(
+        &mut self,
+        contract_calls: Vec<ContractCall<T>>,
+    ) {
+        for call in contract_calls {
+            self.call_contract::<D, T>(call);
+        }
+    }
 }

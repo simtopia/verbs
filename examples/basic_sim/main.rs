@@ -61,6 +61,7 @@ pub fn main() {
     let args: Vec<String> = std::env::args().collect();
 
     let n_users: u64 = args[1].parse::<u64>().unwrap();
+    let n_steps: u64 = args[2].parse::<u64>().unwrap();
 
     let contract_abi_path = String::from("./contracts/basic_erc20_contract/basic_erc20.abi");
     let contract_params_path =
@@ -91,6 +92,7 @@ pub fn main() {
         let _result: bool = sim.call_contract(result_call);
     }
 
-    let mut sim_runner: SimRunner<(Address, U256), SimpleAgent> = SimRunner::new(sim, agents, 100);
+    let mut sim_runner: SimRunner<bool, (Address, U256), SimpleAgent> =
+        SimRunner::new(sim, agents, n_steps);
     sim_runner.run();
 }
