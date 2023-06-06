@@ -1,6 +1,7 @@
 use ethabi::token::{LenientTokenizer, Token, Tokenizer};
 use ethers_contract::BaseContract;
 use ethers_core::abi::Contract;
+use ethers_core::abi::Tokenize;
 use revm::primitives::{Address, Bytecode, Bytes};
 
 pub struct ContractDefinition {
@@ -12,6 +13,13 @@ pub struct ContractDefinition {
 pub struct DeployedContract {
     pub abi: BaseContract,
     pub address: Address,
+}
+
+pub struct ContractCall<T: Tokenize> {
+    pub callee: Address,
+    pub contract_idx: usize,
+    pub function_name: &'static str,
+    pub args: T,
 }
 
 impl ContractDefinition {

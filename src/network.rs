@@ -1,17 +1,10 @@
-use crate::conract::{ContractDefinition, DeployedContract};
+use crate::conract::{ContractCall, ContractDefinition, DeployedContract};
 use ethers_core::abi::{Detokenize, Tokenize};
 use revm::{
     db::{CacheDB, EmptyDB},
     primitives::{AccountInfo, Address, Bytecode, ExecutionResult, TransactTo, TxEnv, U256},
     EVM,
 };
-
-pub struct ContractCall<'a, T: Tokenize> {
-    pub callee: Address,
-    pub contract_idx: usize,
-    pub function_name: &'a str,
-    pub args: T,
-}
 
 pub struct SimulationEnvironment {
     pub evm: EVM<CacheDB<EmptyDB>>,
@@ -129,10 +122,7 @@ impl SimulationEnvironment {
             .unwrap()
     }
 
-    pub fn call_contract<'a, D: Detokenize, T: Tokenize>(
-        &mut self,
-        call_params: ContractCall<'a, T>,
-    ) -> D {
+    pub fn call_contract<D: Detokenize, T: Tokenize>(&mut self, call_params: ContractCall<T>) -> D {
         let tx = self.unwrap_contract_call(
             call_params.callee,
             call_params.contract_idx,

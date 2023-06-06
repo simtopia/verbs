@@ -3,8 +3,8 @@ use rand::distributions::{Distribution, Uniform};
 use rand::rngs::ThreadRng;
 use revm::primitives::Address as RevmAddress;
 use rust_sim::agent::Agent;
-use rust_sim::conract::ContractDefinition;
-use rust_sim::network::{ContractCall, SimulationEnvironment};
+use rust_sim::conract::{ContractCall, ContractDefinition};
+use rust_sim::network::SimulationEnvironment;
 use rust_sim::sim_runner::SimRunner;
 
 struct SimpleAgent {
@@ -26,8 +26,12 @@ impl SimpleAgent {
     }
 }
 
-impl Agent for SimpleAgent {
-    fn update(&mut self, rng: &mut ThreadRng, network: &mut SimulationEnvironment) {
+impl Agent<(Address, U256)> for SimpleAgent {
+    fn update(
+        &mut self,
+        rng: &mut ThreadRng,
+        network: &mut SimulationEnvironment,
+    ) -> Option<ContractCall<(Address, U256)>> {
         let balance_call = ContractCall {
             callee: self.call_address,
             function_name: "balanceOf",
@@ -46,7 +50,9 @@ impl Agent for SimpleAgent {
                 contract_idx: 0,
                 args: (receiver, send_amount),
             };
-            let _result: bool = network.call_contract(send_call);
+            Some(send_call)
+        } else {
+            None
         }
     }
 }
@@ -85,6 +91,6 @@ pub fn main() {
         let _result: bool = sim.call_contract(result_call);
     }
 
-    let mut sim_runner: SimRunner<SimpleAgent> = SimRunner::new(sim, agents, 100);
+    let mut sim_runner: SimRunner<(Address, U256), SimpleAgent> = SimRunner::new(sim, agents, 100);
     sim_runner.run();
 }
