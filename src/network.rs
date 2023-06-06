@@ -1,4 +1,4 @@
-use crate::conract::{ContractCall, ContractDefinition, DeployedContract};
+use crate::conract::{ContractDefinition, DeployedContract, Transaction};
 use ethers_core::abi::{Detokenize, Tokenize};
 use revm::{
     db::{CacheDB, EmptyDB},
@@ -6,13 +6,13 @@ use revm::{
     EVM,
 };
 
-pub struct SimulationEnvironment {
+pub struct Network {
     pub evm: EVM<CacheDB<EmptyDB>>,
     admin_address: Address,
     contracts: Vec<DeployedContract>,
 }
 
-impl SimulationEnvironment {
+impl Network {
     pub fn new(start_balance: u128, n_users: u64) -> Self {
         let mut evm = EVM::new();
         let mut db = CacheDB::new(EmptyDB {});
@@ -85,7 +85,7 @@ impl SimulationEnvironment {
         return address;
     }
 
-    fn unwrap_contract_call<'a, T: Tokenize>(
+    fn unwrap_transaction<'a, T: Tokenize>(
         &mut self,
         callee: Address,
         contract_idx: usize,
@@ -122,12 +122,12 @@ impl SimulationEnvironment {
             .unwrap()
     }
 
-    pub fn call_contract<D: Detokenize, T: Tokenize>(&mut self, call_params: ContractCall<T>) -> D {
-        let tx = self.unwrap_contract_call(
-            call_params.callee,
-            call_params.contract_idx,
-            &call_params.function_name,
-            call_params.args,
+    pub fn call_contract<D: Detokenize, T: Tokenize>(&mut self, transaction: Transaction<T>) -> D {
+        let tx = self.unwrap_transaction(
+            transaction.callee,
+            transaction.contract_idx,
+            &transaction.function_name,
+            transaction.args,
         );
 
         let execution_result = self.execute(tx);
@@ -141,17 +141,17 @@ impl SimulationEnvironment {
         let output_data = output.into_data();
 
         self.decode_output(
-            call_params.contract_idx,
-            call_params.function_name,
+            transaction.contract_idx,
+            transaction.function_name,
             output_data,
         )
     }
 
-    pub fn process_calls<D: Detokenize, T: Tokenize>(
+    pub fn process_transactions<D: Detokenize, T: Tokenize>(
         &mut self,
-        contract_calls: Vec<ContractCall<T>>,
+        transactions: Vec<Transaction<T>>,
     ) {
-        for call in contract_calls {
+        for call in transactions {
             self.call_contract::<D, T>(call);
         }
     }

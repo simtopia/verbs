@@ -15,7 +15,7 @@ pub struct DeployedContract {
     pub address: Address,
 }
 
-pub struct ContractCall<T: Tokenize> {
+pub struct Transaction<T: Tokenize> {
     pub callee: Address,
     pub contract_idx: usize,
     pub function_name: &'static str,
