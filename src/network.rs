@@ -92,28 +92,53 @@ impl SimulationEnvironment {
         return address;
     }
 
-    pub fn call_contract<'a, D: Detokenize, T: Tokenize>(
+    fn unwrap_contract_call<'a, T: Tokenize>(
         &mut self,
-        call_params: ContractCall<'a, T>,
-    ) -> D {
-        let abi = self.contracts[call_params.contract_idx].abi.clone();
-        let address = self.contracts[call_params.contract_idx].address.clone();
-        let encoded = abi
-            .encode(call_params.function_name, call_params.args)
-            .unwrap();
+        callee: Address,
+        contract_idx: usize,
+        function_name: &str,
+        args: T,
+    ) -> TxEnv {
+        let contract = &self.contracts[contract_idx];
+        let encoded = contract.abi.encode(function_name, args).unwrap();
 
-        let tx = TxEnv {
-            caller: call_params.callee,
+        TxEnv {
+            caller: callee,
             gas_limit: u64::MAX,
             gas_price: U256::ZERO,
             gas_priority_fee: None,
-            transact_to: TransactTo::Call(address),
+            transact_to: TransactTo::Call(contract.address),
             value: U256::ZERO,
             data: encoded.0,
             chain_id: None,
             nonce: None,
             access_list: Vec::new(),
-        };
+        }
+    }
+
+    fn decode_output<D: Detokenize>(
+        &mut self,
+        contract_idx: usize,
+        function_name: &str,
+        output_data: bytes::Bytes,
+    ) -> D {
+        let contract = &self.contracts[contract_idx];
+        contract
+            .abi
+            .decode_output(function_name, output_data)
+            .unwrap()
+    }
+
+    pub fn call_contract<'a, D: Detokenize, T: Tokenize>(
+        &mut self,
+        call_params: ContractCall<'a, T>,
+    ) -> D {
+        let tx = self.unwrap_contract_call(
+            call_params.callee,
+            call_params.contract_idx,
+            &call_params.function_name,
+            call_params.args,
+        );
 
         let execution_result = self.execute(tx);
 
@@ -124,10 +149,11 @@ impl SimulationEnvironment {
         };
 
         let output_data = output.into_data();
-        let output = abi
-            .decode_output(call_params.function_name, output_data)
-            .unwrap();
 
-        return output;
+        self.decode_output(
+            call_params.contract_idx,
+            call_params.function_name,
+            output_data,
+        )
     }
 }

@@ -2477,6 +2477,7 @@ checksum = "62cc5760263ea229d367e7dff3c0cbf09e4797a125bd87059a6c095804f3b2d1"
 name = "rust_sim"
 version = "0.1.0"
 dependencies = [
+ "bytes",
  "ethabi",
  "ethers",
  "ethers-contract",
