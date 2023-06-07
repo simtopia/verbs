@@ -99,7 +99,7 @@ impl Network {
         &mut self,
         callee: Address,
         contract_idx: usize,
-        function_name: &str,
+        function_name: &'static str,
         args: T,
     ) -> TxEnv {
         let contract = &self.contracts[contract_idx];
@@ -122,7 +122,7 @@ impl Network {
     fn decode_output<D: Detokenize>(
         &mut self,
         contract_idx: usize,
-        function_name: &str,
+        function_name: &'static str,
         output_data: bytes::Bytes,
     ) -> D {
         let contract = &self.contracts[contract_idx];
@@ -136,7 +136,7 @@ impl Network {
         &mut self,
         callee: Address,
         contract_idx: usize,
-        function_name: &str,
+        function_name: &'static str,
         args: T,
     ) -> D {
         let tx = self.unwrap_transaction(callee, contract_idx, function_name, args);
@@ -158,7 +158,7 @@ impl Network {
         let tx = self.unwrap_transaction(
             transaction.callee,
             transaction.contract_idx,
-            &transaction.function_name,
+            transaction.function_name,
             transaction.args,
         );
 
