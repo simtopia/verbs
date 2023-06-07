@@ -10,9 +10,14 @@ pub fn main() {
     let n_users: u64 = args[1].parse::<u64>().unwrap();
     let n_steps: u64 = args[2].parse::<u64>().unwrap();
 
-    let contract_abi_path = String::from("./contracts/basic_erc20_contract/basic_erc20.abi");
-    let contract_params_path =
-        String::from("./contracts/basic_erc20_contract/basic_erc20_params.json");
+    let contract_path = String::from("./examples/basic_sim/basic_erc20_contract/");
+
+    let contract_abi_path = format!("{}{}", contract_path, String::from("basic_erc20.abi"));
+    let contract_params_path = format!(
+        "{}{}",
+        contract_path,
+        String::from("basic_erc20_params.json")
+    );
 
     let contract = ContractDefinition::load(contract_abi_path, contract_params_path, None);
 
