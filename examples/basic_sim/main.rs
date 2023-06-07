@@ -2,6 +2,7 @@ use ethers_core::types::{Address, U256};
 use rust_sim::conract::{ContractDefinition, Transaction};
 use rust_sim::network::Network;
 use rust_sim::sim_runner::SimRunner;
+use rust_sim::utils;
 mod simple_agent;
 
 pub fn main() {
@@ -47,5 +48,7 @@ pub fn main() {
     let mut sim_runner: SimRunner<bool, (Address, U256), U256, simple_agent::SimpleAgent> =
         SimRunner::new(sim, agents, n_steps);
 
-    let _records = sim_runner.run();
+    let records = sim_runner.run();
+
+    utils::csv_writer(records, String::from("./output.csv"));
 }

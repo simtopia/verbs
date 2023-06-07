@@ -25,7 +25,7 @@ impl<D: Detokenize, T: Tokenize, R, A: Agent<T> + RecordedAgent<R>> SimRunner<D,
     pub fn run(&mut self) -> Vec<Vec<R>> {
         let mut rng = rand::thread_rng();
 
-        // TODO: There should be a nicer way to initialise this!
+        // TODO: There should be a nicer way to initialize this!
         let mut records: Vec<Vec<R>> = Vec::with_capacity(self.n_steps);
 
         for _ in tqdm!(0..self.n_steps) {
