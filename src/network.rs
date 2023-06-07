@@ -13,7 +13,7 @@ pub struct Network {
 }
 
 impl Network {
-    pub fn new(start_balance: u128, n_users: u64) -> Self {
+    pub fn new(start_balance: u128, n_users: usize) -> Self {
         let mut evm = EVM::new();
         let mut db = CacheDB::new(EmptyDB {});
 
@@ -21,7 +21,7 @@ impl Network {
         evm.env.block.gas_limit = U256::MAX;
 
         for n in 0..n_users {
-            let a = Address::from(n);
+            let a = Address::from(u64::try_from(n).expect("Couldn't cast n_users to a u64"));
             db.insert_account_info(
                 a,
                 AccountInfo::new(U256::from(start_balance), 0, Bytecode::default()),

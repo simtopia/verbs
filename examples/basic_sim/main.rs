@@ -7,8 +7,8 @@ mod simple_agent;
 pub fn main() {
     let args: Vec<String> = std::env::args().collect();
 
-    let n_users: u64 = args[1].parse::<u64>().unwrap();
-    let n_steps: u64 = args[2].parse::<u64>().unwrap();
+    let n_users: usize = args[1].parse::<usize>().unwrap();
+    let n_steps: usize = args[2].parse::<usize>().unwrap();
 
     let contract_path = String::from("./examples/basic_sim/basic_erc20_contract/");
 
@@ -44,7 +44,8 @@ pub fn main() {
         let _result: bool = sim.call_contract(result_call);
     }
 
-    let mut sim_runner: SimRunner<bool, (Address, U256), simple_agent::SimpleAgent> =
+    let mut sim_runner: SimRunner<bool, (Address, U256), U256, simple_agent::SimpleAgent> =
         SimRunner::new(sim, agents, n_steps);
-    sim_runner.run();
+
+    let _records = sim_runner.run();
 }

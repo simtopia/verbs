@@ -1,19 +1,19 @@
-use crate::agent::Agent;
+use crate::agent::{Agent, RecordedAgent};
 use crate::conract::Transaction;
 use crate::network::Network;
 use ethers_core::abi::{Detokenize, Tokenize};
 use kdam::tqdm;
 use std::marker::PhantomData;
 
-pub struct SimRunner<D: Detokenize, T: Tokenize, A: Agent<T>> {
+pub struct SimRunner<D: Detokenize, T: Tokenize, R, A: Agent<T> + RecordedAgent<R>> {
     network: Network,
     agents: Vec<A>,
-    n_steps: u64,
-    _marker: PhantomData<(D, T)>,
+    n_steps: usize,
+    _marker: PhantomData<(D, T, R)>,
 }
 
-impl<D: Detokenize, T: Tokenize, A: Agent<T>> SimRunner<D, T, A> {
-    pub fn new(network: Network, agents: Vec<A>, n_steps: u64) -> Self {
+impl<D: Detokenize, T: Tokenize, R, A: Agent<T> + RecordedAgent<R>> SimRunner<D, T, R, A> {
+    pub fn new(network: Network, agents: Vec<A>, n_steps: usize) -> Self {
         SimRunner {
             network: network,
             agents: agents,
@@ -22,8 +22,11 @@ impl<D: Detokenize, T: Tokenize, A: Agent<T>> SimRunner<D, T, A> {
         }
     }
 
-    pub fn run(&mut self) {
+    pub fn run(&mut self) -> Vec<Vec<R>> {
         let mut rng = rand::thread_rng();
+
+        // TODO: There should be a nicer way to initialise this!
+        let mut records: Vec<Vec<R>> = Vec::with_capacity(self.n_steps);
 
         for _ in tqdm!(0..self.n_steps) {
             let transactions: Vec<Transaction<T>> = (&mut self.agents)
@@ -33,7 +36,11 @@ impl<D: Detokenize, T: Tokenize, A: Agent<T>> SimRunner<D, T, A> {
                 .map(|x| x.unwrap())
                 .collect();
 
-            self.network.process_transactions::<D, T>(transactions)
+            self.network.process_transactions::<D, T>(transactions);
+
+            records.push((&self.agents).into_iter().map(|x| x.record()).collect());
         }
+
+        records
     }
 }
