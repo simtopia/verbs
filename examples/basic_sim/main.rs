@@ -48,7 +48,7 @@ pub fn main() {
     let mut sim_runner: SimRunner<bool, (Address, U256), U256, simple_agent::SimpleAgent> =
         SimRunner::new(sim, agents, n_steps);
 
-    let records = sim_runner.run();
+    let records = sim_runner.run(0);
 
     utils::csv_writer(records, String::from("./output.csv"));
 }

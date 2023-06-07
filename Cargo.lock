@@ -2504,10 +2504,10 @@ dependencies = [
  "ethers",
  "ethers-contract",
  "ethers-core",
+ "fastrand",
  "hex",
  "kdam",
  "primitive-types",
- "rand",
  "revm",
  "serde_json",
 ]
