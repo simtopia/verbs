@@ -14,7 +14,7 @@ pub fn main() {
     let contract_params_path =
         String::from("./contracts/basic_erc20_contract/basic_erc20_params.json");
 
-    let contract = ContractDefinition::load(contract_abi_path, contract_params_path);
+    let contract = ContractDefinition::load(contract_abi_path, contract_params_path, None);
 
     let start_balance = 1000000000000u128;
 

@@ -17,7 +17,7 @@ impl Network {
         let mut evm = EVM::new();
         let mut db = CacheDB::new(EmptyDB {});
 
-        evm.env.cfg.limit_contract_code_size = Some(0x100000); // This is a large contract size limit, beware!
+        evm.env.cfg.limit_contract_code_size = Some(0x100000);
         evm.env.block.gas_limit = U256::MAX;
 
         for n in 0..n_users {
@@ -42,7 +42,6 @@ impl Network {
 
         let execution_result = match self.evm.transact_commit() {
             Ok(val) => val,
-            // URGENT: change this to a custom error
             Err(_) => panic!("failed"),
         };
 

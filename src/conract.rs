@@ -23,7 +23,11 @@ pub struct Transaction<T: Tokenize> {
 }
 
 impl ContractDefinition {
-    pub fn load(abi_path: String, params_path: String) -> ContractDefinition {
+    pub fn load(
+        abi_path: String,
+        params_path: String,
+        deployment_args: Option<Vec<Token>>,
+    ) -> ContractDefinition {
         let abi_file = std::fs::File::open(abi_path).unwrap();
         let abi = Contract::load(abi_file).unwrap();
         let abi = BaseContract::from(abi);
@@ -45,13 +49,17 @@ impl ContractDefinition {
 
         let mut constructor_tokens: Vec<Token> = Vec::new();
 
-        for (a, b) in Iterator::zip(
-            constructor_args.iter(),
-            abi.as_ref().constructor().unwrap().clone().inputs,
-        ) {
-            let arg_str = a.as_str().unwrap();
-            let token = LenientTokenizer::tokenize(&b.kind, arg_str).unwrap();
-            constructor_tokens.push(token);
+        if deployment_args.is_none() {
+            for (a, b) in Iterator::zip(
+                constructor_args.iter(),
+                abi.as_ref().constructor().unwrap().clone().inputs,
+            ) {
+                let arg_str = a.as_str().unwrap();
+                let token = LenientTokenizer::tokenize(&b.kind, arg_str).unwrap();
+                constructor_tokens.push(token);
+            }
+        } else {
+            constructor_tokens = deployment_args.unwrap();
         }
 
         let constructor_args = abi
