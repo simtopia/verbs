@@ -48,6 +48,17 @@ impl Network {
         execution_result
     }
 
+    pub fn call(&mut self, tx: TxEnv) -> ExecutionResult {
+        self.evm.env.tx = tx;
+
+        let execution_result = match self.evm.transact() {
+            Ok(val) => val,
+            Err(_) => panic!("failed"),
+        };
+
+        execution_result.result
+    }
+
     pub fn deploy_contract(&mut self, contract: ContractDefinition) -> Address {
         let tx = TxEnv {
             caller: self.admin_address,
@@ -119,6 +130,28 @@ impl Network {
             .abi
             .decode_output(function_name, output_data)
             .unwrap()
+    }
+
+    pub fn call_without_commit<D: Detokenize, T: Tokenize>(
+        &mut self,
+        callee: Address,
+        contract_idx: usize,
+        function_name: &str,
+        args: T,
+    ) -> D {
+        let tx = self.unwrap_transaction(callee, contract_idx, function_name, args);
+
+        let execution_result = self.call(tx);
+
+        let output = match execution_result {
+            ExecutionResult::Success { output, .. } => output,
+            ExecutionResult::Revert { output, .. } => panic!("Failed due to revert: {:?}", output),
+            ExecutionResult::Halt { reason, .. } => panic!("Failed due to halt: {:?}", reason),
+        };
+
+        let output_data = output.into_data();
+
+        self.decode_output(contract_idx, function_name, output_data)
     }
 
     pub fn call_contract<D: Detokenize, T: Tokenize>(&mut self, transaction: Transaction<T>) -> D {

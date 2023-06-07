@@ -31,13 +31,8 @@ impl Agent<(Address, U256)> for SimpleAgent {
         rng: &mut ThreadRng,
         network: &mut Network,
     ) -> Option<Transaction<(Address, U256)>> {
-        let balance_call = Transaction {
-            callee: self.call_address,
-            function_name: "balanceOf",
-            contract_idx: 0,
-            args: (self.address,),
-        };
-        let current_balance: U256 = network.call_contract(balance_call);
+        let current_balance: U256 =
+            network.call_without_commit(self.call_address, 0, "balanceOf", (self.address,));
 
         if current_balance > U256::from(0u64) {
             let receiver = self.dist.sample(rng);
