@@ -50,7 +50,7 @@ contract ApproveAndCallFallBack {
 //Actual token contract
 
 contract Token is ERC20Interface, SafeMath {
-    
+
     string public  name;
     uint8 public decimals;
     uint public _totalSupply;
