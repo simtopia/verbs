@@ -30,13 +30,13 @@ impl<D: Detokenize, T: Tokenize, R, A: Agent<T> + RecordedAgent<R>> SimRunner<D,
         let mut records: Vec<Vec<R>> = Vec::with_capacity(self.n_steps);
 
         for _ in tqdm!(0..self.n_steps) {
-            let transactions: Vec<Transaction<T>> = (&mut self.agents)
+            let mut transactions: Vec<Transaction<T>> = (&mut self.agents)
                 .into_iter()
                 .map(|x| x.update(&mut rng, &mut self.network))
                 .filter(|x| x.is_some())
                 .map(|x| x.unwrap())
                 .collect();
-
+            rng.shuffle(transactions.as_mut_slice());
             self.network.process_transactions::<D, T>(transactions);
 
             records.push((&self.agents).into_iter().map(|x| x.record()).collect());
