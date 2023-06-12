@@ -2,7 +2,9 @@ use crate::conract::{ContractDefinition, DeployedContract, Transaction};
 use ethers_core::abi::{Detokenize, Tokenize};
 use revm::{
     db::{CacheDB, EmptyDB},
-    primitives::{AccountInfo, Address, Bytecode, ExecutionResult, TransactTo, TxEnv, U256},
+    primitives::{
+        AccountInfo, Address, Bytecode, ExecutionResult, ResultAndState, TransactTo, TxEnv, U256,
+    },
     EVM,
 };
 
@@ -48,7 +50,7 @@ impl Network {
         execution_result
     }
 
-    pub fn call(&mut self, tx: TxEnv) -> ExecutionResult {
+    pub fn call(&mut self, tx: TxEnv) -> ResultAndState {
         self.evm.env.tx = tx;
 
         let execution_result = match self.evm.transact() {
@@ -56,7 +58,7 @@ impl Network {
             Err(_) => panic!("failed"),
         };
 
-        execution_result.result
+        execution_result
     }
 
     pub fn deploy_contract(&mut self, contract: ContractDefinition) -> Address {
@@ -73,26 +75,47 @@ impl Network {
             access_list: Vec::new(),
         };
 
-        let execution_result = self.execute(tx);
+        let account_changes = self.call(tx);
 
-        let output = match execution_result {
+        let output = match account_changes.result {
             ExecutionResult::Success { output, .. } => output,
             ExecutionResult::Revert { output, .. } => panic!("Failed due to revert: {:?}", output),
             ExecutionResult::Halt { reason, .. } => panic!("Failed due to halt: {:?}", reason),
         };
-        let address = match output {
+
+        let deploy_address = match output {
             revm::primitives::Output::Create(_, address) => address.unwrap(),
             _ => panic!("failed"),
         };
 
+        let db = self.evm.db().unwrap();
+
+        for (k, v) in account_changes.state.into_iter() {
+            if k == deploy_address {
+                db.insert_account_info(contract.deploy_address, v.info);
+                let storage_changes: hashbrown::HashMap<U256, U256> = v
+                    .storage
+                    .into_iter()
+                    .map(|(k, v)| (k.clone(), v.present_value().clone()))
+                    .collect();
+                db.replace_account_storage(contract.deploy_address, storage_changes)
+                    .expect("Doh");
+            } else {
+                for (ks, vs) in v.storage {
+                    db.insert_account_storage(k, ks, vs.present_value())
+                        .expect("Doo");
+                }
+            }
+        }
+
         let deployed_contract = DeployedContract {
             abi: contract.abi,
-            address: address,
+            address: contract.deploy_address,
         };
 
         self.contracts.push(deployed_contract);
 
-        return address;
+        return contract.deploy_address;
     }
 
     fn unwrap_transaction<'a, T: Tokenize>(
@@ -142,6 +165,7 @@ impl Network {
         let tx = self.unwrap_transaction(callee, contract_idx, function_name, args);
 
         let execution_result = self.call(tx);
+        let execution_result = execution_result.result;
 
         let output = match execution_result {
             ExecutionResult::Success { output, .. } => output,

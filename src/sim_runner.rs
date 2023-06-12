@@ -23,7 +23,6 @@ impl<D: Detokenize, T: Tokenize, R, A: Agent<T> + RecordedAgent<R>> SimRunner<D,
     }
 
     pub fn run(&mut self, seed: u64) -> Vec<Vec<R>> {
-
         let mut rng = fastrand::Rng::with_seed(seed);
 
         // TODO: There should be a nicer way to initialize this!

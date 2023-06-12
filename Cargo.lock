@@ -2505,6 +2505,7 @@ dependencies = [
  "ethers-contract",
  "ethers-core",
  "fastrand",
+ "hashbrown 0.13.2",
  "hex",
  "kdam",
  "primitive-types",

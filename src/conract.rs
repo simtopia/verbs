@@ -8,6 +8,7 @@ pub struct ContractDefinition {
     pub abi: BaseContract,
     pub bytecode: Bytecode,
     pub arguments: Bytes,
+    pub deploy_address: Address,
 }
 
 pub struct DeployedContract {
@@ -40,6 +41,10 @@ impl ContractDefinition {
         let bytes2 = bytes.clone();
 
         let bytecode = Bytecode::new_raw(Bytes::from(bytes));
+
+        let deploy_address = params_json.get("deploy_address").unwrap().as_str().unwrap();
+        let deploy_address = hex::decode(deploy_address).expect("Decoding address failed");
+        let deploy_address: Address = Address::from_slice(&deploy_address[..]);
 
         let constructor_args = params_json
             .get("constructor_args")
@@ -75,6 +80,7 @@ impl ContractDefinition {
             abi: abi,
             bytecode: bytecode,
             arguments: constructor_args,
+            deploy_address,
         }
     }
 }
