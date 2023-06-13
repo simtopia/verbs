@@ -9,7 +9,10 @@ def process_contract(contract_path, solc_version, output_path):
     install_solc(version=solc_version)
 
     compiled_sol = compile_files(
-        [contract_path], output_values=["abi", "bin"], solc_version=solc_version
+        [contract_path],
+        output_values=["abi", "bin"],
+        solc_version=solc_version,
+        allow_paths="../",
     )
 
     for k, v in compiled_sol.items():
@@ -24,7 +27,7 @@ def process_contract(contract_path, solc_version, output_path):
             with open(f"{output_path}/{contract_name}.abi", "w") as f:
                 json.dump(abi, f, indent=4)
 
-            params = dict(bin=bin, constructor_args=[])
+            params = dict(bin=bin, constructor_args=[], deploy_address="")
 
             with open(f"{output_path}/{contract_name}_params.json", "w") as f:
                 json.dump(params, f, indent=4)
