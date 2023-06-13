@@ -1,4 +1,4 @@
-use ethabi::token::{LenientTokenizer, Token, Tokenizer};
+use ethabi::token::{StrictTokenizer, Token, Tokenizer};
 use ethers_contract::BaseContract;
 use ethers_core::abi::Contract;
 use ethers_core::abi::Tokenize;
@@ -60,7 +60,8 @@ impl ContractDefinition {
                 abi.as_ref().constructor().unwrap().clone().inputs,
             ) {
                 let arg_str = a.as_str().unwrap();
-                let token = LenientTokenizer::tokenize(&b.kind, arg_str).unwrap();
+                let token = StrictTokenizer::tokenize(&b.kind, arg_str)
+                    .expect(format!("Could not parse token {} as {}", arg_str, b.kind).as_str());
                 constructor_tokens.push(token);
             }
         } else {
