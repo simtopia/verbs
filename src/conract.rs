@@ -24,15 +24,17 @@ pub struct Transaction<T: Tokenize> {
 }
 
 impl ContractDefinition {
-    pub fn load(
-        abi_path: String,
-        params_path: String,
-        deployment_args: Option<Vec<Token>>,
-    ) -> ContractDefinition {
+    pub fn load_abi(abi_path: String) -> BaseContract {
         let abi_file = std::fs::File::open(abi_path).unwrap();
         let abi = Contract::load(abi_file).unwrap();
-        let abi = BaseContract::from(abi);
+        BaseContract::from(abi)
+    }
 
+    pub fn load_params(
+        abi: &BaseContract,
+        params_path: String,
+        deployment_args: Option<Vec<Token>>,
+    ) -> (Bytecode, Address, Bytes) {
         let params_file = std::fs::File::open(params_path).unwrap();
         let params_json: serde_json::Value = serde_json::from_reader(params_file).unwrap();
 
@@ -76,6 +78,18 @@ impl ContractDefinition {
             .unwrap();
 
         let constructor_args = Bytes::from(constructor_args);
+
+        (bytecode, deploy_address, constructor_args)
+    }
+
+    pub fn load(
+        abi_path: String,
+        params_path: String,
+        deployment_args: Option<Vec<Token>>,
+    ) -> ContractDefinition {
+        let abi = ContractDefinition::load_abi(abi_path);
+        let (bytecode, deploy_address, constructor_args) =
+            ContractDefinition::load_params(&abi, params_path, deployment_args);
 
         ContractDefinition {
             abi: abi,

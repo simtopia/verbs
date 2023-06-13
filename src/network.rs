@@ -113,9 +113,13 @@ impl Network {
             address: contract.deploy_address,
         };
 
-        self.contracts.push(deployed_contract);
+        self.insert_contract(deployed_contract);
 
         return contract.deploy_address;
+    }
+
+    fn insert_contract(&mut self, contract: DeployedContract) {
+        self.contracts.push(contract);
     }
 
     fn unwrap_transaction<'a, T: Tokenize>(
