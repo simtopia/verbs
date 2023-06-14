@@ -22,7 +22,7 @@ def process_contract(contract_path, solc_version, output_path):
         abi = v["abi"]
         bin = v["bin"]
 
-        if bin:
+        if bin and abi:
 
             with open(f"{output_path}/{contract_name}.abi", "w") as f:
                 json.dump(abi, f, indent=4)
