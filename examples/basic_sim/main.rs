@@ -1,8 +1,8 @@
 use ethers_core::types::U256;
+use rust_sim::agent::Agent;
 use rust_sim::conract::{ContractDefinition, Transaction};
 use rust_sim::network::Network;
 use rust_sim::sim_runner::SimRunner;
-use rust_sim::utils;
 mod simple_agent;
 
 pub fn main() {
@@ -27,28 +27,27 @@ pub fn main() {
     let mut sim = Network::new(start_balance, n_users);
     sim.deploy_contract(contract);
 
-    let mut agents = Vec::<simple_agent::SimpleAgent>::new();
+    let mut agents = Vec::<Box<dyn Agent>>::new();
 
     for i in 0..n_users {
         let agent = simple_agent::SimpleAgent::new(i, n_users);
-        agents.push(agent);
+        agents.push(Box::new(agent));
     }
 
     let start_balance = U256::from(start_balance);
     for agent in &agents {
         let result_call = Transaction {
-            callee: agent.call_address,
+            callee: agent.get_call_address(),
             function_name: "approve",
             contract_idx: 0,
-            args: (agent.address, start_balance),
+            args: (agent.get_address(), start_balance),
         };
         let _result: bool = sim.call_contract(result_call);
     }
 
-    let mut sim_runner: SimRunner<bool, U256, simple_agent::SimpleAgent> =
-        SimRunner::new(sim, agents, n_steps);
+    let mut sim_runner: SimRunner = SimRunner::new(sim, agents, n_steps);
 
-    let records = sim_runner.run(0);
+    sim_runner.run(0);
 
-    utils::csv_writer(records, String::from("./output.csv"));
+    // utils::csv_writer(records, String::from("./output.csv"));
 }

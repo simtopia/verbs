@@ -42,6 +42,14 @@ impl Agent for SimpleAgent {
             None
         }
     }
+
+    fn get_call_address(&self) -> RevmAddress {
+        self.call_address
+    }
+
+    fn get_address(&self) -> Address {
+        self.address
+    }
 }
 
 impl RecordedAgent<U256> for SimpleAgent {
