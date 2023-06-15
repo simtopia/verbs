@@ -1,10 +1,9 @@
-use crate::conract::Transaction;
+use crate::conract::Call;
 use crate::network::Network;
-use ethers_core::abi::Tokenize;
 use fastrand::Rng;
 
-pub trait Agent<T: Tokenize> {
-    fn update(&mut self, rng: &mut Rng, network: &mut Network) -> Option<Transaction<T>>;
+pub trait Agent {
+    fn update(&mut self, rng: &mut Rng, network: &mut Network) -> Option<Call>;
 }
 
 pub trait RecordedAgent<T> {

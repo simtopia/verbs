@@ -1,7 +1,7 @@
 use ethabi::token::{StrictTokenizer, Token, Tokenizer};
 use ethers_contract::BaseContract;
-use ethers_core::abi::Contract;
-use ethers_core::abi::Tokenize;
+use ethers_core::abi::{Contract, Tokenize};
+use ethers_core::types::Bytes as EthersBytes;
 use revm::primitives::{Address, Bytecode, Bytes};
 
 pub struct ContractDefinition {
@@ -21,6 +21,12 @@ pub struct Transaction<T: Tokenize> {
     pub contract_idx: usize,
     pub function_name: &'static str,
     pub args: T,
+}
+
+pub struct Call {
+    pub callee: Address,
+    pub transact_to: Address,
+    pub args: EthersBytes,
 }
 
 impl ContractDefinition {

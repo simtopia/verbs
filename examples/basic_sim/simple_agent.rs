@@ -2,7 +2,7 @@ use ethers_core::types::{Address, U256};
 use fastrand::Rng;
 use revm::primitives::Address as RevmAddress;
 use rust_sim::agent::{Agent, RecordedAgent};
-use rust_sim::conract::Transaction;
+use rust_sim::conract::Call;
 use rust_sim::network::Network;
 
 pub struct SimpleAgent {
@@ -26,12 +26,8 @@ impl SimpleAgent {
     }
 }
 
-impl Agent<(Address, U256)> for SimpleAgent {
-    fn update(
-        &mut self,
-        rng: &mut Rng,
-        network: &mut Network,
-    ) -> Option<Transaction<(Address, U256)>> {
+impl Agent for SimpleAgent {
+    fn update(&mut self, rng: &mut Rng, network: &mut Network) -> Option<Call> {
         self.current_balance =
             network.call_without_commit(self.call_address, 0, "balanceOf", (self.address,));
 
@@ -39,12 +35,8 @@ impl Agent<(Address, U256)> for SimpleAgent {
             let receiver = rng.u64(0..self.n_agents);
             let receiver = Address::from(primitive_types::H160::from_low_u64_be(receiver));
             let send_amount = std::cmp::min(self.current_balance, U256::from(1000));
-            let send_call = Transaction {
-                callee: self.call_address,
-                function_name: "transfer",
-                contract_idx: 0,
-                args: (receiver, send_amount),
-            };
+            let send_call =
+                network.create_call(self.call_address, 0, "transfer", (receiver, send_amount));
             Some(send_call)
         } else {
             None

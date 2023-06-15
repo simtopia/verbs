@@ -1,4 +1,4 @@
-use crate::conract::{ContractDefinition, DeployedContract, Transaction};
+use crate::conract::{Call, ContractDefinition, DeployedContract, Transaction};
 use ethers_core::abi::{Detokenize, Tokenize};
 use revm::{
     db::{CacheDB, EmptyDB},
@@ -122,6 +122,37 @@ impl Network {
         self.contracts.push(contract);
     }
 
+    pub fn encode_transaction<T: Tokenize>(&mut self, transaction: Transaction<T>) -> Call {
+        let contract = &self.contracts[transaction.contract_idx];
+        let encoded_args = contract
+            .abi
+            .encode(transaction.function_name, transaction.args)
+            .unwrap();
+
+        Call {
+            callee: transaction.callee,
+            transact_to: contract.address,
+            args: encoded_args,
+        }
+    }
+
+    pub fn create_call<T: Tokenize>(
+        &mut self,
+        callee: Address,
+        contract_idx: usize,
+        function_name: &'static str,
+        args: T,
+    ) -> Call {
+        let contract = &self.contracts[contract_idx];
+        let args = contract.abi.encode(function_name, args).unwrap();
+
+        Call {
+            callee,
+            transact_to: contract.address,
+            args,
+        }
+    }
+
     fn unwrap_transaction<'a, T: Tokenize>(
         &mut self,
         callee: Address,
@@ -140,6 +171,21 @@ impl Network {
             transact_to: TransactTo::Call(contract.address),
             value: U256::ZERO,
             data: encoded.0,
+            chain_id: None,
+            nonce: None,
+            access_list: Vec::new(),
+        }
+    }
+
+    fn unwrap_call(call: Call) -> TxEnv {
+        TxEnv {
+            caller: call.callee,
+            gas_limit: u64::MAX,
+            gas_price: U256::ZERO,
+            gas_priority_fee: None,
+            transact_to: TransactTo::Call(call.transact_to),
+            value: U256::ZERO,
+            data: call.args.0,
             chain_id: None,
             nonce: None,
             access_list: Vec::new(),
@@ -207,12 +253,23 @@ impl Network {
         )
     }
 
+    fn call_from_call(&mut self, call: Call) {
+        let tx = Network::unwrap_call(call);
+        self.execute(tx);
+    }
+
     pub fn process_transactions<D: Detokenize, T: Tokenize>(
         &mut self,
         transactions: Vec<Transaction<T>>,
     ) {
         for call in transactions {
             self.call_contract::<D, T>(call);
+        }
+    }
+
+    pub fn process_calls(&mut self, calls: Vec<Call>) {
+        for call in calls {
+            self.call_from_call(call);
         }
     }
 }

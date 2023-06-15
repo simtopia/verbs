@@ -1,4 +1,4 @@
-use ethers_core::types::{Address, U256};
+use ethers_core::types::U256;
 use rust_sim::conract::{ContractDefinition, Transaction};
 use rust_sim::network::Network;
 use rust_sim::sim_runner::SimRunner;
@@ -45,7 +45,7 @@ pub fn main() {
         let _result: bool = sim.call_contract(result_call);
     }
 
-    let mut sim_runner: SimRunner<bool, (Address, U256), U256, simple_agent::SimpleAgent> =
+    let mut sim_runner: SimRunner<bool, U256, simple_agent::SimpleAgent> =
         SimRunner::new(sim, agents, n_steps);
 
     let records = sim_runner.run(0);
