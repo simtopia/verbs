@@ -1,4 +1,4 @@
-use ethabi::token::{StrictTokenizer, Token, Tokenizer};
+use ethabi::token::{LenientTokenizer, Token, Tokenizer};
 use ethers_contract::BaseContract;
 use ethers_core::abi::{Contract, Tokenize};
 use ethers_core::types::Bytes as EthersBytes;
@@ -44,7 +44,7 @@ impl ContractDefinition {
         let params_file = std::fs::File::open(params_path).unwrap();
         let params_json: serde_json::Value = serde_json::from_reader(params_file).unwrap();
 
-        let bytes = params_json.get("bin").unwrap().as_str().unwrap();
+        let bytes = params_json.get("bytecode").unwrap().as_str().unwrap();
         let bytes = hex::decode(bytes).expect("Decoding failed");
         let bytes2 = bytes.clone();
 
@@ -52,7 +52,7 @@ impl ContractDefinition {
 
         let deploy_address = params_json.get("deploy_address").unwrap().as_str().unwrap();
         let deploy_address = hex::decode(deploy_address).expect("Decoding address failed");
-        let deploy_address: Address = Address::from_slice(&deploy_address[..]);
+        let deploy_address: Address = Address::from_slice(&deploy_address);
 
         let constructor_args = params_json
             .get("constructor_args")
@@ -60,32 +60,41 @@ impl ContractDefinition {
             .as_array()
             .unwrap();
 
-        let mut constructor_tokens: Vec<Token> = Vec::new();
+        let encoded_constructor_args: Bytes;
 
-        if deployment_args.is_none() {
-            for (a, b) in Iterator::zip(
-                constructor_args.iter(),
-                abi.as_ref().constructor().unwrap().clone().inputs,
-            ) {
-                let arg_str = a.as_str().unwrap();
-                let token = StrictTokenizer::tokenize(&b.kind, arg_str)
-                    .expect(format!("Could not parse token {} as {}", arg_str, b.kind).as_str());
-                constructor_tokens.push(token);
-            }
+        if abi.abi().constructor.is_none() {
+            encoded_constructor_args = Bytes::default();
         } else {
-            constructor_tokens = deployment_args.unwrap();
+            let mut constructor_tokens: Vec<Token>;
+
+            if deployment_args.is_none() {
+                constructor_tokens = Vec::new();
+
+                for (a, b) in Iterator::zip(
+                    constructor_args.iter(),
+                    abi.abi().constructor().unwrap().clone().inputs,
+                ) {
+                    let arg_str = a.as_str().unwrap();
+                    let token = LenientTokenizer::tokenize(&b.kind, arg_str).expect(
+                        format!("Could not parse token {} as {}", arg_str, b.kind).as_str(),
+                    );
+                    constructor_tokens.push(token);
+                }
+            } else {
+                constructor_tokens = deployment_args.unwrap();
+            }
+
+            let constructor_args = abi
+                .abi()
+                .constructor()
+                .unwrap()
+                .encode_input(bytes2, &constructor_tokens)
+                .unwrap();
+
+            encoded_constructor_args = Bytes::from(constructor_args);
         }
 
-        let constructor_args = abi
-            .abi()
-            .constructor()
-            .unwrap()
-            .encode_input(bytes2, &constructor_tokens)
-            .unwrap();
-
-        let constructor_args = Bytes::from(constructor_args);
-
-        (bytecode, deploy_address, constructor_args)
+        (bytecode, deploy_address, encoded_constructor_args)
     }
 
     pub fn load(

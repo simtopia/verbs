@@ -4,8 +4,12 @@ from os import listdir
 from os.path import isfile, join
 
 
+def format_arg(a):
+    return str(a).replace("'", "").replace("0x", "").replace(" ", "").lower()
+
+
 def process_deployment_files(path, out_path):
-    files = [f for f in listdir(path) if isfile(join(path, f)) and f[0] != "."]
+    files = sorted([f for f in listdir(path) if isfile(join(path, f)) and f[0] != "."])
 
     file_names = list()
 
@@ -23,9 +27,11 @@ def process_deployment_files(path, out_path):
                 json.dump(abi, abi_file, indent=4)
 
             args = x["args"] if "args" in x else []
+            args = [format_arg(a) for a in args]
+
             params = dict(
-                bytecode=x["bytecode"],
-                deploy_address=x["address"],
+                bytecode=x["bytecode"][2:],
+                deploy_address=x["address"][2:],
                 constructor_args=args,
             )
 
