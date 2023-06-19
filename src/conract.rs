@@ -5,6 +5,7 @@ use ethers_core::types::Bytes as EthersBytes;
 use revm::primitives::{Address, Bytecode, Bytes};
 
 pub struct ContractDefinition {
+    pub name: String,
     pub abi: BaseContract,
     pub bytecode: Bytecode,
     pub arguments: Bytes,
@@ -40,9 +41,16 @@ impl ContractDefinition {
         abi: &BaseContract,
         params_path: String,
         deployment_args: Option<Vec<Token>>,
-    ) -> (Bytecode, Address, Bytes) {
+    ) -> (String, Bytecode, Address, Bytes) {
         let params_file = std::fs::File::open(params_path).unwrap();
         let params_json: serde_json::Value = serde_json::from_reader(params_file).unwrap();
+
+        let name = params_json
+            .get("name")
+            .unwrap()
+            .as_str()
+            .unwrap()
+            .to_string();
 
         let bytes = params_json.get("bytecode").unwrap().as_str().unwrap();
         let bytes = hex::decode(bytes).expect("Decoding failed");
@@ -94,7 +102,7 @@ impl ContractDefinition {
             encoded_constructor_args = Bytes::from(constructor_args);
         }
 
-        (bytecode, deploy_address, encoded_constructor_args)
+        (name, bytecode, deploy_address, encoded_constructor_args)
     }
 
     pub fn load(
@@ -103,12 +111,13 @@ impl ContractDefinition {
         deployment_args: Option<Vec<Token>>,
     ) -> ContractDefinition {
         let abi = ContractDefinition::load_abi(abi_path);
-        let (bytecode, deploy_address, constructor_args) =
+        let (name, bytecode, deploy_address, constructor_args) =
             ContractDefinition::load_params(&abi, params_path, deployment_args);
 
         ContractDefinition {
-            abi: abi,
-            bytecode: bytecode,
+            name,
+            abi,
+            bytecode,
             arguments: constructor_args,
             deploy_address,
         }

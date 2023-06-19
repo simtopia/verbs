@@ -33,7 +33,7 @@ impl Network {
         evm.database(db);
 
         Self {
-            evm: evm,
+            evm,
             admin_address: Address::from(0),
             contracts: Vec::new(),
         }
@@ -79,8 +79,14 @@ impl Network {
 
         let output = match account_changes.result {
             ExecutionResult::Success { output, .. } => output,
-            ExecutionResult::Revert { output, .. } => panic!("Failed due to revert: {:?}", output),
-            ExecutionResult::Halt { reason, .. } => panic!("Failed due to halt: {:?}", reason),
+            ExecutionResult::Revert { output, .. } => panic!(
+                "Failed to deploy {} due to revert: {:?}",
+                contract.name, output
+            ),
+            ExecutionResult::Halt { reason, .. } => panic!(
+                "Failed to deploy {} due to halt: {:?}",
+                contract.name, reason
+            ),
         };
 
         let deploy_address = match output {

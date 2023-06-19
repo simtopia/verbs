@@ -9,7 +9,7 @@ def format_arg(a):
 
 
 def process_deployment_files(path, out_path):
-    files = sorted([f for f in listdir(path) if isfile(join(path, f)) and f[0] != "."])
+    files = [f for f in listdir(path) if isfile(join(path, f)) and f[0] != "."]
 
     file_names = list()
 
@@ -33,6 +33,7 @@ def process_deployment_files(path, out_path):
                 bytecode=x["bytecode"][2:],
                 deploy_address=x["address"][2:],
                 constructor_args=args,
+                name=fx,
             )
 
             with open(f"{out_path}/{fx}.json", "w") as params_file:
