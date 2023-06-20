@@ -2,7 +2,8 @@ use ethers_core::types::U256;
 use rust_sim::agent::Agent;
 use rust_sim::conract::{ContractDefinition, Transaction};
 use rust_sim::network::Network;
-use rust_sim::sim_runner::SimRunner;
+use rust_sim::sim_runner::{AgentSet, SimRunner, UpdateAgents};
+use simple_agent::SimpleAgent;
 mod simple_agent;
 
 pub fn main() {
@@ -27,14 +28,15 @@ pub fn main() {
     let mut sim = Network::new(start_balance, n_users);
     sim.deploy_contract(contract);
 
-    let mut agents = Vec::<Box<dyn Agent>>::new();
+    let mut agents = Vec::<SimpleAgent>::new();
 
     for i in 0..n_users {
         let agent = simple_agent::SimpleAgent::new(i, n_users);
-        agents.push(Box::new(agent));
+        agents.push(agent);
     }
 
     let start_balance = U256::from(start_balance);
+
     for agent in &agents {
         let result_call = Transaction {
             callee: agent.get_call_address(),
@@ -44,6 +46,10 @@ pub fn main() {
         };
         let _result: bool = sim.call_contract(result_call);
     }
+
+    let agent_set = AgentSet::from(agents);
+    let mut agents = Vec::<Box<dyn UpdateAgents>>::new();
+    agents.push(Box::new(agent_set));
 
     let mut sim_runner: SimRunner = SimRunner::new(sim, agents, n_steps);
 
