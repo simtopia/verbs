@@ -1,8 +1,8 @@
 use ethers_core::types::U256;
-use rust_sim::agent::Agent;
+use rust_sim::agent::{Agent, AgentSet};
 use rust_sim::conract::{ContractDefinition, Transaction};
 use rust_sim::network::Network;
-use rust_sim::sim_runner::{AgentSet, SimRunner, UpdateAgents};
+use rust_sim::sim_runner::SimRunner;
 use simple_agent::SimpleAgent;
 mod simple_agent;
 
@@ -48,12 +48,11 @@ pub fn main() {
     }
 
     let agent_set = AgentSet::from(agents);
-    let mut agents = Vec::<Box<dyn UpdateAgents>>::new();
-    agents.push(Box::new(agent_set));
 
-    let mut sim_runner: SimRunner = SimRunner::new(sim, agents, n_steps);
+    let mut sim_runner: SimRunner = SimRunner::new(sim, n_steps);
+    sim_runner.insert_agent_set(Box::new(agent_set));
 
     sim_runner.run(0);
 
-    // utils::csv_writer(records, String::from("./output.csv"));
+    sim_runner.agents[0].records_to_csv("./output.csv".to_string());
 }
