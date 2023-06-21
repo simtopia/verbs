@@ -3,7 +3,8 @@ use ethers_core::abi::{Detokenize, Tokenize};
 use revm::{
     db::{CacheDB, EmptyDB},
     primitives::{
-        AccountInfo, Address, Bytecode, ExecutionResult, ResultAndState, TransactTo, TxEnv, U256,
+        AccountInfo, Address, Bytecode, ExecutionResult, Output, ResultAndState, TransactTo, TxEnv,
+        U256,
     },
     EVM,
 };
@@ -44,7 +45,7 @@ impl Network {
 
         let execution_result = match self.evm.transact_commit() {
             Ok(val) => val,
-            Err(_) => panic!("failed"),
+            Err(_) => panic!("Execution failed"),
         };
 
         execution_result
@@ -55,7 +56,7 @@ impl Network {
 
         let execution_result = match self.evm.transact() {
             Ok(val) => val,
-            Err(_) => panic!("failed"),
+            Err(_) => panic!("Call failed"),
         };
 
         execution_result
@@ -76,22 +77,10 @@ impl Network {
         };
 
         let account_changes = self.call(tx);
-
-        let output = match account_changes.result {
-            ExecutionResult::Success { output, .. } => output,
-            ExecutionResult::Revert { output, .. } => panic!(
-                "Failed to deploy {} due to revert: {:?}",
-                contract.name, output
-            ),
-            ExecutionResult::Halt { reason, .. } => panic!(
-                "Failed to deploy {} due to halt: {:?}",
-                contract.name, reason
-            ),
-        };
-
+        let output = result_to_output("deploy", account_changes.result);
         let deploy_address = match output {
             revm::primitives::Output::Create(_, address) => address.unwrap(),
-            _ => panic!("failed"),
+            _ => panic!("Deployment of {} failed", contract.name),
         };
 
         let db = self.evm.db().unwrap();
@@ -105,11 +94,15 @@ impl Network {
                     .map(|(k, v)| (k.clone(), v.present_value().clone()))
                     .collect();
                 db.replace_account_storage(contract.deploy_address, storage_changes)
-                    .expect("Doh");
+                    .unwrap_or_else(|_| {
+                        panic!("Could not update account {} storage during deployment", k)
+                    });
             } else {
                 for (ks, vs) in v.storage {
                     db.insert_account_storage(k, ks, vs.present_value())
-                        .expect("Doo");
+                        .unwrap_or_else(|_| {
+                            panic!("Could not insert account {} storage during deployment", k)
+                        });
                 }
             }
         }
@@ -211,7 +204,22 @@ impl Network {
             .unwrap()
     }
 
-    pub fn call_without_commit<D: Detokenize, T: Tokenize>(
+    pub fn direct_execute<D: Detokenize, T: Tokenize>(
+        &mut self,
+        callee: Address,
+        contract_idx: usize,
+        function_name: &'static str,
+        args: T,
+    ) -> D {
+        let tx = self.unwrap_transaction(callee, contract_idx, function_name, args);
+
+        let execution_result: ExecutionResult = self.execute(tx);
+        let output = result_to_output(function_name, execution_result);
+        let output_data = output.into_data();
+        self.decode_output(contract_idx, function_name, output_data)
+    }
+
+    pub fn direct_call<D: Detokenize, T: Tokenize>(
         &mut self,
         callee: Address,
         contract_idx: usize,
@@ -222,15 +230,8 @@ impl Network {
 
         let execution_result = self.call(tx);
         let execution_result = execution_result.result;
-
-        let output = match execution_result {
-            ExecutionResult::Success { output, .. } => output,
-            ExecutionResult::Revert { output, .. } => panic!("Failed due to revert: {:?}", output),
-            ExecutionResult::Halt { reason, .. } => panic!("Failed due to halt: {:?}", reason),
-        };
-
+        let output = result_to_output(function_name, execution_result);
         let output_data = output.into_data();
-
         self.decode_output(contract_idx, function_name, output_data)
     }
 
@@ -243,15 +244,8 @@ impl Network {
         );
 
         let execution_result = self.execute(tx);
-
-        let output = match execution_result {
-            ExecutionResult::Success { output, .. } => output,
-            ExecutionResult::Revert { output, .. } => panic!("Failed due to revert: {:?}", output),
-            ExecutionResult::Halt { reason, .. } => panic!("Failed due to halt: {:?}", reason),
-        };
-
+        let output = result_to_output(transaction.function_name, execution_result);
         let output_data = output.into_data();
-
         self.decode_output(
             transaction.contract_idx,
             transaction.function_name,
@@ -276,6 +270,19 @@ impl Network {
     pub fn process_calls(&mut self, calls: Vec<Call>) {
         for call in calls {
             self.call_from_call(call);
+        }
+    }
+}
+
+fn result_to_output(function_name: &'static str, execution_result: ExecutionResult) -> Output {
+    match execution_result {
+        ExecutionResult::Success { output, .. } => output,
+        ExecutionResult::Revert { output, .. } => panic!(
+            "Failed to call {} due to revert: {:?}",
+            function_name, output
+        ),
+        ExecutionResult::Halt { reason, .. } => {
+            panic!("Failed to call {} due to halt: {:?}", function_name, reason)
         }
     }
 }

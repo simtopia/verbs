@@ -29,7 +29,7 @@ impl SimpleAgent {
 impl Agent for SimpleAgent {
     fn update(&mut self, rng: &mut Rng, network: &mut Network) -> Option<Call> {
         self.current_balance =
-            network.call_without_commit(self.call_address, 0, "balanceOf", (self.address,));
+            network.direct_call(self.call_address, 0, "balanceOf", (self.address,));
 
         if self.current_balance > U256::from(0u64) {
             let receiver = rng.u64(0..self.n_agents);
