@@ -1,6 +1,6 @@
 use ethers_core::types::U256;
 use rust_sim::agent::{Agent, AgentVec};
-use rust_sim::conract::ContractDefinition;
+use rust_sim::contract::load_contract;
 use rust_sim::network::Network;
 use rust_sim::sim_runner::SimRunner;
 use simple_agent::SimpleAgent;
@@ -21,7 +21,7 @@ pub fn main() {
         String::from("basic_erc20_params.json")
     );
 
-    let contract = ContractDefinition::load(contract_abi_path, contract_params_path, None);
+    let contract = load_contract(contract_abi_path, contract_params_path, None);
 
     let start_balance = 1000000000000u128;
 

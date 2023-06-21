@@ -1,5 +1,5 @@
 use crate::agent::AgentSet;
-use crate::conract::{Call, ContractDefinition, DeployedContract, Transaction};
+use crate::contract::{Call, ContractDefinition, DeployedContract, Transaction};
 use ethers_core::abi::{Detokenize, Tokenize};
 use revm::{
     db::{CacheDB, EmptyDB},

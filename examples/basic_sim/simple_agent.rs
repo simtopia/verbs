@@ -2,7 +2,7 @@ use ethers_core::types::{Address, U256};
 use fastrand::Rng;
 use revm::primitives::Address as RevmAddress;
 use rust_sim::agent::{Agent, RecordedAgent};
-use rust_sim::conract::Call;
+use rust_sim::contract::Call;
 use rust_sim::network::Network;
 
 pub struct SimpleAgent {

@@ -1,5 +1,5 @@
 use crate::agent::AgentSet;
-use crate::conract::Call;
+use crate::contract::Call;
 use crate::network::Network;
 use kdam::tqdm;
 
