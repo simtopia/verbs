@@ -1,3 +1,4 @@
+use crate::agent::UpdateAgents;
 use crate::conract::{Call, ContractDefinition, DeployedContract, Transaction};
 use ethers_core::abi::{Detokenize, Tokenize};
 use revm::{
@@ -24,11 +25,36 @@ impl Network {
         evm.env.block.gas_limit = U256::MAX;
 
         for n in 0..n_users {
-            let a = Address::from(u64::try_from(n).expect("Couldn't cast n_users to a u64"));
+            let address = Address::from(u64::try_from(n).expect("Couldn't cast n_users to a u64"));
             db.insert_account_info(
-                a,
+                address,
                 AccountInfo::new(U256::from(start_balance), 0, Bytecode::default()),
             );
+        }
+
+        evm.database(db);
+
+        Self {
+            evm,
+            admin_address: Address::from(0),
+            contracts: Vec::new(),
+        }
+    }
+
+    pub fn from_agents(start_balance: u128, agents: &Vec<Box<dyn UpdateAgents>>) -> Self {
+        let mut evm = EVM::new();
+        let mut db = CacheDB::new(EmptyDB {});
+
+        evm.env.cfg.limit_contract_code_size = Some(0x100000);
+        evm.env.block.gas_limit = U256::MAX;
+
+        for agent_set in agents {
+            for address in agent_set.get_addresses() {
+                db.insert_account_info(
+                    address,
+                    AccountInfo::new(U256::from(start_balance), 0, Bytecode::default()),
+                );
+            }
         }
 
         evm.database(db);
@@ -84,6 +110,11 @@ impl Network {
         };
 
         let db = self.evm.db().unwrap();
+
+        // Check we are not deploying to an already existing address
+        if db.accounts.contains_key(&contract.deploy_address) {
+            panic!("Account at {} already exists", contract.deploy_address);
+        };
 
         for (k, v) in account_changes.state.into_iter() {
             if k == deploy_address {

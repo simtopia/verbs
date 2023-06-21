@@ -20,6 +20,7 @@ pub trait UpdateAgents {
     fn call_agents(&mut self, rng: &mut fastrand::Rng, network: &mut Network) -> Vec<Call>;
     fn record_agents(&mut self);
     fn records_to_csv(&self, path: String);
+    fn get_addresses(&self) -> Vec<RevmAddress>;
 }
 
 pub struct AgentSet<R: Display, A: Agent + RecordedAgent<R>> {
@@ -60,5 +61,8 @@ impl<R: Display, A: Agent + RecordedAgent<R>> UpdateAgents for AgentSet<R, A> {
     }
     fn records_to_csv(&self, output_path: String) {
         csv_writer::<R>(&self.records, output_path);
+    }
+    fn get_addresses(&self) -> Vec<RevmAddress> {
+        self.agents.iter().map(|x| x.get_call_address()).collect()
     }
 }
