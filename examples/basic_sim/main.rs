@@ -12,16 +12,13 @@ pub fn main() {
     let n_users: usize = args[1].parse::<usize>().unwrap();
     let n_steps: usize = args[2].parse::<usize>().unwrap();
 
-    let contract_path = String::from("./examples/basic_sim/basic_erc20_contract/");
+    let contract_path = "./examples/basic_sim/basic_erc20_contract/";
 
-    let contract_abi_path = format!("{}{}", contract_path, String::from("basic_erc20.abi"));
-    let contract_params_path = format!(
-        "{}{}",
-        contract_path,
-        String::from("basic_erc20_params.json")
+    let contract = load_contract(
+        format!("{}{}", contract_path, "basic_erc20.abi").as_str(),
+        format!("{}{}", contract_path, "basic_erc20_params.json").as_str(),
+        None,
     );
-
-    let contract = load_contract(contract_abi_path, contract_params_path, None);
 
     let start_balance = 1000000000000u128;
 

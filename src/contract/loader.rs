@@ -4,7 +4,7 @@ use ethers_contract::BaseContract;
 use ethers_core::abi::Contract;
 use revm::primitives::{Address, Bytecode, Bytes};
 
-pub fn load_abi(abi_path: String) -> BaseContract {
+pub fn load_abi(abi_path: &str) -> BaseContract {
     let abi_file = std::fs::File::open(abi_path).unwrap();
     let abi = Contract::load(abi_file).unwrap();
     BaseContract::from(abi)
@@ -12,7 +12,7 @@ pub fn load_abi(abi_path: String) -> BaseContract {
 
 pub fn load_params(
     abi: &BaseContract,
-    params_path: String,
+    params_path: &str,
     deployment_args: Option<Vec<Token>>,
 ) -> (String, Bytecode, Address, Bytes) {
     let params_file = std::fs::File::open(params_path).unwrap();
@@ -78,8 +78,8 @@ pub fn load_params(
 }
 
 pub fn load_contract(
-    abi_path: String,
-    params_path: String,
+    abi_path: &str,
+    params_path: &str,
     deployment_args: Option<Vec<Token>>,
 ) -> ContractDefinition {
     let abi = load_abi(abi_path);
