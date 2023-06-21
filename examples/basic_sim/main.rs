@@ -1,6 +1,6 @@
 use ethers_core::types::U256;
 use rust_sim::agent::{Agent, AgentSet};
-use rust_sim::conract::{ContractDefinition, Transaction};
+use rust_sim::conract::ContractDefinition;
 use rust_sim::network::Network;
 use rust_sim::sim_runner::SimRunner;
 use simple_agent::SimpleAgent;
@@ -38,13 +38,12 @@ pub fn main() {
     let start_balance = U256::from(start_balance);
 
     for agent in &agents {
-        let result_call = Transaction {
-            callee: agent.get_call_address(),
-            function_name: "approve",
-            contract_idx: 0,
-            args: (agent.get_address(), start_balance),
-        };
-        let _result: bool = sim.call_contract(result_call);
+        let _result: bool = sim.direct_execute(
+            agent.get_call_address(),
+            0,
+            "approve",
+            (agent.get_address(), start_balance),
+        );
     }
 
     let agent_set = AgentSet::from(agents);

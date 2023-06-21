@@ -12,7 +12,7 @@ use revm::{
 
 pub struct Network {
     pub evm: EVM<CacheDB<EmptyDB>>,
-    admin_address: Address,
+    pub admin_address: Address,
     contracts: Vec<DeployedContract>,
 }
 
@@ -49,7 +49,7 @@ impl Network {
         evm.env.block.gas_limit = U256::MAX;
 
         for agent_set in agents {
-            for address in agent_set.get_addresses() {
+            for address in agent_set.get_call_addresses() {
                 db.insert_account_info(
                     address,
                     AccountInfo::new(U256::from(start_balance), 0, Bytecode::default()),
