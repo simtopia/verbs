@@ -1,5 +1,5 @@
 use ethers_core::types::U256;
-use rust_sim::agent::{Agent, AgentSet};
+use rust_sim::agent::{Agent, AgentVec};
 use rust_sim::conract::ContractDefinition;
 use rust_sim::network::Network;
 use rust_sim::sim_runner::SimRunner;
@@ -46,7 +46,7 @@ pub fn main() {
         );
     }
 
-    let agent_set = AgentSet::from(agents);
+    let agent_set = AgentVec::from(agents);
 
     let mut sim_runner: SimRunner = SimRunner::new(sim, n_steps);
     sim_runner.insert_agent_set(Box::new(agent_set));

@@ -1,4 +1,6 @@
 use csv::Writer;
+use ethers_core::types::Address;
+use revm::primitives::Address as RevmAddress;
 use std::fs::File;
 
 pub fn csv_writer<T: ToString>(records: &Vec<Vec<T>>, output_path: String) {
@@ -12,4 +14,8 @@ pub fn csv_writer<T: ToString>(records: &Vec<Vec<T>>, output_path: String) {
     }
 
     wtr.flush().expect("Error flushing csv");
+}
+
+pub fn convert_address(address: RevmAddress) -> Address {
+    Address::from_low_u64_le(address.to_low_u64_le())
 }

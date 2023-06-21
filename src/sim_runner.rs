@@ -1,11 +1,11 @@
-use crate::agent::UpdateAgents;
+use crate::agent::AgentSet;
 use crate::conract::Call;
 use crate::network::Network;
 use kdam::tqdm;
 
 pub struct SimRunner {
     network: Network,
-    pub agents: Vec<Box<dyn UpdateAgents>>,
+    pub agents: Vec<Box<dyn AgentSet>>,
     n_steps: usize,
 }
 
@@ -13,16 +13,12 @@ impl SimRunner {
     pub fn new(network: Network, n_steps: usize) -> Self {
         SimRunner {
             network,
-            agents: Vec::<Box<dyn UpdateAgents>>::new(),
+            agents: Vec::<Box<dyn AgentSet>>::new(),
             n_steps,
         }
     }
 
-    pub fn from_agents(
-        network: Network,
-        n_steps: usize,
-        agents: Vec<Box<dyn UpdateAgents>>,
-    ) -> Self {
+    pub fn from_agents(network: Network, n_steps: usize, agents: Vec<Box<dyn AgentSet>>) -> Self {
         SimRunner {
             network,
             agents,
@@ -30,7 +26,7 @@ impl SimRunner {
         }
     }
 
-    pub fn insert_agent_set(&mut self, agent_set: Box<dyn UpdateAgents>) {
+    pub fn insert_agent_set(&mut self, agent_set: Box<dyn AgentSet>) {
         self.agents.push(agent_set);
     }
 

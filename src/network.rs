@@ -1,4 +1,4 @@
-use crate::agent::UpdateAgents;
+use crate::agent::AgentSet;
 use crate::conract::{Call, ContractDefinition, DeployedContract, Transaction};
 use ethers_core::abi::{Detokenize, Tokenize};
 use revm::{
@@ -41,7 +41,7 @@ impl Network {
         }
     }
 
-    pub fn from_agents(start_balance: u128, agents: &Vec<Box<dyn UpdateAgents>>) -> Self {
+    pub fn from_agents(start_balance: u128, agents: &Vec<Box<dyn AgentSet>>) -> Self {
         let mut evm = EVM::new();
         let mut db = CacheDB::new(EmptyDB {});
 
@@ -302,6 +302,10 @@ impl Network {
         for call in calls {
             self.call_from_call(call);
         }
+    }
+
+    pub fn get_contract_address(&self, contract_idx: usize) -> Address {
+        self.contracts.get(contract_idx).unwrap().address
     }
 }
 

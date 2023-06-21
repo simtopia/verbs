@@ -16,7 +16,7 @@ pub trait RecordedAgent<R> {
     fn record(&self) -> R;
 }
 
-pub trait UpdateAgents {
+pub trait AgentSet {
     fn call_agents(&mut self, rng: &mut fastrand::Rng, network: &mut Network) -> Vec<Call>;
     fn record_agents(&mut self);
     fn records_to_csv(&self, path: String);
@@ -24,20 +24,20 @@ pub trait UpdateAgents {
     fn get_addresses(&self) -> Vec<Address>;
 }
 
-pub struct AgentSet<R: Display, A: Agent + RecordedAgent<R>> {
+pub struct AgentVec<R: Display, A: Agent + RecordedAgent<R>> {
     agents: Vec<A>,
     records: Vec<Vec<R>>,
 }
 
-impl<R: Display, A: Agent + RecordedAgent<R>> AgentSet<R, A> {
+impl<R: Display, A: Agent + RecordedAgent<R>> AgentVec<R, A> {
     pub fn new() -> Self {
-        AgentSet {
+        AgentVec {
             agents: Vec::<A>::new(),
             records: Vec::<Vec<R>>::new(),
         }
     }
     pub fn from(agents: Vec<A>) -> Self {
-        AgentSet {
+        AgentVec {
             agents,
             records: Vec::<Vec<R>>::new(),
         }
@@ -47,7 +47,7 @@ impl<R: Display, A: Agent + RecordedAgent<R>> AgentSet<R, A> {
     }
 }
 
-impl<R: Display, A: Agent + RecordedAgent<R>> UpdateAgents for AgentSet<R, A> {
+impl<R: Display, A: Agent + RecordedAgent<R>> AgentSet for AgentVec<R, A> {
     fn call_agents(&mut self, rng: &mut fastrand::Rng, network: &mut Network) -> Vec<Call> {
         (&mut self.agents)
             .into_iter()
