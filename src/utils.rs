@@ -3,7 +3,7 @@ use ethers_core::types::Address;
 use revm::primitives::Address as RevmAddress;
 use std::fs::File;
 
-pub fn csv_writer<T: ToString>(records: &Vec<Vec<T>>, output_path: String) {
+pub fn csv_writer<T: ToString>(records: &Vec<Vec<T>>, output_path: &str) {
     let output_file = File::create(output_path).unwrap();
 
     let mut wtr = Writer::from_writer(output_file);

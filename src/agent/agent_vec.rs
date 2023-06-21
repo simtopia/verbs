@@ -4,14 +4,13 @@ use crate::network::Network;
 use crate::utils::csv_writer;
 use ethers_core::types::Address;
 use revm::primitives::Address as RevmAddress;
-use std::fmt::Display;
 
-pub struct AgentVec<R: Display, A: Agent + RecordedAgent<R>> {
+pub struct AgentVec<R: ToString, A: Agent + RecordedAgent<R>> {
     agents: Vec<A>,
     records: Vec<Vec<R>>,
 }
 
-impl<R: Display, A: Agent + RecordedAgent<R>> AgentVec<R, A> {
+impl<R: ToString, A: Agent + RecordedAgent<R>> AgentVec<R, A> {
     pub fn new() -> Self {
         AgentVec {
             agents: Vec::<A>::new(),
@@ -29,7 +28,7 @@ impl<R: Display, A: Agent + RecordedAgent<R>> AgentVec<R, A> {
     }
 }
 
-impl<R: Display, A: Agent + RecordedAgent<R>> AgentSet for AgentVec<R, A> {
+impl<R: ToString, A: Agent + RecordedAgent<R>> AgentSet for AgentVec<R, A> {
     fn call_agents(&mut self, rng: &mut fastrand::Rng, network: &mut Network) -> Vec<Call> {
         (&mut self.agents)
             .into_iter()
@@ -42,7 +41,7 @@ impl<R: Display, A: Agent + RecordedAgent<R>> AgentSet for AgentVec<R, A> {
         let records: Vec<R> = (&mut self.agents).into_iter().map(|x| x.record()).collect();
         self.records.push(records);
     }
-    fn records_to_csv(&self, output_path: String) {
+    fn records_to_csv(&self, output_path: &str) {
         csv_writer::<R>(&self.records, output_path);
     }
     fn get_call_addresses(&self) -> Vec<RevmAddress> {

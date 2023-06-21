@@ -50,5 +50,5 @@ pub fn main() {
 
     sim_runner.run(0);
 
-    sim_runner.agents[0].records_to_csv("./output.csv".to_string());
+    sim_runner.agents[0].records_to_csv("./output.csv");
 }
