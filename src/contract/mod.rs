@@ -1,5 +1,5 @@
-pub mod loader;
+pub mod json_loader;
 pub mod structs;
 
-pub use loader::*;
+pub use json_loader::*;
 pub use structs::*;
