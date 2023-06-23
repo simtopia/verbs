@@ -48,13 +48,13 @@ def process_deployment_files(
             address = x["address"]
 
             params = dict(
-                bytecode=x["bytecode"],
                 deploy_address=address,
                 constructor_args=args,
                 name=fx,
             )
 
             if get_storage:
+                params["bytecode"] = x["deployedBytecode"]
                 storage_layout = x["storageLayout"]["storage"]
                 slots = [y["slot"] for y in storage_layout]
                 params["storage"] = {
@@ -62,6 +62,7 @@ def process_deployment_files(
                     for s in slots
                 }
             else:
+                params["bytecode"] = x["bytecode"]
                 params["storage"] = dict()
 
             with open(f"{out_path}/{fx}.json", "w") as params_file:

@@ -89,60 +89,79 @@ impl Network {
     }
 
     pub fn deploy_contract(&mut self, contract: ContractDefinition) -> Address {
-        let tx = TxEnv {
-            caller: self.admin_address,
-            gas_limit: u64::MAX,
-            gas_price: U256::ZERO,
-            gas_priority_fee: None,
-            transact_to: TransactTo::create(),
-            value: U256::ZERO,
-            data: contract.arguments,
-            chain_id: None,
-            nonce: None,
-            access_list: Vec::new(),
-        };
+        match contract.storage_values {
+            None {} => {
+                let tx = TxEnv {
+                    caller: self.admin_address,
+                    gas_limit: u64::MAX,
+                    gas_price: U256::ZERO,
+                    gas_priority_fee: None,
+                    transact_to: TransactTo::create(),
+                    value: U256::ZERO,
+                    data: contract.arguments,
+                    chain_id: None,
+                    nonce: None,
+                    access_list: Vec::new(),
+                };
 
-        let account_changes = self.call(tx);
-        let output = result_to_output("deploy", account_changes.result);
-        let deploy_address = match output {
-            revm::primitives::Output::Create(_, address) => address.unwrap(),
-            _ => panic!("Deployment of {} failed", contract.name),
-        };
+                let account_changes = self.call(tx);
+                let output = result_to_output("deploy", account_changes.result);
+                let deploy_address = match output {
+                    revm::primitives::Output::Create(_, address) => address.unwrap(),
+                    _ => panic!("Deployment of {} failed", contract.name),
+                };
 
-        let db = self.evm.db().unwrap();
+                let db = self.evm.db().unwrap();
 
-        // Check we are not deploying to an already existing address
-        if db.accounts.contains_key(&contract.deploy_address) {
-            panic!("Account at {} already exists", contract.deploy_address);
-        };
+                // Check we are not deploying to an already existing address
+                if db.accounts.contains_key(&contract.deploy_address) {
+                    panic!("Account at {} already exists", contract.deploy_address);
+                };
 
-        for (k, v) in account_changes.state.into_iter() {
-            if k == deploy_address {
-                db.insert_account_info(contract.deploy_address, v.info);
-                let storage_changes: hashbrown::HashMap<U256, U256> = v
-                    .storage
-                    .into_iter()
-                    .map(|(k, v)| (k.clone(), v.present_value().clone()))
-                    .collect();
-                db.replace_account_storage(contract.deploy_address, storage_changes)
-                    .unwrap_or_else(|_| {
-                        panic!("Could not update account {} storage during deployment", k)
-                    });
-            } else {
-                for (ks, vs) in v.storage {
-                    db.insert_account_storage(k, ks, vs.present_value())
+                for (k, v) in account_changes.state.into_iter() {
+                    if k == deploy_address {
+                        db.insert_account_info(contract.deploy_address, v.info);
+                        let storage_changes: hashbrown::HashMap<U256, U256> = v
+                            .storage
+                            .into_iter()
+                            .map(|(k, v)| (k.clone(), v.present_value().clone()))
+                            .collect();
+                        db.replace_account_storage(contract.deploy_address, storage_changes)
+                            .unwrap_or_else(|_| {
+                                panic!("Could not update account {} storage during deployment", k)
+                            });
+                    } else {
+                        for (ks, vs) in v.storage {
+                            db.insert_account_storage(k, ks, vs.present_value())
+                                .unwrap_or_else(|_| {
+                                    panic!(
+                                        "Could not insert account {} storage during deployment",
+                                        k
+                                    )
+                                });
+                        }
+                    }
+                }
+            }
+            Some(x) => {
+                let db = self.evm.db().unwrap();
+
+                // Check we are not deploying to an already existing address
+                if db.accounts.contains_key(&contract.deploy_address) {
+                    panic!("Account at {} already exists", contract.deploy_address);
+                };
+
+                let account = AccountInfo::new(U256::MAX, 0, contract.bytecode);
+
+                db.insert_account_info(contract.deploy_address, account);
+
+                for (k, v) in x {
+                    db.insert_account_storage(contract.deploy_address, k, v)
                         .unwrap_or_else(|_| {
                             panic!("Could not insert account {} storage during deployment", k)
                         });
                 }
             }
-        }
-
-        for (k, v) in contract.storage_values {
-            db.insert_account_storage(contract.deploy_address, k, v)
-                .unwrap_or_else(|_| {
-                    panic!("Could not insert account {} storage during deployment", k)
-                });
         }
 
         let deployed_contract = DeployedContract {

@@ -10,7 +10,7 @@ pub struct ContractDefinition {
     pub bytecode: Bytecode,
     pub arguments: Bytes,
     pub deploy_address: Address,
-    pub storage_values: HashMap<U256, U256>,
+    pub storage_values: Option<HashMap<U256, U256>>,
 }
 
 pub struct DeployedContract {

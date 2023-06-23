@@ -24,7 +24,13 @@ pub fn load_params(
     abi: &BaseContract,
     params_path: &str,
     deployment_args: Option<Vec<Token>>,
-) -> (String, Bytecode, Address, Bytes, HashMap<U256, U256>) {
+) -> (
+    String,
+    Bytecode,
+    Address,
+    Bytes,
+    Option<HashMap<U256, U256>>,
+) {
     let params_file = std::fs::File::open(params_path).unwrap();
     let params_json: serde_json::Value = serde_json::from_reader(params_file).unwrap();
 
@@ -57,9 +63,18 @@ pub fn load_params(
     let deploy_address = hex::decode(deploy_address).expect("Decoding address failed");
     let deploy_address: Address = Address::from_slice(&deploy_address);
 
-    let storage_values = params_json.get("storage").unwrap().as_object().unwrap();
-    let storage_values: HashMap<U256, U256> =
-        storage_values.into_iter().map(unpack_storage).collect();
+    let storage_values = params_json.get("storage");
+
+    let storage_values = match storage_values {
+        None => Option::None,
+        Some(x) => Option::Some(
+            x.as_object()
+                .unwrap()
+                .into_iter()
+                .map(unpack_storage)
+                .collect(),
+        ),
+    };
 
     let constructor_args = params_json
         .get("constructor_args")

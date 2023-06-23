@@ -4,6 +4,5 @@
     "0000000000000000000000000000000000000000000000056bc75e2d63100000"
   ],
   "deploy_address": "0xb794f5ea0ba39494ce839613fffba74279579268",
-  "name": "BasicERC20",
-  "storage": {}
+  "name": "BasicERC20"
 }
