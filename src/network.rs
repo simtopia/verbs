@@ -138,6 +138,13 @@ impl Network {
             }
         }
 
+        for (k, v) in contract.storage_values {
+            db.insert_account_storage(contract.deploy_address, k, v)
+                .unwrap_or_else(|_| {
+                    panic!("Could not insert account {} storage during deployment", k)
+                });
+        }
+
         let deployed_contract = DeployedContract {
             abi: contract.abi,
             address: contract.deploy_address,

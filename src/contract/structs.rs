@@ -1,7 +1,8 @@
 use ethers_contract::BaseContract;
 use ethers_core::abi::Tokenize;
 use ethers_core::types::Bytes as EthersBytes;
-use revm::primitives::{Address, Bytecode, Bytes};
+use revm::primitives::{Address, Bytecode, Bytes, U256};
+use std::collections::HashMap;
 
 pub struct ContractDefinition {
     pub name: String,
@@ -9,6 +10,7 @@ pub struct ContractDefinition {
     pub bytecode: Bytecode,
     pub arguments: Bytes,
     pub deploy_address: Address,
+    pub storage_values: HashMap<U256, U256>,
 }
 
 pub struct DeployedContract {

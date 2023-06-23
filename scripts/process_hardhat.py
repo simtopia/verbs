@@ -48,8 +48,8 @@ def process_deployment_files(
             address = x["address"]
 
             params = dict(
-                bytecode=x["bytecode"][2:],
-                deploy_address=address[2:],
+                bytecode=x["bytecode"],
+                deploy_address=address,
                 constructor_args=args,
                 name=fx,
             )

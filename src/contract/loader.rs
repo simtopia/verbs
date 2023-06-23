@@ -2,7 +2,9 @@ use crate::contract::structs::ContractDefinition;
 use ethabi::token::{LenientTokenizer, Token, Tokenizer};
 use ethers_contract::BaseContract;
 use ethers_core::abi::Contract;
-use revm::primitives::{Address, Bytecode, Bytes};
+use revm::primitives::{Address, Bytecode, Bytes, U256};
+use serde_json::value::Value as SerdeVale;
+use std::collections::HashMap;
 
 pub fn load_abi(abi_path: &str) -> BaseContract {
     let abi_file = std::fs::File::open(abi_path).unwrap();
@@ -10,11 +12,19 @@ pub fn load_abi(abi_path: &str) -> BaseContract {
     BaseContract::from(abi)
 }
 
+fn unpack_storage(v: (&String, &SerdeVale)) -> (U256, U256) {
+    let slot = U256::from_le_bytes(v.0.parse::<u128>().unwrap().to_le_bytes());
+    let value = v.1.as_str().unwrap().strip_prefix("0x").unwrap();
+    let value = U256::from_str_radix(value, 16).unwrap();
+
+    (slot, value)
+}
+
 pub fn load_params(
     abi: &BaseContract,
     params_path: &str,
     deployment_args: Option<Vec<Token>>,
-) -> (String, Bytecode, Address, Bytes) {
+) -> (String, Bytecode, Address, Bytes, HashMap<U256, U256>) {
     let params_file = std::fs::File::open(params_path).unwrap();
     let params_json: serde_json::Value = serde_json::from_reader(params_file).unwrap();
 
@@ -25,15 +35,31 @@ pub fn load_params(
         .unwrap()
         .to_string();
 
-    let bytes = params_json.get("bytecode").unwrap().as_str().unwrap();
+    let bytes = params_json
+        .get("bytecode")
+        .unwrap()
+        .as_str()
+        .unwrap()
+        .strip_prefix("0x")
+        .unwrap();
     let bytes = hex::decode(bytes).expect("Decoding failed");
     let bytes2 = bytes.clone();
 
     let bytecode = Bytecode::new_raw(Bytes::from(bytes));
 
-    let deploy_address = params_json.get("deploy_address").unwrap().as_str().unwrap();
+    let deploy_address = params_json
+        .get("deploy_address")
+        .unwrap()
+        .as_str()
+        .unwrap()
+        .strip_prefix("0x")
+        .unwrap();
     let deploy_address = hex::decode(deploy_address).expect("Decoding address failed");
     let deploy_address: Address = Address::from_slice(&deploy_address);
+
+    let storage_values = params_json.get("storage").unwrap().as_object().unwrap();
+    let storage_values: HashMap<U256, U256> =
+        storage_values.into_iter().map(unpack_storage).collect();
 
     let constructor_args = params_json
         .get("constructor_args")
@@ -74,7 +100,13 @@ pub fn load_params(
         encoded_constructor_args = Bytes::from(constructor_args);
     }
 
-    (name, bytecode, deploy_address, encoded_constructor_args)
+    (
+        name,
+        bytecode,
+        deploy_address,
+        encoded_constructor_args,
+        storage_values,
+    )
 }
 
 pub fn load_contract(
@@ -83,7 +115,7 @@ pub fn load_contract(
     deployment_args: Option<Vec<Token>>,
 ) -> ContractDefinition {
     let abi = load_abi(abi_path);
-    let (name, bytecode, deploy_address, constructor_args) =
+    let (name, bytecode, deploy_address, constructor_args, storage_values) =
         load_params(&abi, params_path, deployment_args);
 
     ContractDefinition {
@@ -92,5 +124,6 @@ pub fn load_contract(
         bytecode,
         arguments: constructor_args,
         deploy_address,
+        storage_values,
     }
 }
