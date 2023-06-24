@@ -21,8 +21,9 @@ pub fn main() {
     );
 
     let start_balance = 1000000000000u128;
+    let admin_address = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
 
-    let mut sim = Network::new(start_balance, n_users);
+    let mut sim = Network::new(start_balance, n_users, admin_address);
     sim.deploy_contract(contract);
 
     let mut agents = Vec::<SimpleAgent>::new();
