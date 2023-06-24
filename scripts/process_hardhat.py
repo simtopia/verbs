@@ -21,6 +21,10 @@ def format_arg(a):
     return str(a).replace("'", "").replace("0x", "").replace(" ", "").lower()
 
 
+def slot_to_hex(x):
+    return f"{x:#0{66}x}"
+
+
 def process_deployment_files(
     path, out_path, node_url="http://127.0.0.1:8545", get_storage=True
 ):
@@ -54,11 +58,14 @@ def process_deployment_files(
             )
 
             if get_storage:
-                params["bytecode"] = x["deployedBytecode"]
+                # params["bytecode"] = x["deployedBytecode"]
+                params["bytecode"] = x["bytecode"]
                 storage_layout = x["storageLayout"]["storage"]
                 slots = [y["slot"] for y in storage_layout]
                 params["storage"] = {
-                    int(s): get_storage_values(address, s, node_url=node_url)["result"]
+                    slot_to_hex(int(s)): get_storage_values(
+                        address, s, node_url=node_url
+                    )["result"]
                     for s in slots
                 }
             else:
@@ -69,7 +76,7 @@ def process_deployment_files(
                 json.dump(params, params_file, indent=4)
 
     with open(f"{out_path}/contract_names.json", "w") as contracts_file:
-        json.dump(file_names, contracts_file, indent=4)
+        json.dump(sorted(file_names), contracts_file, indent=4)
 
 
 if __name__ == "__main__":

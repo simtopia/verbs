@@ -13,7 +13,8 @@ pub fn load_abi(abi_path: &str) -> BaseContract {
 }
 
 fn unpack_storage(v: (&String, &SerdeVale)) -> (U256, U256) {
-    let slot = U256::from_le_bytes(v.0.parse::<u128>().unwrap().to_le_bytes());
+    let slot = v.0.strip_prefix("0x").unwrap();
+    let slot = U256::from_str_radix(slot, 16).unwrap();
     let value = v.1.as_str().unwrap().strip_prefix("0x").unwrap();
     let value = U256::from_str_radix(value, 16).unwrap();
 
@@ -31,6 +32,7 @@ pub fn load_params(
     Bytes,
     Option<HashMap<U256, U256>>,
 ) {
+    println!("Loading {}", params_path);
     let params_file = std::fs::File::open(params_path).unwrap();
     let params_json: serde_json::Value = serde_json::from_reader(params_file).unwrap();
 
@@ -84,7 +86,7 @@ pub fn load_params(
 
     let encoded_constructor_args: Bytes;
 
-    if abi.abi().constructor.is_none() {
+    if (abi.abi().constructor.is_none()) || (!storage_values.is_none()) {
         encoded_constructor_args = Bytes::default();
     } else {
         let mut constructor_tokens: Vec<Token>;
