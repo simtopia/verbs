@@ -23,7 +23,7 @@ pub struct Network {
 }
 
 impl Network {
-    pub fn new(start_balance: u128, n_users: usize, admin_address: &str) -> Self {
+    fn init(admin_address: &str) -> Self {
         let admin_address = address_from_hex(admin_address);
         let mut evm = EVM::new();
         let mut db = CacheDB::new(EmptyDB {});
@@ -35,14 +35,6 @@ impl Network {
             admin_address,
             AccountInfo::new(U256::MAX, 0, Bytecode::default()),
         );
-
-        for n in 0..n_users {
-            let address = Address::from(u64::try_from(n).expect("Couldn't cast n_users to a u64"));
-            db.insert_account_info(
-                address,
-                AccountInfo::new(U256::from(start_balance), 0, Bytecode::default()),
-            );
-        }
 
         evm.database(db);
 
@@ -53,22 +45,28 @@ impl Network {
         }
     }
 
+    pub fn new(start_balance: u128, n_users: usize, admin_address: &str) -> Self {
+        let mut network = Network::init(admin_address);
+        let db = network.evm.db().unwrap();
+
+        for n in 0..n_users {
+            let address = Address::from(u64::try_from(n).expect("Couldn't cast n_users to a u64"));
+            db.insert_account_info(
+                address,
+                AccountInfo::new(U256::from(start_balance), 0, Bytecode::default()),
+            );
+        }
+
+        network
+    }
+
     pub fn from_agents(
         start_balance: u128,
         agents: &Vec<Box<dyn AgentSet>>,
         admin_address: &str,
     ) -> Self {
-        let admin_address = address_from_hex(admin_address);
-        let mut evm = EVM::new();
-        let mut db = CacheDB::new(EmptyDB {});
-
-        evm.env.cfg.limit_contract_code_size = Some(0x100000);
-        evm.env.block.gas_limit = U256::MAX;
-
-        db.insert_account_info(
-            admin_address,
-            AccountInfo::new(U256::MAX, 0, Bytecode::default()),
-        );
+        let mut network = Network::init(admin_address);
+        let db = network.evm.db().unwrap();
 
         for agent_set in agents {
             for address in agent_set.get_call_addresses() {
@@ -79,13 +77,7 @@ impl Network {
             }
         }
 
-        evm.database(db);
-
-        Self {
-            evm,
-            admin_address: admin_address,
-            contracts: Vec::new(),
-        }
+        network
     }
 
     pub fn execute(&mut self, tx: TxEnv) -> ExecutionResult {

@@ -14,7 +14,20 @@ def get_storage_values(address, slot, node_url):
         "id": 0,
     }
 
-    return requests.post(node_url, json=payload).json()
+    return requests.post(node_url, json=payload).json()["result"]
+
+
+def get_bytecode(address, node_url):
+    payload = {
+        "method": "eth_getCode",
+        "params": [
+            address,
+        ],
+        "jsonrpc": "2.0",
+        "id": 0,
+    }
+
+    return requests.post(node_url, json=payload).json()["result"]
 
 
 def format_arg(a):
@@ -58,14 +71,11 @@ def process_deployment_files(
             )
 
             if get_storage:
-                # params["bytecode"] = x["deployedBytecode"]
-                params["bytecode"] = x["bytecode"]
+                params["bytecode"] = get_bytecode(address, node_url)
                 storage_layout = x["storageLayout"]["storage"]
                 slots = [y["slot"] for y in storage_layout]
                 params["storage"] = {
-                    slot_to_hex(int(s)): get_storage_values(
-                        address, s, node_url=node_url
-                    )["result"]
+                    slot_to_hex(int(s)): get_storage_values(address, s, node_url)
                     for s in slots
                 }
             else:
