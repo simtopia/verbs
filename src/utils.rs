@@ -19,3 +19,7 @@ pub fn csv_writer<T: ToString>(records: &Vec<Vec<T>>, output_path: &str) {
 pub fn convert_address(address: RevmAddress) -> Address {
     Address::from_low_u64_le(address.to_low_u64_le())
 }
+
+pub fn inverse_convert_address(address: Address) -> RevmAddress {
+    RevmAddress::from_low_u64_le(address.to_low_u64_le())
+}

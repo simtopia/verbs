@@ -14,6 +14,7 @@ pub struct ContractDefinition {
 }
 
 pub struct DeployedContract {
+    pub name: String,
     pub abi: BaseContract,
     pub address: Address,
 }

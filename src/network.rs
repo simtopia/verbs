@@ -9,6 +9,7 @@ use revm::{
     },
     EVM,
 };
+use std::ops::Range;
 
 fn address_from_hex(x: &str) -> Address {
     let address = x.strip_prefix("0x").unwrap();
@@ -40,17 +41,17 @@ impl Network {
 
         Self {
             evm,
-            admin_address: admin_address,
+            admin_address,
             contracts: Vec::new(),
         }
     }
 
-    pub fn new(start_balance: u128, n_users: usize, admin_address: &str) -> Self {
+    pub fn from_range(start_balance: u128, r: Range<u64>, admin_address: &str) -> Self {
         let mut network = Network::init(admin_address);
         let db = network.evm.db().unwrap();
 
-        for n in 0..n_users {
-            let address = Address::from(u64::try_from(n).expect("Couldn't cast n_users to a u64"));
+        for n in r {
+            let address = Address::from(n);
             db.insert_account_info(
                 address,
                 AccountInfo::new(U256::from(start_balance), 0, Bytecode::default()),
@@ -179,6 +180,7 @@ impl Network {
         }
 
         let deployed_contract = DeployedContract {
+            name: contract.name,
             abi: contract.abi,
             address: contract.deploy_address,
         };
