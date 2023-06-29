@@ -1,11 +1,13 @@
 use crate::agent::AgentSet;
 use crate::contract::{Call, ContractDefinition, DeployedContract, Transaction};
+use crate::utils::eth_to_weth;
 use ethers_core::abi::{Detokenize, Tokenize};
+use ethers_core::types::Selector;
 use revm::{
     db::{CacheDB, EmptyDB},
     primitives::{
-        AccountInfo, Address, Bytecode, ExecutionResult, Output, ResultAndState, TransactTo, TxEnv,
-        U256,
+        AccountInfo, Address, Bytecode, ExecutionResult, Output, ResultAndState, SpecId,
+        TransactTo, TxEnv, U256,
     },
     EVM,
 };
@@ -30,11 +32,18 @@ impl Network {
         let mut db = CacheDB::new(EmptyDB {});
 
         evm.env.cfg.limit_contract_code_size = Some(0x100000);
+        evm.env.cfg.disable_eip3607 = true;
         evm.env.block.gas_limit = U256::MAX;
+
+        let start_balance = eth_to_weth(10_000);
 
         db.insert_account_info(
             admin_address,
-            AccountInfo::new(U256::MAX, 0, Bytecode::default()),
+            AccountInfo::new(start_balance, 0, Bytecode::default()),
+        );
+        db.insert_account_info(
+            Address::zero(),
+            AccountInfo::new(start_balance, 0, Bytecode::default()),
         );
 
         evm.database(db);
@@ -103,6 +112,37 @@ impl Network {
         execution_result
     }
 
+    pub fn manually_deploy_contract(&mut self, contract: ContractDefinition) -> Address {
+        let tx = TxEnv {
+            caller: self.admin_address,
+            gas_limit: u64::MAX,
+            gas_price: U256::ZERO,
+            gas_priority_fee: None,
+            transact_to: TransactTo::create(),
+            value: U256::ZERO,
+            data: contract.arguments,
+            chain_id: None,
+            nonce: None,
+            access_list: Vec::new(),
+        };
+        let result = self.execute(tx);
+        let output = result_to_output("manually_deploy", result);
+        let deploy_address = match output {
+            revm::primitives::Output::Create(_, address) => address.unwrap(),
+            _ => panic!("Deployment of {} failed", contract.name),
+        };
+
+        let deployed_contract = DeployedContract {
+            name: contract.name,
+            abi: contract.abi,
+            address: deploy_address,
+        };
+
+        self.insert_contract(deployed_contract);
+
+        deploy_address
+    }
+
     pub fn deploy_contract(&mut self, contract: ContractDefinition) -> Address {
         match contract.storage_values {
             None {} => {
@@ -166,7 +206,7 @@ impl Network {
                     panic!("Account at {} already exists", contract.deploy_address);
                 };
 
-                let account = AccountInfo::new(U256::MAX, 0, contract.bytecode);
+                let account = AccountInfo::new(eth_to_weth(1), 0, contract.bytecode);
 
                 db.insert_account_info(contract.deploy_address, account);
 
@@ -249,6 +289,30 @@ impl Network {
         }
     }
 
+    fn unwrap_transaction_with_selector<'a, T: Tokenize>(
+        &mut self,
+        callee: Address,
+        contract_idx: usize,
+        selector: Selector,
+        args: T,
+    ) -> TxEnv {
+        let contract = &self.contracts[contract_idx];
+        let encoded = contract.abi.encode_with_selector(selector, args).unwrap();
+
+        TxEnv {
+            caller: callee,
+            gas_limit: u64::MAX,
+            gas_price: U256::ZERO,
+            gas_priority_fee: None,
+            transact_to: TransactTo::Call(contract.address),
+            value: U256::ZERO,
+            data: encoded.0,
+            chain_id: None,
+            nonce: None,
+            access_list: Vec::new(),
+        }
+    }
+
     fn unwrap_call(call: Call) -> TxEnv {
         TxEnv {
             caller: call.callee,
@@ -277,6 +341,19 @@ impl Network {
             .unwrap()
     }
 
+    fn decode_output_with_selector<D: Detokenize>(
+        &mut self,
+        contract_idx: usize,
+        selector: Selector,
+        output_data: bytes::Bytes,
+    ) -> D {
+        let contract = &self.contracts[contract_idx];
+        contract
+            .abi
+            .decode_output_with_selector(selector, output_data)
+            .unwrap()
+    }
+
     pub fn direct_execute<D: Detokenize, T: Tokenize>(
         &mut self,
         callee: Address,
@@ -292,6 +369,20 @@ impl Network {
         self.decode_output(contract_idx, function_name, output_data)
     }
 
+    pub fn direct_execute_with_selector<T: Tokenize>(
+        &mut self,
+        callee: Address,
+        contract_idx: usize,
+        selector: Selector,
+        args: T,
+    ) {
+        let tx = self.unwrap_transaction_with_selector(callee, contract_idx, selector, args);
+        let execution_result: ExecutionResult = self.execute(tx);
+        let output = result_to_output("Selected", execution_result);
+        let output_data: bytes::Bytes = output.into_data();
+        self.decode_output_with_selector(contract_idx, selector, output_data)
+    }
+
     pub fn direct_call<D: Detokenize, T: Tokenize>(
         &mut self,
         callee: Address,
@@ -304,7 +395,7 @@ impl Network {
         let execution_result = self.call(tx);
         let execution_result = execution_result.result;
         let output = result_to_output(function_name, execution_result);
-        let output_data = output.into_data();
+        let output_data: bytes::Bytes = output.into_data();
         self.decode_output(contract_idx, function_name, output_data)
     }
 
@@ -354,10 +445,12 @@ impl Network {
 fn result_to_output(function_name: &'static str, execution_result: ExecutionResult) -> Output {
     match execution_result {
         ExecutionResult::Success { output, .. } => output,
-        ExecutionResult::Revert { output, .. } => panic!(
-            "Failed to call {} due to revert: {:?}",
-            function_name, output
-        ),
+        ExecutionResult::Revert { output, .. } => {
+            panic!(
+                "Failed to call {} due to revert: {:?}",
+                function_name, output
+            )
+        }
         ExecutionResult::Halt { reason, .. } => {
             panic!("Failed to call {} due to halt: {:?}", function_name, reason)
         }

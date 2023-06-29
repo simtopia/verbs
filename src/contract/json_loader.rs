@@ -1,5 +1,5 @@
 use crate::contract::structs::ContractDefinition;
-use ethabi::token::{LenientTokenizer, Token, Tokenizer};
+use ethabi::token::{StrictTokenizer, Token, Tokenizer};
 use ethers_contract::BaseContract;
 use ethers_core::abi::Contract;
 use revm::primitives::{Address, Bytecode, Bytes, U256};
@@ -32,7 +32,6 @@ pub fn load_params(
     Bytes,
     Option<HashMap<U256, U256>>,
 ) {
-    println!("Loading {}", params_path);
     let params_file = std::fs::File::open(params_path).unwrap();
     let params_json: serde_json::Value = serde_json::from_reader(params_file).unwrap();
 
@@ -99,7 +98,7 @@ pub fn load_params(
                 abi.abi().constructor().unwrap().clone().inputs,
             ) {
                 let arg_str = a.as_str().unwrap();
-                let token = LenientTokenizer::tokenize(&b.kind, arg_str)
+                let token = StrictTokenizer::tokenize(&b.kind, arg_str)
                     .expect(format!("Could not parse token {} as {}", arg_str, b.kind).as_str());
                 constructor_tokens.push(token);
             }

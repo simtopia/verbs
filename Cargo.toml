@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-revm = "3.3.0"
+revm = { version="3.3.0", features=["optional_eip3607"]}
 ethers = "2.0.4"
 ethers-core = "2.0.4"
 ethers-contract = "2.0.4"

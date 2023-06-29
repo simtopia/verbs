@@ -1,6 +1,7 @@
 use csv::Writer;
 use ethers_core::types::Address;
 use revm::primitives::Address as RevmAddress;
+use revm::primitives::U256;
 use std::fs::File;
 
 pub fn csv_writer<T: ToString>(records: &Vec<Vec<T>>, output_path: &str) {
@@ -22,4 +23,9 @@ pub fn convert_address(address: RevmAddress) -> Address {
 
 pub fn inverse_convert_address(address: Address) -> RevmAddress {
     RevmAddress::from_low_u64_le(address.to_low_u64_le())
+}
+
+pub fn eth_to_weth(x: u128) -> U256 {
+    let x: u128 = x * 10u128.pow(18);
+    U256::from(x)
 }
