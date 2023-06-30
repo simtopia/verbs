@@ -6,8 +6,8 @@ use ethers_core::types::Selector;
 use revm::{
     db::{CacheDB, EmptyDB},
     primitives::{
-        AccountInfo, Address, Bytecode, ExecutionResult, Output, ResultAndState, SpecId,
-        TransactTo, TxEnv, U256,
+        AccountInfo, Address, Bytecode, ExecutionResult, Output, ResultAndState, TransactTo, TxEnv,
+        U256,
     },
     EVM,
 };

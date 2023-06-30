@@ -80,7 +80,6 @@ def process_deployment_files(
                 }
             else:
                 params["bytecode"] = x["bytecode"]
-                params["storage"] = dict()
 
             with open(f"{out_path}/{fx}.json", "w") as params_file:
                 json.dump(params, params_file, indent=4)
