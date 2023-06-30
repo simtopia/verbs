@@ -18,11 +18,11 @@ pub fn csv_writer<T: ToString>(records: &Vec<Vec<T>>, output_path: &str) {
 }
 
 pub fn convert_address(address: RevmAddress) -> Address {
-    Address::from_low_u64_le(address.to_low_u64_le())
+    Address::from(address.0)
 }
 
 pub fn inverse_convert_address(address: Address) -> RevmAddress {
-    RevmAddress::from_low_u64_le(address.to_low_u64_le())
+    RevmAddress::from(address.0)
 }
 
 pub fn eth_to_weth(x: u128) -> U256 {
