@@ -26,7 +26,7 @@ pub struct Network {
 }
 
 impl Network {
-    fn init(admin_address: &str) -> Self {
+    pub fn init(admin_address: &str) -> Self {
         let admin_address = address_from_hex(admin_address);
         let mut evm = EVM::new();
         let mut db = CacheDB::new(EmptyDB {});
@@ -76,7 +76,12 @@ impl Network {
         admin_address: &str,
     ) -> Self {
         let mut network = Network::init(admin_address);
-        let db = network.evm.db().unwrap();
+        network.insert_agents(start_balance, agents);
+        network
+    }
+
+    pub fn insert_agents(&mut self, start_balance: u128, agents: &Vec<Box<dyn AgentSet>>) {
+        let db = self.evm.db().unwrap();
 
         for agent_set in agents {
             for address in agent_set.get_call_addresses() {
@@ -86,8 +91,6 @@ impl Network {
                 );
             }
         }
-
-        network
     }
 
     pub fn execute(&mut self, tx: TxEnv) -> ExecutionResult {
