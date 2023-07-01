@@ -1,8 +1,8 @@
 use crate::agent::AgentSet;
 use crate::contract::{Call, ContractDefinition, DeployedContract, Transaction};
-use crate::utils::eth_to_weth;
+use crate::utils::{convert_address, eth_to_weth};
 use ethers_core::abi::{Detokenize, Tokenize};
-use ethers_core::types::Selector;
+use ethers_core::types::{Address as EthAddress, Selector};
 use revm::{
     db::{CacheDB, EmptyDB},
     primitives::{
@@ -139,6 +139,7 @@ impl Network {
             name: contract.name,
             abi: contract.abi,
             address: deploy_address,
+            arg_address: convert_address(deploy_address),
         };
 
         self.insert_contract(deployed_contract);
@@ -226,6 +227,7 @@ impl Network {
             name: contract.name,
             abi: contract.abi,
             address: contract.deploy_address,
+            arg_address: convert_address(contract.deploy_address),
         };
 
         self.insert_contract(deployed_contract);
@@ -440,8 +442,8 @@ impl Network {
         }
     }
 
-    pub fn get_contract_address(&self, contract_idx: usize) -> Address {
-        self.contracts.get(contract_idx).unwrap().address
+    pub fn get_contract_address(&self, contract_idx: usize) -> EthAddress {
+        self.contracts.get(contract_idx).unwrap().arg_address
     }
 }
 

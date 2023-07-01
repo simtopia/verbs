@@ -40,6 +40,7 @@ impl SimRunner {
                 .map(|x| x.call_agents(&mut rng, n))
                 .flatten()
                 .collect();
+
             rng.shuffle(calls.as_mut_slice());
             self.network.process_calls(calls);
             for agent_set in &mut self.agents {
