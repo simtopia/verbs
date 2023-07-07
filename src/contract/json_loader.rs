@@ -86,7 +86,7 @@ pub fn load_params(
     let encoded_constructor_args: Bytes;
 
     if (abi.abi().constructor.is_none()) || (!storage_values.is_none()) {
-        encoded_constructor_args = Bytes::default();
+        encoded_constructor_args = Bytes::from(bytes2);
     } else {
         let mut constructor_tokens: Vec<Token>;
 

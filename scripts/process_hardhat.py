@@ -91,4 +91,4 @@ def process_deployment_files(
 if __name__ == "__main__":
     args = sys.argv
 
-    process_deployment_files(args[1], args[2])
+    process_deployment_files(args[1], args[2], get_storage=False)

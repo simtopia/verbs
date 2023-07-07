@@ -1,5 +1,5 @@
 use csv::Writer;
-use ethers_core::types::Address;
+use ethers_core::types::{Address, Bytes};
 use revm::primitives::Address as RevmAddress;
 use revm::primitives::U256;
 use std::fs::File;
@@ -28,4 +28,15 @@ pub fn inverse_convert_address(address: Address) -> RevmAddress {
 pub fn eth_to_weth(x: u128) -> U256 {
     let x: u128 = x * 10u128.pow(18);
     U256::from(x)
+}
+
+pub fn address_from_hex(x: &str) -> RevmAddress {
+    let address = x.strip_prefix("0x").unwrap();
+    let address = hex::decode(address).expect("Decoding failed");
+    RevmAddress::from_slice(address.as_slice())
+}
+
+pub fn data_bytes_from_hex(hx: &str) -> Bytes {
+    let data = hex::decode(hx).expect("Decoding failed");
+    Bytes::from(data)
 }

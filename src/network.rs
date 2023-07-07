@@ -1,6 +1,7 @@
 use crate::agent::AgentSet;
 use crate::contract::{Call, ContractDefinition, DeployedContract, Transaction};
-use crate::utils::{convert_address, eth_to_weth};
+use crate::utils::{address_from_hex, convert_address, eth_to_weth};
+use ethers_contract::BaseContract;
 use ethers_core::abi::{Detokenize, Tokenize};
 use ethers_core::types::{Address as EthAddress, Selector};
 use revm::{
@@ -13,12 +14,6 @@ use revm::{
 };
 use std::ops::Range;
 
-fn address_from_hex(x: &str) -> Address {
-    let address = x.strip_prefix("0x").unwrap();
-    let address = hex::decode(address).expect("Decoding failed");
-    Address::from_slice(address.as_slice())
-}
-
 pub struct Network {
     pub evm: EVM<CacheDB<EmptyDB>>,
     pub admin_address: Address,
@@ -26,45 +21,43 @@ pub struct Network {
 }
 
 impl Network {
+    pub fn insert_account(&mut self, address: Address, start_balance: U256) {
+        self.evm.db().unwrap().insert_account_info(
+            address,
+            AccountInfo::new(start_balance, 0, Bytecode::default()),
+        );
+    }
+
     pub fn init(admin_address: &str) -> Self {
         let admin_address = address_from_hex(admin_address);
         let mut evm = EVM::new();
-        let mut db = CacheDB::new(EmptyDB {});
+        let db = CacheDB::new(EmptyDB {});
 
-        evm.env.cfg.limit_contract_code_size = Some(0x100000);
+        evm.env.cfg.limit_contract_code_size = Some(0x1000000);
         evm.env.cfg.disable_eip3607 = true;
         evm.env.block.gas_limit = U256::MAX;
 
         let start_balance = eth_to_weth(10_000);
-
-        db.insert_account_info(
-            admin_address,
-            AccountInfo::new(start_balance, 0, Bytecode::default()),
-        );
-        db.insert_account_info(
-            Address::zero(),
-            AccountInfo::new(start_balance, 0, Bytecode::default()),
-        );
-
         evm.database(db);
 
-        Self {
+        let mut network = Self {
             evm,
             admin_address,
             contracts: Vec::new(),
-        }
+        };
+
+        network.insert_account(admin_address, start_balance);
+        network.insert_account(Address::zero(), start_balance);
+
+        network
     }
 
     pub fn from_range(start_balance: u128, r: Range<u64>, admin_address: &str) -> Self {
         let mut network = Network::init(admin_address);
-        let db = network.evm.db().unwrap();
+        let start_balance = U256::from(start_balance);
 
         for n in r {
-            let address = Address::from(n);
-            db.insert_account_info(
-                address,
-                AccountInfo::new(U256::from(start_balance), 0, Bytecode::default()),
-            );
+            network.insert_account(Address::from(n), start_balance);
         }
 
         network
@@ -81,14 +74,10 @@ impl Network {
     }
 
     pub fn insert_agents(&mut self, start_balance: u128, agents: &Vec<Box<dyn AgentSet>>) {
-        let db = self.evm.db().unwrap();
-
+        let start_balance = U256::from(start_balance);
         for agent_set in agents {
             for address in agent_set.get_call_addresses() {
-                db.insert_account_info(
-                    address,
-                    AccountInfo::new(U256::from(start_balance), 0, Bytecode::default()),
-                );
+                self.insert_account(address, start_balance);
             }
         }
     }
@@ -135,14 +124,7 @@ impl Network {
             _ => panic!("Deployment of {} failed", contract.name),
         };
 
-        let deployed_contract = DeployedContract {
-            name: contract.name,
-            abi: contract.abi,
-            address: deploy_address,
-            arg_address: convert_address(deploy_address),
-        };
-
-        self.insert_contract(deployed_contract);
+        self.insert_contract(contract.name, contract.abi, deploy_address);
 
         deploy_address
     }
@@ -223,19 +205,18 @@ impl Network {
             }
         }
 
-        let deployed_contract = DeployedContract {
-            name: contract.name,
-            abi: contract.abi,
-            address: contract.deploy_address,
-            arg_address: convert_address(contract.deploy_address),
-        };
-
-        self.insert_contract(deployed_contract);
-
+        self.insert_contract(contract.name, contract.abi, contract.deploy_address);
         return contract.deploy_address;
     }
 
-    fn insert_contract(&mut self, contract: DeployedContract) {
+    pub fn insert_contract(&mut self, name: String, abi: BaseContract, address: Address) {
+        let contract = DeployedContract {
+            name,
+            abi,
+            address,
+            arg_address: convert_address(address),
+        };
+
         self.contracts.push(contract);
     }
 
