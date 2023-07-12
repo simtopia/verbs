@@ -49,32 +49,28 @@ pub fn deploy_contracts(mut network: Network) -> Network {
         network.direct_execute(network.admin_address, 0, "transferOwnership", admin_address);
 
     // 1
-    let _supply_logic_address = load_contract(&mut network, "SupplyLogic", Vec::<Token>::new());
+    let _supply_logic_address = load_contract(&mut network, "SupplyLogic", vec![]);
 
     // 2
-    let _borrow_logic_address = load_contract(&mut network, "BorrowLogic", Vec::<Token>::new());
+    let _borrow_logic_address = load_contract(&mut network, "BorrowLogic", vec![]);
 
     // 3
-    let _liquidation_logic_address =
-        load_contract(&mut network, "LiquidationLogic", Vec::<Token>::new());
+    let _liquidation_logic_address = load_contract(&mut network, "LiquidationLogic", vec![]);
 
     // 4
-    let _emode_logic_address = load_contract(&mut network, "EModeLogic", Vec::<Token>::new());
+    let _emode_logic_address = load_contract(&mut network, "EModeLogic", vec![]);
 
     // 5
-    let _bridge_logic_addresse_logic =
-        load_contract(&mut network, "BridgeLogic", Vec::<Token>::new());
+    let _bridge_logic_addresse_logic = load_contract(&mut network, "BridgeLogic", vec![]);
 
     // 6
-    let _configurator_logic_address =
-        load_contract(&mut network, "ConfiguratorLogic", Vec::<Token>::new());
+    let _configurator_logic_address = load_contract(&mut network, "ConfiguratorLogic", vec![]);
 
     // 7
-    let _flash_loan_logic_address =
-        load_contract(&mut network, "FlashLoanLogic", Vec::<Token>::new());
+    let _flash_loan_logic_address = load_contract(&mut network, "FlashLoanLogic", vec![]);
 
     // 8
-    let _pool_logic_address = load_contract(&mut network, "PoolLogic", Vec::<Token>::new());
+    let _pool_logic_address = load_contract(&mut network, "PoolLogic", vec![]);
 
     // 9
     let treasury_controller_address = load_contract(
@@ -84,11 +80,10 @@ pub fn deploy_contracts(mut network: Network) -> Network {
     );
 
     // 10
-    let treasury_proxy_address = load_contract(&mut network, "TreasuryProxy", Vec::<Token>::new());
+    let treasury_proxy_address = load_contract(&mut network, "TreasuryProxy", vec![]);
 
     // 11
-    let treasury_address =
-        load_contract(&mut network, "Treasury-Implementation", Vec::<Token>::new());
+    let treasury_address = load_contract(&mut network, "Treasury-Implementation", vec![]);
 
     // Initialize treasury
     let _: () = network.direct_execute(network.admin_address, 11, "initialize", Address::zero());
@@ -151,20 +146,18 @@ pub fn deploy_contracts(mut network: Network) -> Network {
     );
 
     // 16
-    let _stk_aave_address = load_contract(
+    let weth_address = load_contract(
         &mut network,
-        "DAI-TestnetMintableERC20-Test",
+        "WETH-TestnetMintableERC20-Test",
         vec![
-            Token::String("STK".to_string()),
-            Token::String("STK".to_string()),
-            Token::Uint(18.into()),
+            Token::String("WETH".to_string()),
+            Token::String("WETH".to_string()),
             Token::Address(faucet_address),
         ],
     );
 
     // 17
-    let staked_aave_proxy_address =
-        load_contract(&mut network, "StakeAave-Proxy", Vec::<Token>::new());
+    let staked_aave_proxy_address = load_contract(&mut network, "StakeAave-Proxy", vec![]);
 
     // 18
     let staked_aave_v1_address = load_contract(
@@ -220,7 +213,7 @@ pub fn deploy_contracts(mut network: Network) -> Network {
     let _: () = network.direct_execute(
         network.admin_address,
         17,
-        "initialize", 
+        "initialize",
         (
             staked_aave_v1_address,
             admin_address,
@@ -293,6 +286,13 @@ pub fn deploy_contracts(mut network: Network) -> Network {
     );
 
     // 26
+    let weth_aggregator_address = load_contract(
+        &mut network,
+        "WETH-TestnetPriceAggregator-Test",
+        vec![Token::Int(400000000000u128.into())],
+    );
+
+    // 27
     let pool_address = load_contract(
         &mut network,
         "Pool-Implementation",
@@ -301,7 +301,7 @@ pub fn deploy_contracts(mut network: Network) -> Network {
 
     let _: () = network.direct_execute(
         network.admin_address,
-        26,
+        27,
         "initialize",
         address_provider_address,
     );
@@ -309,24 +309,21 @@ pub fn deploy_contracts(mut network: Network) -> Network {
     let _: () = network.direct_execute(network.admin_address, 21, "setPoolImpl", pool_address);
     let pool_proxy_address: Address = network.direct_call(network.admin_address, 21, "getPool", ());
 
-    // 27
+    // 28
     println!("Deployed Pool-Proxy to {}", pool_proxy_address);
     network.insert_contract(
         "Pool-Proxy".to_string(),
-        network.contracts[26].abi.clone(),
+        network.contracts[27].abi.clone(),
         inverse_convert_address(pool_proxy_address),
     );
 
-    // 28
-    let pool_configurator_address = load_contract(
-        &mut network,
-        "PoolConfigurator-Implementation",
-        Vec::<Token>::new(),
-    );
+    // 29
+    let pool_configurator_address =
+        load_contract(&mut network, "PoolConfigurator-Implementation", vec![]);
 
     let _: () = network.direct_execute(
         network.admin_address,
-        28,
+        29,
         "initialize",
         address_provider_address,
     );
@@ -341,21 +338,20 @@ pub fn deploy_contracts(mut network: Network) -> Network {
     let pool_configurator_proxy_address: Address =
         network.direct_call(network.admin_address, 21, "getPoolConfigurator", ());
 
-    // 29
+    // 30
     println!("Deployed Pool-Configurator-Proxy to {}", pool_proxy_address);
     network.insert_contract(
         "Pool-Configurator-Proxy".to_string(),
-        network.contracts[28].abi.clone(),
+        network.contracts[29].abi.clone(),
         inverse_convert_address(pool_configurator_proxy_address),
     );
 
-    // 30
-    let reserves_setup_helper_address =
-        load_contract(&mut network, "ReservesSetupHelper", Vec::<Token>::new());
+    // 31
+    let reserves_setup_helper_address = load_contract(&mut network, "ReservesSetupHelper", vec![]);
 
     let _: () = network.direct_execute(network.admin_address, 21, "setACLAdmin", admin_address);
 
-    // 31
+    // 32
     let acl_manager_address = load_contract(
         &mut network,
         "ACLManager-Test",
@@ -369,16 +365,16 @@ pub fn deploy_contracts(mut network: Network) -> Network {
         acl_manager_address,
     );
 
-    let _: () = network.direct_execute(network.admin_address, 31, "addPoolAdmin", admin_address);
+    let _: () = network.direct_execute(network.admin_address, 32, "addPoolAdmin", admin_address);
     let _: () = network.direct_execute(
         network.admin_address,
-        31,
+        32,
         "addEmergencyAdmin",
         admin_address,
     );
 
-    // 32
-    let _oracle_address = load_contract(
+    // 33
+    let oracle_address = load_contract(
         &mut network,
         "AaveOracle-Test",
         vec![
@@ -387,11 +383,13 @@ pub fn deploy_contracts(mut network: Network) -> Network {
                 Token::Address(aave_address),
                 Token::Address(token_a_address),
                 Token::Address(token_b_address),
+                Token::Address(weth_address),
             ]),
             Token::Array(vec![
                 Token::Address(aave_aggregator_address),
                 Token::Address(token_a_aggregator_address),
                 Token::Address(token_b_aggregator_address),
+                Token::Address(weth_aggregator_address),
             ]),
             Token::Address(Address::zero()),
             Token::Address(Address::zero()),
@@ -399,34 +397,37 @@ pub fn deploy_contracts(mut network: Network) -> Network {
         ],
     );
 
+    let _: () = network.direct_execute(network.admin_address, 21, "setPriceOracle", oracle_address);
+
     let _: () = network.direct_execute(
         network.admin_address,
-        29,
+        30,
         "updateFlashloanPremiumTotal",
         9u128,
     );
     let _: () = network.direct_execute(
         network.admin_address,
-        29,
+        30,
         "updateFlashloanPremiumToProtocol",
         0u128,
     );
 
-    // 33
+    // 34
     let emission_manager_address = load_contract(
         &mut network,
         "EmissionManager",
         vec![Token::Address(admin_address)],
     );
 
-    // 34
+    // 35
     let rewards_controller_address = load_contract(
         &mut network,
         "IncentivesV2-Implementation",
         vec![Token::Address(emission_manager_address)],
     );
 
-    let _: () = network.direct_execute(network.admin_address, 34, "initialize", Address::zero());
+    let _: () = network.direct_execute(network.admin_address, 35, "initialize", Address::zero());
+
     let id =
         data_bytes_from_hex("703c2c8634bed68d98c029c18f310e7f7ec0e5d6342c590190b3cb8b3ba54532")
             .to_ascii_lowercase();
@@ -441,25 +442,25 @@ pub fn deploy_contracts(mut network: Network) -> Network {
     let rewards_controller_proxy_address: Address =
         network.direct_execute(network.admin_address, 21, "getAddress", id);
 
-    // 35
+    // 36
     println!(
         "Deployed IncentivesV2-Proxy to {}",
         rewards_controller_proxy_address
     );
     network.insert_contract(
         "IncentivesV2-Proxy".to_string(),
-        network.contracts[34].abi.clone(),
+        network.contracts[35].abi.clone(),
         inverse_convert_address(rewards_controller_proxy_address),
     );
 
     let _: () = network.direct_execute(
         network.admin_address,
-        33,
+        34,
         "setRewardsController",
         rewards_controller_proxy_address,
     );
 
-    // 36
+    // 37
     let _pull_rewards_transfer_address = load_contract(
         &mut network,
         "PullRewardsTransferStrategy",
@@ -470,7 +471,7 @@ pub fn deploy_contracts(mut network: Network) -> Network {
         ],
     );
 
-    // 37
+    // 38
     let _staked_token_transfer_strategy_address = load_contract(
         &mut network,
         "StakedTokenTransferStrategy",
@@ -481,46 +482,17 @@ pub fn deploy_contracts(mut network: Network) -> Network {
         ],
     );
 
-    let _: bool = network.direct_execute(
-        network.admin_address,
-        15,
-        "approve",
-        (staked_aave_proxy_address, u128::MAX),
-    );
     let _: () = network.direct_execute(
         network.admin_address,
-        33,
+        34,
         "transferOwnership",
         admin_address,
     );
 
-    // 38
+    // 39
     let a_token_address = load_contract(
         &mut network,
         "AToken-Test",
-        vec![Token::Address(pool_proxy_address)],
-    );
-
-    let _: () = network.direct_execute(
-        network.admin_address,
-        38,
-        "initialize",
-        (
-            pool_proxy_address,
-            Address::zero(),
-            Address::zero(),
-            Address::zero(),
-            0u128,
-            "ATOKEN_IMPL".to_string(),
-            "ATOKEN_IMPL".to_string(),
-            Bytes::default(),
-        ),
-    );
-
-    // 39
-    let _delegation_aware_token_address = load_contract(
-        &mut network,
-        "DelegationAwareAToken-Test",
         vec![Token::Address(pool_proxy_address)],
     );
 
@@ -534,16 +506,16 @@ pub fn deploy_contracts(mut network: Network) -> Network {
             Address::zero(),
             Address::zero(),
             0u128,
-            "DELEGATION_AWARE_ATOKEN_IMPL".to_string(),
-            "DELEGATION_AWARE_ATOKEN_IMPL".to_string(),
-            Bytes::default(),
+            "ATOKEN_IMPL".to_string(),
+            "ATOKEN_IMPL".to_string(),
+            data_bytes_from_hex("00"),
         ),
     );
 
     // 40
-    let stable_debt_token_address = load_contract(
+    let _delegation_aware_token_address = load_contract(
         &mut network,
-        "StableDebtToken-Test",
+        "DelegationAwareAToken-Test",
         vec![Token::Address(pool_proxy_address)],
     );
 
@@ -555,17 +527,18 @@ pub fn deploy_contracts(mut network: Network) -> Network {
             pool_proxy_address,
             Address::zero(),
             Address::zero(),
+            Address::zero(),
             0u128,
-            "STABLE_DEBT_TOKEN_IMPL".to_string(),
-            "STABLE_DEBT_TOKEN_IMPL".to_string(),
-            Bytes::default(),
+            "DELEGATION_AWARE_ATOKEN_IMPL".to_string(),
+            "DELEGATION_AWARE_ATOKEN_IMPL".to_string(),
+            data_bytes_from_hex("00"),
         ),
     );
 
     // 41
-    let variable_debt_token_address = load_contract(
+    let stable_debt_token_address = load_contract(
         &mut network,
-        "VariableDebtToken-Test",
+        "StableDebtToken-Test",
         vec![Token::Address(pool_proxy_address)],
     );
 
@@ -578,13 +551,35 @@ pub fn deploy_contracts(mut network: Network) -> Network {
             Address::zero(),
             Address::zero(),
             0u128,
-            "VARIABLE_DEBT_TOKEN_IMPL".to_string(),
-            "VARIABLE_DEBT_TOKEN_IMPL".to_string(),
-            Bytes::default(),
+            "STABLE_DEBT_TOKEN_IMPL".to_string(),
+            "STABLE_DEBT_TOKEN_IMPL".to_string(),
+            data_bytes_from_hex("00"),
         ),
     );
 
     // 42
+    let variable_debt_token_address = load_contract(
+        &mut network,
+        "VariableDebtToken-Test",
+        vec![Token::Address(pool_proxy_address)],
+    );
+
+    let _: () = network.direct_execute(
+        network.admin_address,
+        42,
+        "initialize",
+        (
+            pool_proxy_address,
+            Address::zero(),
+            Address::zero(),
+            0u128,
+            "VARIABLE_DEBT_TOKEN_IMPL".to_string(),
+            "VARIABLE_DEBT_TOKEN_IMPL".to_string(),
+            data_bytes_from_hex("00"),
+        ),
+    );
+
+    // 43
     let reserve_strategy_volatile_one_address = load_contract(
         &mut network,
         "ReserveStrategy-rateStrategyVolatileOne",
@@ -602,7 +597,7 @@ pub fn deploy_contracts(mut network: Network) -> Network {
         ],
     );
 
-    // 43
+    // 44
     let reserve_strategy_stable_one_address = load_contract(
         &mut network,
         "ReserveStrategy-rateStrategyStableOne",
@@ -620,7 +615,7 @@ pub fn deploy_contracts(mut network: Network) -> Network {
         ],
     );
 
-    // 44
+    // 45
     let reserve_strategy_stable_two_address = load_contract(
         &mut network,
         "ReserveStrategy-rateStrategyStableTwo",
@@ -640,7 +635,7 @@ pub fn deploy_contracts(mut network: Network) -> Network {
 
     let _: () = network.direct_execute(
         network.admin_address,
-        29,
+        30,
         "initReserves",
         vec![
             (
@@ -694,19 +689,36 @@ pub fn deploy_contracts(mut network: Network) -> Network {
                 "StableDebtB".to_string(),
                 data_bytes_from_hex("10"),
             ),
+            (
+                a_token_address,
+                stable_debt_token_address,
+                variable_debt_token_address,
+                18u8,
+                reserve_strategy_volatile_one_address,
+                weth_address,
+                treasury_proxy_address,
+                rewards_controller_proxy_address,
+                "WETH".to_string(),
+                "aWETH".to_string(),
+                "WETH Variable Debt".to_string(),
+                "VariableDebtWETH".to_string(),
+                "WETH Stable Debt".to_string(),
+                "StableDebtWETH".to_string(),
+                data_bytes_from_hex("10"),
+            ),
         ],
     );
 
     let _: () = network.direct_execute(
         network.admin_address,
-        31,
+        32,
         "addRiskAdmin",
         reserves_setup_helper_address,
     );
 
     let _: () = network.direct_execute(
         network.admin_address,
-        30,
+        31,
         "configureReserves",
         (
             pool_configurator_proxy_address,
@@ -747,32 +759,59 @@ pub fn deploy_contracts(mut network: Network) -> Network {
                     true,
                     true,
                 ),
+                (
+                    weth_address,
+                    8000u128,
+                    8250u128,
+                    10500u128,
+                    1000u128,
+                    0u128,
+                    0u128,
+                    true,
+                    true,
+                    true,
+                ),
             ],
         ),
     );
 
     let _: () = network.direct_execute(
         network.admin_address,
-        31,
+        32,
         "removeRiskAdmin",
         reserves_setup_helper_address,
     );
 
+    // 46
+    let _weth_gateway_address = load_contract(
+        &mut network,
+        "WrappedTokenGatewayV3",
+        vec![
+            Token::Address(weth_address),
+            Token::Address(admin_address),
+            Token::Address(pool_proxy_address),
+        ],
+    );
+
+    // 47
+    let _wallet_balance_provider_address =
+        load_contract(&mut network, "WalletBalanceProvider", vec![]);
+
     let _: () = network.direct_execute(
         network.admin_address,
-        29,
+        30,
         "setBorrowableInIsolation",
         (token_a_address, true),
     );
     let _: () = network.direct_execute(
         network.admin_address,
-        29,
+        30,
         "setBorrowableInIsolation",
         (token_b_address, true),
     );
     let _: () = network.direct_execute(
         network.admin_address,
-        29,
+        30,
         "setEModeCategory",
         (
             1u8,
@@ -783,6 +822,50 @@ pub fn deploy_contracts(mut network: Network) -> Network {
             "Stable-EMode".to_string(),
         ),
     );
+
+    let _: () = network.direct_execute(
+        network.admin_address,
+        30,
+        "setAssetEModeCategory",
+        (token_a_address, 1u128),
+    );
+
+    let _: () = network.direct_execute(
+        network.admin_address,
+        30,
+        "setAssetEModeCategory",
+        (token_b_address, 1u128),
+    );
+
+    let _: () = network.direct_execute(
+        network.admin_address,
+        30,
+        "setLiquidationProtocolFee",
+        (aave_address, 1000u128),
+    );
+
+    let _: () = network.direct_execute(
+        network.admin_address,
+        30,
+        "setLiquidationProtocolFee",
+        (token_a_address, 1000u128),
+    );
+
+    let _: () = network.direct_execute(
+        network.admin_address,
+        30,
+        "setLiquidationProtocolFee",
+        (token_b_address, 1000u128),
+    );
+
+    let _: () = network.direct_execute(
+        network.admin_address,
+        30,
+        "setLiquidationProtocolFee",
+        (weth_address, 1000u128),
+    );
+
+    let _: () = network.direct_execute(network.admin_address, 30, "setPoolPause", false);
 
     network
 }
