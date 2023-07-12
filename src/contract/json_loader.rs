@@ -77,12 +77,6 @@ pub fn load_params(
         ),
     };
 
-    let constructor_args = params_json
-        .get("constructor_args")
-        .unwrap()
-        .as_array()
-        .unwrap();
-
     let encoded_constructor_args: Bytes;
 
     if (abi.abi().constructor.is_none()) || (!storage_values.is_none()) {
@@ -91,6 +85,12 @@ pub fn load_params(
         let mut constructor_tokens: Vec<Token>;
 
         if deployment_args.is_none() {
+            let constructor_args = params_json
+                .get("constructor_args")
+                .unwrap()
+                .as_array()
+                .unwrap();
+
             constructor_tokens = Vec::new();
 
             for (a, b) in Iterator::zip(
