@@ -240,6 +240,7 @@ impl Network {
         let args = contract.abi.encode(function_name, args).unwrap();
 
         Call {
+            function_name,
             contract_idx,
             callee,
             transact_to: contract.address,
@@ -312,9 +313,10 @@ impl Network {
 
     fn call_from_call(&mut self, call: Call) {
         let contract = self.contracts.get(call.contract_idx).unwrap();
+        let function_name = call.function_name;
         let tx = DeployedContract::unwrap_call(call);
         let execution_result = self.evm.execute(tx);
-        let _ = result_to_output(contract.abi.abi(), "call", execution_result);
+        let _ = result_to_output(contract.abi.abi(), function_name, execution_result);
     }
 
     pub fn process_transactions<D: Detokenize, T: Tokenize>(

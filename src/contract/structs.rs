@@ -30,6 +30,7 @@ pub struct Transaction<T: Tokenize> {
 }
 
 pub struct Call {
+    pub function_name: &'static str,
     pub contract_idx: usize,
     pub callee: Address,
     pub transact_to: Address,
@@ -44,6 +45,7 @@ impl DeployedContract {
             .unwrap();
 
         Call {
+            function_name: transaction.function_name,
             contract_idx: transaction.contract_idx,
             callee: transaction.callee,
             transact_to: self.address,
