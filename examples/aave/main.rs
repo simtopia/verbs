@@ -26,15 +26,23 @@ pub fn main() {
     let token_b_decimals = token_b_config.0;
     let token_b_ltv = token_b_config.1;
 
+    let token_a_address = network.get_contract_address(TOKEN_A_IDX);
+    let token_b_address = network.get_contract_address(TOKEN_B_IDX);
+
     let borrow_agent_set = deployment::initialise_borrow_agents(
         100,
         0.01,
         token_b_ltv,
         token_b_decimals,
-        network.get_contract_address(TOKEN_A_IDX),
-        network.get_contract_address(TOKEN_B_IDX),
+        token_a_address,
+        token_b_address,
     );
-    let liquidation_agent_set = deployment::initialise_liquidation_agents(2);
+    let liquidation_agent_set = deployment::initialise_liquidation_agents(
+        2,
+        token_b_address,
+        token_a_address,
+        borrow_agent_set.get_addresses(),
+    );
 
     let mut agents: Vec<Box<dyn AgentSet>> = Vec::new();
 

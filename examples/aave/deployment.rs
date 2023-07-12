@@ -86,9 +86,21 @@ pub fn initialise_borrow_agents(
     AgentVec::from(agents)
 }
 
-pub fn initialise_liquidation_agents(n_agents: usize) -> AgentVec<U256, LiquidationAgent> {
+pub fn initialise_liquidation_agents(
+    n_agents: usize,
+    supply_token_address: Address,
+    borrow_token_address: Address,
+    liquidation_addresses: Vec<Address>,
+) -> AgentVec<U256, LiquidationAgent> {
     let agents = (200..200 + n_agents)
-        .map(|i| LiquidationAgent::new(i))
+        .map(|i| {
+            LiquidationAgent::new(
+                i,
+                supply_token_address,
+                borrow_token_address,
+                liquidation_addresses.clone(),
+            )
+        })
         .collect();
     AgentVec::from(agents)
 }
