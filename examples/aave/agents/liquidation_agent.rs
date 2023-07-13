@@ -9,8 +9,8 @@ use rust_sim::network::Network;
 pub struct LiquidationAgent {
     call_address: RevmAddress,
     address: Address,
-    _supply_token_address: Address,
-    _borrow_token_address: Address,
+    collateral_token_address: Address,
+    debt_token_address: Address,
     liquidation_addresses: Vec<Address>,
 }
 
@@ -22,8 +22,8 @@ fn health_factor(network: &mut Network, address: Address) -> U256 {
 impl LiquidationAgent {
     pub fn new(
         idx: usize,
-        supply_token_address: Address,
-        borrow_token_address: Address,
+        collateral_token_address: Address,
+        debt_token_address: Address,
         liquidation_addresses: Vec<Address>,
     ) -> Self {
         let idx_u64 = u64::try_from(idx).unwrap();
@@ -33,24 +33,41 @@ impl LiquidationAgent {
         LiquidationAgent {
             call_address,
             address,
-            _supply_token_address: supply_token_address,
-            _borrow_token_address: borrow_token_address,
+            collateral_token_address,
+            debt_token_address,
             liquidation_addresses,
         }
     }
 }
 
 impl Agent for LiquidationAgent {
-    fn update(&mut self, _rng: &mut Rng, network: &mut Network) -> Option<Call> {
+    fn update(&mut self, rng: &mut Rng, network: &mut Network) -> Option<Call> {
         // TODO: Can calculate amount to cover using this
         //  https://docs.aave.com/developers/guides/liquidations#executing-the-liquidation-call
-        let _health_factors: Vec<(Address, U256)> = self
+        let health_factors: Vec<(Address, U256)> = self
             .liquidation_addresses
             .iter()
             .map(|x| (x.clone(), health_factor(network, x.clone())))
             .filter(|x| x.1 < U256::from(1000u128))
             .collect();
-        None
+
+        let n_liquidation = health_factors.len();
+
+        if n_liquidation > 0 {
+            let i = rng.usize(0..n_liquidation);
+            let selection = health_factors[i];
+            let c = calls::liquidation_call(
+                network,
+                self.collateral_token_address,
+                self.debt_token_address,
+                selection.0,
+                self.address,
+                U256::MAX,
+            );
+            Some(c)
+        } else {
+            None
+        }
     }
 
     fn get_call_address(&self) -> RevmAddress {

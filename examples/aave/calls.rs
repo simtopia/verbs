@@ -38,6 +38,28 @@ pub fn borrow_call(
     )
 }
 
+pub fn liquidation_call(
+    network: &mut Network,
+    collateral_token_address: Address,
+    debt_token_address: Address,
+    user_address: Address,
+    liquidator_address: Address,
+    amount: U256,
+) -> Call {
+    network.create_call(
+        inverse_convert_address(liquidator_address),
+        POOL_INDEX,
+        "LiquidationCall",
+        (
+            collateral_token_address,
+            debt_token_address,
+            user_address,
+            amount,
+            true,
+        ),
+    )
+}
+
 pub fn get_reserve_configuration_data(
     network: &mut Network,
     token_idx: usize,
