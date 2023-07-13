@@ -3,7 +3,7 @@ use rust_sim::agent::{Agent, AgentVec};
 use rust_sim::contract::load_contract;
 use rust_sim::network::Network;
 use rust_sim::sim_runner::SimRunner;
-use simple_agent::SimpleAgent;
+use simple_agent::{DummyAdminAgent, SimpleAgent};
 mod simple_agent;
 
 pub fn main() {
@@ -26,6 +26,8 @@ pub fn main() {
     let mut sim = Network::from_range(start_balance, 1..n_users.try_into().unwrap(), admin_address);
     sim.deploy_contract(contract);
 
+    let admin_agent = DummyAdminAgent {};
+
     let mut agents = Vec::<SimpleAgent>::new();
 
     for i in 0..n_users {
@@ -46,7 +48,7 @@ pub fn main() {
 
     let agent_set = AgentVec::from(agents);
 
-    let mut sim_runner: SimRunner = SimRunner::new(sim, n_steps);
+    let mut sim_runner: SimRunner<DummyAdminAgent> = SimRunner::new(sim, admin_agent, n_steps);
     sim_runner.insert_agent_set(Box::new(agent_set));
 
     sim_runner.run(0);

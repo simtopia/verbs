@@ -29,6 +29,9 @@ pub fn main() {
     let token_a_address = network.get_contract_address(TOKEN_A_IDX);
     let token_b_address = network.get_contract_address(TOKEN_B_IDX);
 
+    let price_admin_agent =
+        agents::PriceAdminAgent::new(10000000u128, 10000000u128, token_a_address, token_b_address);
+
     let borrow_agent_set = deployment::initialise_borrow_agents(
         100,
         0.01,
@@ -68,7 +71,8 @@ pub fn main() {
     let network =
         deployment::admin_mint_and_supply(network, TOKEN_B_IDX, 10000000000000000000000000000000);
 
-    let mut sim_runner: SimRunner = SimRunner::from_agents(network, 100, agents);
+    let mut sim_runner: SimRunner<agents::PriceAdminAgent> =
+        SimRunner::from_agents(network, price_admin_agent, 100, agents);
 
     sim_runner.run(0);
 }

@@ -1,26 +1,34 @@
-use crate::agent::AgentSet;
+use crate::agent::{traits::AdminAgent, AgentSet};
 use crate::contract::Call;
 use crate::network::Network;
 use kdam::tqdm;
 
-pub struct SimRunner {
+pub struct SimRunner<A: AdminAgent> {
     network: Network,
+    pub admin_agent: A,
     pub agents: Vec<Box<dyn AgentSet>>,
     n_steps: usize,
 }
 
-impl SimRunner {
-    pub fn new(network: Network, n_steps: usize) -> Self {
+impl<A: AdminAgent> SimRunner<A> {
+    pub fn new(network: Network, admin_agent: A, n_steps: usize) -> Self {
         SimRunner {
             network,
+            admin_agent,
             agents: Vec::<Box<dyn AgentSet>>::new(),
             n_steps,
         }
     }
 
-    pub fn from_agents(network: Network, n_steps: usize, agents: Vec<Box<dyn AgentSet>>) -> Self {
+    pub fn from_agents(
+        network: Network,
+        admin_agent: A,
+        n_steps: usize,
+        agents: Vec<Box<dyn AgentSet>>,
+    ) -> Self {
         SimRunner {
             network,
+            admin_agent,
             agents,
             n_steps,
         }
@@ -35,6 +43,9 @@ impl SimRunner {
 
         for _ in tqdm!(0..self.n_steps) {
             let n = &mut self.network;
+
+            self.admin_agent.update(&mut rng, n);
+
             let mut calls: Vec<Call> = (&mut self.agents)
                 .into_iter()
                 .map(|x| x.call_agents(&mut rng, n))

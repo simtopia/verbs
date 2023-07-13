@@ -4,6 +4,10 @@ use ethers_core::types::Address;
 use fastrand::Rng;
 use revm::primitives::Address as RevmAddress;
 
+pub trait AdminAgent {
+    fn update(&mut self, rng: &mut Rng, network: &mut Network);
+}
+
 pub trait Agent {
     fn update(&mut self, rng: &mut Rng, network: &mut Network) -> Option<Call>;
     fn get_call_address(&self) -> RevmAddress;

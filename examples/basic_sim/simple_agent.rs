@@ -1,9 +1,15 @@
 use ethers_core::types::{Address, U256};
 use fastrand::Rng;
 use revm::primitives::Address as RevmAddress;
-use rust_sim::agent::{Agent, RecordedAgent};
+use rust_sim::agent::{AdminAgent, Agent, RecordedAgent};
 use rust_sim::contract::Call;
 use rust_sim::network::Network;
+
+pub struct DummyAdminAgent {}
+
+impl AdminAgent for DummyAdminAgent {
+    fn update(&mut self, _rng: &mut Rng, _network: &mut Network) {}
+}
 
 pub struct SimpleAgent {
     pub call_address: RevmAddress,
