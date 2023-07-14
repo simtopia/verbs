@@ -267,14 +267,14 @@ pub fn deploy_contracts(mut network: Network) -> Network {
     // 23
     let token_a_aggregator_address = load_contract(
         &mut network,
-        "DAI-TestnetPriceAggregator-Test",
+        "MockAggregator",
         vec![Token::Int(30000000000u128.into())],
     );
 
     // 24
     let token_b_aggregator_address = load_contract(
         &mut network,
-        "DAI-TestnetPriceAggregator-Test",
+        "MockAggregator",
         vec![Token::Int(100000000u128.into())],
     );
 

@@ -92,3 +92,7 @@ pub fn get_user_data(
         account_address,
     )
 }
+
+pub fn set_token_price(network: &mut Network, idx: usize, price: i128) {
+    let _: bool = network.direct_call(network.admin_address, idx, "setValue", price);
+}

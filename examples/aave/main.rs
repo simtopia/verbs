@@ -10,6 +10,8 @@ const FAUCET_INDEX: usize = 12;
 const TOKEN_A_IDX: usize = 13;
 const TOKEN_B_IDX: usize = 14;
 const DATA_PROVIDER_INDEX: usize = 22;
+const TOKEN_A_ORACLE_IDX: usize = 23;
+const TOKEN_B_ORACLE_IDX: usize = 24;
 const POOL_INDEX: usize = 28;
 const ORACLE_INDEX: usize = 33;
 
@@ -29,8 +31,15 @@ pub fn main() {
     let token_a_address = network.get_contract_address(TOKEN_A_IDX);
     let token_b_address = network.get_contract_address(TOKEN_B_IDX);
 
-    let price_admin_agent =
-        agents::PriceAdminAgent::new(10000000u128, 10000000u128, token_a_address, token_b_address);
+    let price_admin_agent = agents::PriceAdminAgent::new(
+        10000000i128,
+        10000000i128,
+        TOKEN_A_ORACLE_IDX,
+        TOKEN_B_ORACLE_IDX,
+        0.0,
+        0.01,
+        0.4,
+    );
 
     let borrow_agent_set = deployment::initialise_borrow_agents(
         100,
