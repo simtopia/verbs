@@ -41,7 +41,7 @@ pub fn main() {
         0.4,
     );
 
-    let borrow_agent_set = deployment::initialise_borrow_agents(
+    let mut borrow_agent_set = deployment::initialise_borrow_agents(
         100,
         0.01,
         token_b_ltv,
@@ -49,17 +49,17 @@ pub fn main() {
         token_a_address,
         token_b_address,
     );
-    let liquidation_agent_set = deployment::initialise_liquidation_agents(
+    let mut liquidation_agent_set = deployment::initialise_liquidation_agents(
         2,
         token_b_address,
         token_a_address,
         borrow_agent_set.get_addresses(),
     );
 
-    let mut agents: Vec<Box<dyn AgentSet>> = Vec::new();
+    let mut agents: Vec<Box<&mut dyn AgentSet>> = Vec::new();
 
-    agents.push(Box::new(borrow_agent_set));
-    agents.push(Box::new(liquidation_agent_set));
+    agents.push(Box::new(&mut borrow_agent_set));
+    agents.push(Box::new(&mut liquidation_agent_set));
 
     network.insert_agents(start_balance, &agents);
 

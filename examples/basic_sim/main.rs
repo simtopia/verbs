@@ -46,12 +46,12 @@ pub fn main() {
         );
     }
 
-    let agent_set = AgentVec::from(agents);
+    let mut agent_set = AgentVec::from(agents);
 
     let mut sim_runner: SimRunner<DummyAdminAgent> = SimRunner::new(sim, admin_agent, n_steps);
-    sim_runner.insert_agent_set(Box::new(agent_set));
+    sim_runner.insert_agent_set(Box::new(&mut agent_set));
 
     sim_runner.run(0);
 
-    sim_runner.agents[0].records_to_csv("./output.csv");
+    let _agent_data = agent_set.get_records();
 }

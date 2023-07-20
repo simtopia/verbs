@@ -95,7 +95,7 @@ impl Network {
 
     pub fn from_agents(
         start_balance: u128,
-        agents: &Vec<Box<dyn AgentSet>>,
+        agents: &Vec<Box<&mut dyn AgentSet>>,
         admin_address: &str,
     ) -> Self {
         let mut network = Network::init(admin_address);
@@ -103,7 +103,7 @@ impl Network {
         network
     }
 
-    pub fn insert_agents(&mut self, start_balance: u128, agents: &Vec<Box<dyn AgentSet>>) {
+    pub fn insert_agents(&mut self, start_balance: u128, agents: &Vec<Box<&mut dyn AgentSet>>) {
         let start_balance = U256::from(start_balance);
         for agent_set in agents {
             for address in agent_set.get_call_addresses() {

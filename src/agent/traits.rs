@@ -21,7 +21,6 @@ pub trait RecordedAgent<R> {
 pub trait AgentSet {
     fn call_agents(&mut self, rng: &mut fastrand::Rng, network: &mut Network) -> Vec<Call>;
     fn record_agents(&mut self);
-    fn records_to_csv(&self, path: &str);
     fn get_call_addresses(&self) -> Vec<RevmAddress>;
     fn get_addresses(&self) -> Vec<Address>;
 }

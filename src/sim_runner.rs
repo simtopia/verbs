@@ -3,19 +3,19 @@ use crate::contract::Call;
 use crate::network::Network;
 use kdam::tqdm;
 
-pub struct SimRunner<A: AdminAgent> {
+pub struct SimRunner<'a, A: AdminAgent> {
     network: Network,
     pub admin_agent: A,
-    pub agents: Vec<Box<dyn AgentSet>>,
+    pub agents: Vec<Box<&'a mut dyn AgentSet>>,
     n_steps: usize,
 }
 
-impl<A: AdminAgent> SimRunner<A> {
+impl<'a, A: AdminAgent> SimRunner<'a, A> {
     pub fn new(network: Network, admin_agent: A, n_steps: usize) -> Self {
         SimRunner {
             network,
             admin_agent,
-            agents: Vec::<Box<dyn AgentSet>>::new(),
+            agents: Vec::<Box<&mut dyn AgentSet>>::new(),
             n_steps,
         }
     }
@@ -24,7 +24,7 @@ impl<A: AdminAgent> SimRunner<A> {
         network: Network,
         admin_agent: A,
         n_steps: usize,
-        agents: Vec<Box<dyn AgentSet>>,
+        agents: Vec<Box<&'a mut dyn AgentSet>>,
     ) -> Self {
         SimRunner {
             network,
@@ -34,7 +34,7 @@ impl<A: AdminAgent> SimRunner<A> {
         }
     }
 
-    pub fn insert_agent_set(&mut self, agent_set: Box<dyn AgentSet>) {
+    pub fn insert_agent_set(&mut self, agent_set: Box<&'a mut dyn AgentSet>) {
         self.agents.push(agent_set);
     }
 
