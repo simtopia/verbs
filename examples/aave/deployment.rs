@@ -3,14 +3,14 @@ use crate::{FAUCET_INDEX, POOL_INDEX};
 use ethers_core::types::{Address, U256};
 use rust_sim::agent::AgentVec;
 use rust_sim::network::Network;
-use rust_sim::utils::{convert_address, inverse_convert_address};
+use rust_sim::utils::Cast;
 
 pub fn admin_mint_and_supply(mut network: Network, token_index: usize, amount: u128) -> Network {
     let amount = U256::from(amount);
-    let faucet_address = inverse_convert_address(network.get_contract_address(FAUCET_INDEX));
+    let faucet_address = network.get_contract_address(FAUCET_INDEX).cast();
     let pool_address = network.get_contract_address(POOL_INDEX);
     let token_address = network.get_contract_address(token_index);
-    let admin_address = convert_address(network.admin_address);
+    let admin_address = network.admin_address.cast();
 
     let _minted: U256 = network.direct_execute(
         faucet_address,
@@ -43,7 +43,7 @@ pub fn approve_and_mint(
     amount: u128,
 ) -> Network {
     let amount = U256::from(amount);
-    let faucet_address = inverse_convert_address(network.get_contract_address(FAUCET_INDEX));
+    let faucet_address = network.get_contract_address(FAUCET_INDEX).cast();
     let pool_address = network.get_contract_address(POOL_INDEX);
     let token_address = network.get_contract_address(token_index);
 
@@ -55,7 +55,7 @@ pub fn approve_and_mint(
             (token_address, address, amount),
         );
         let _amount: U256 = network.direct_call(faucet_address, token_index, "balanceOf", address);
-        let a = inverse_convert_address(address);
+        let a = address.cast();
         let _approved: bool =
             network.direct_execute(a, token_index, "approve", (pool_address, U256::MAX));
     }

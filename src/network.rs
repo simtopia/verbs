@@ -1,6 +1,6 @@
 use crate::agent::AgentSet;
 use crate::contract::{Call, ContractDefinition, DeployedContract, Transaction};
-use crate::utils::{address_from_hex, convert_address, eth_to_weth};
+use crate::utils::{address_from_hex, Cast, Eth};
 use ethabi::Contract as ABI;
 use ethers_contract::BaseContract;
 use ethers_core::abi::{Detokenize, Tokenize};
@@ -67,7 +67,7 @@ impl Network {
         evm.env.cfg.disable_eip3607 = true;
         evm.env.block.gas_limit = U256::MAX;
 
-        let start_balance = eth_to_weth(10_000);
+        let start_balance = U256::to_weth(10_000);
         evm.database(db);
 
         let mut network = Self {
@@ -201,7 +201,7 @@ impl Network {
                     panic!("Account at {} already exists", contract.deploy_address);
                 };
 
-                let account = AccountInfo::new(eth_to_weth(1), 0, contract.bytecode);
+                let account = AccountInfo::new(U256::to_weth(1), 0, contract.bytecode);
 
                 db.insert_account_info(contract.deploy_address, account);
 
@@ -223,7 +223,7 @@ impl Network {
             name,
             abi,
             address,
-            arg_address: convert_address(address),
+            arg_address: address.cast(),
         };
 
         self.contracts.push(contract);

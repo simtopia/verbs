@@ -5,7 +5,7 @@ use ethers_core::{
 };
 use rust_sim::contract::load_contract as _load_contract;
 use rust_sim::network::Network;
-use rust_sim::utils::{convert_address, data_bytes_from_hex, inverse_convert_address};
+use rust_sim::utils::{data_bytes_from_hex, Cast};
 
 fn load_contract(
     network: &mut Network,
@@ -24,7 +24,7 @@ fn load_contract(
 
     let contract_address = network.manually_deploy_contract(contract);
     println!("Deployed {} to {}", contract_name, contract_address);
-    convert_address(contract_address)
+    contract_address.cast()
 }
 
 fn initialisation_data(address: Address) -> Bytes {
@@ -36,7 +36,7 @@ fn initialisation_data(address: Address) -> Bytes {
 }
 
 pub fn deploy_contracts(mut network: Network) -> Network {
-    let admin_address = convert_address(network.admin_address);
+    let admin_address = network.admin_address.cast();
 
     // 0
     let _address_provider_registry_address = load_contract(
@@ -314,7 +314,7 @@ pub fn deploy_contracts(mut network: Network) -> Network {
     network.insert_contract(
         "Pool-Proxy".to_string(),
         network.contracts[27].abi.clone(),
-        inverse_convert_address(pool_proxy_address),
+        pool_proxy_address.cast(),
     );
 
     // 29
@@ -343,7 +343,7 @@ pub fn deploy_contracts(mut network: Network) -> Network {
     network.insert_contract(
         "Pool-Configurator-Proxy".to_string(),
         network.contracts[29].abi.clone(),
-        inverse_convert_address(pool_configurator_proxy_address),
+        pool_configurator_proxy_address.cast(),
     );
 
     // 31
@@ -450,7 +450,7 @@ pub fn deploy_contracts(mut network: Network) -> Network {
     network.insert_contract(
         "IncentivesV2-Proxy".to_string(),
         network.contracts[35].abi.clone(),
-        inverse_convert_address(rewards_controller_proxy_address),
+        rewards_controller_proxy_address.cast(),
     );
 
     let _: () = network.direct_execute(

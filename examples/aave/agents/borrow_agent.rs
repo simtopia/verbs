@@ -5,7 +5,7 @@ use revm::primitives::Address as RevmAddress;
 use rust_sim::agent::{Agent, RecordedAgent};
 use rust_sim::contract::Call;
 use rust_sim::network::Network;
-use rust_sim::utils::convert_address;
+use rust_sim::utils::Cast;
 
 pub struct BorrowAgent {
     call_address: RevmAddress,
@@ -29,7 +29,7 @@ impl BorrowAgent {
     ) -> Self {
         let idx_u64 = u64::try_from(idx).unwrap();
         let call_address = RevmAddress::from(idx_u64);
-        let address = convert_address(call_address);
+        let address = call_address.cast();
 
         BorrowAgent {
             call_address,

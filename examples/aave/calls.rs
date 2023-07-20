@@ -3,7 +3,7 @@ use ethabi::{Address, Uint};
 use ethers_core::types::U256;
 use rust_sim::contract::Call;
 use rust_sim::network::Network;
-use rust_sim::utils::inverse_convert_address;
+use rust_sim::utils::Cast;
 
 pub fn supply_call(
     network: &mut Network,
@@ -12,7 +12,7 @@ pub fn supply_call(
     amount: u128,
 ) -> Call {
     network.create_call(
-        inverse_convert_address(user_address),
+        user_address.cast(),
         POOL_INDEX,
         "supply",
         (
@@ -31,7 +31,7 @@ pub fn borrow_call(
     amount: U256,
 ) -> Call {
     network.create_call(
-        inverse_convert_address(user_address),
+        user_address.cast(),
         POOL_INDEX,
         "borrow",
         (token_address, amount, 1u128, 0u16, user_address),
@@ -47,7 +47,7 @@ pub fn liquidation_call(
     amount: U256,
 ) -> Call {
     network.create_call(
-        inverse_convert_address(liquidator_address),
+        liquidator_address.cast(),
         POOL_INDEX,
         "LiquidationCall",
         (
