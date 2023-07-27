@@ -3,10 +3,13 @@ use crate::contract::Call;
 use crate::network::Network;
 use kdam::tqdm;
 
+pub type AgentSetRef<'a> = Box<&'a mut dyn AgentSet>;
+pub type AgentSetVec<'a> = Vec<AgentSetRef<'a>>;
+
 pub struct SimRunner<'a, A: AdminAgent> {
     network: Network,
     pub admin_agent: A,
-    pub agents: Vec<Box<&'a mut dyn AgentSet>>,
+    pub agents: AgentSetVec<'a>,
     n_steps: usize,
 }
 
@@ -15,7 +18,7 @@ impl<'a, A: AdminAgent> SimRunner<'a, A> {
         SimRunner {
             network,
             admin_agent,
-            agents: Vec::<Box<&mut dyn AgentSet>>::new(),
+            agents: AgentSetVec::new(),
             n_steps,
         }
     }
@@ -24,7 +27,7 @@ impl<'a, A: AdminAgent> SimRunner<'a, A> {
         network: Network,
         admin_agent: A,
         n_steps: usize,
-        agents: Vec<Box<&'a mut dyn AgentSet>>,
+        agents: AgentSetVec<'a>,
     ) -> Self {
         SimRunner {
             network,
@@ -34,8 +37,8 @@ impl<'a, A: AdminAgent> SimRunner<'a, A> {
         }
     }
 
-    pub fn insert_agent_set(&mut self, agent_set: Box<&'a mut dyn AgentSet>) {
-        self.agents.push(agent_set);
+    pub fn insert_agent_set<S: AgentSet>(&mut self, agent_set: &'a mut S) {
+        self.agents.push(Box::new(agent_set));
     }
 
     pub fn run(&mut self, seed: u64) {
