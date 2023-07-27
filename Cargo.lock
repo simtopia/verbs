@@ -2587,6 +2587,7 @@ dependencies = [
  "hashbrown 0.13.2",
  "hex",
  "kdam",
+ "log",
  "primitive-types",
  "revm",
  "serde_json",

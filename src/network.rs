@@ -5,6 +5,7 @@ use ethabi::Contract as ABI;
 use ethers_contract::BaseContract;
 use ethers_core::abi::{Detokenize, Tokenize};
 use ethers_core::types::{Address as EthAddress, Selector};
+use log::debug;
 use revm::{
     db::{CacheDB, EmptyDB},
     primitives::{
@@ -219,6 +220,8 @@ impl Network {
     }
 
     pub fn insert_contract(&mut self, name: String, abi: BaseContract, address: Address) {
+        debug!("Inserted {} contract at {}", name, address);
+
         let contract = DeployedContract {
             name,
             abi,
