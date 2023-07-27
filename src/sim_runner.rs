@@ -6,6 +6,16 @@ use kdam::tqdm;
 pub type AgentSetRef<'a> = Box<&'a mut dyn AgentSet>;
 pub type AgentSetVec<'a> = Vec<AgentSetRef<'a>>;
 
+trait AgentSetVecMethods<'a> {
+    fn push_agent_set<A: AgentSet>(&mut self, agent_set: &'a mut A);
+}
+
+impl<'a> AgentSetVecMethods<'a> for AgentSetVec<'a> {
+    fn push_agent_set<A: AgentSet>(&mut self, agent_set: &'a mut A) {
+        self.push(Box::new(agent_set))
+    }
+}
+
 pub struct SimRunner<'a, A: AdminAgent> {
     network: Network,
     pub admin_agent: A,
