@@ -6,7 +6,7 @@ use kdam::tqdm;
 pub type AgentSetRef<'a> = Box<&'a mut dyn AgentSet>;
 pub type AgentSetVec<'a> = Vec<AgentSetRef<'a>>;
 
-trait AgentSetVecMethods<'a> {
+pub trait AgentSetVecMethods<'a> {
     fn push_agent_set<A: AgentSet>(&mut self, agent_set: &'a mut A);
 }
 
