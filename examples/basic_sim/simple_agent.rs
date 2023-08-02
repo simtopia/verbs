@@ -41,8 +41,13 @@ impl Agent for SimpleAgent {
             let receiver = rng.u64(0..self.n_agents);
             let receiver = Address::from(primitive_types::H160::from_low_u64_be(receiver));
             let send_amount = std::cmp::min(self.current_balance, U256::from(1000));
-            let send_call =
-                network.create_call(self.call_address, 0, "transfer", (receiver, send_amount));
+            let send_call = network.create_call(
+                self.call_address,
+                0,
+                "transfer",
+                (receiver, send_amount),
+                true,
+            );
             Some(send_call)
         } else {
             None

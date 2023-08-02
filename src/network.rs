@@ -1,6 +1,7 @@
 use crate::agent::AgentSet;
 use crate::contract::{Call, ContractDefinition, DeployedContract, Transaction};
 use crate::utils::{address_from_hex, Cast, Eth};
+use bytes::Bytes;
 use ethabi::Contract as ABI;
 use ethers_contract::BaseContract;
 use ethers_core::abi::{Detokenize, Tokenize};
@@ -127,7 +128,7 @@ impl Network {
             access_list: Vec::new(),
         };
         let result = self.evm.execute(tx);
-        let output = result_to_output(&contract.abi.abi(), "manually_deploy", result);
+        let output = result_to_output(&contract.abi.abi(), "manually_deploy", result, true);
         let deploy_address = match output {
             revm::primitives::Output::Create(_, address) => address.unwrap(),
             _ => panic!("Deployment of {} failed", contract.name),
@@ -156,7 +157,7 @@ impl Network {
 
                 let account_changes = self.evm.call(tx);
                 let output =
-                    result_to_output(&contract.abi.abi(), "deploy", account_changes.result);
+                    result_to_output(&contract.abi.abi(), "deploy", account_changes.result, true);
                 let deploy_address = match output {
                     revm::primitives::Output::Create(_, address) => address.unwrap(),
                     _ => panic!("Deployment of {} failed", contract.name),
@@ -238,6 +239,7 @@ impl Network {
         contract_idx: usize,
         function_name: &'static str,
         args: T,
+        checked: bool,
     ) -> Call {
         let contract = self.contracts.get(contract_idx).unwrap();
         let args = contract.abi.encode(function_name, args).unwrap();
@@ -248,6 +250,7 @@ impl Network {
             callee,
             transact_to: contract.address,
             args,
+            checked,
         }
     }
 
@@ -261,7 +264,7 @@ impl Network {
         let contract = self.contracts.get(contract_idx).unwrap();
         let tx = contract.unwrap_transaction(callee, function_name, args);
         let execution_result: ExecutionResult = self.evm.execute(tx);
-        let output = result_to_output(contract.abi.abi(), function_name, execution_result);
+        let output = result_to_output(contract.abi.abi(), function_name, execution_result, true);
         let output_data = output.into_data();
         contract.decode_output(function_name, output_data)
     }
@@ -276,7 +279,7 @@ impl Network {
         let contract = self.contracts.get(contract_idx).unwrap();
         let tx = contract.unwrap_transaction_with_selector(callee, selector, args);
         let execution_result: ExecutionResult = self.evm.execute(tx);
-        let output = result_to_output(contract.abi.abi(), "Selected", execution_result);
+        let output = result_to_output(contract.abi.abi(), "Selected", execution_result, true);
         let output_data: bytes::Bytes = output.into_data();
         contract.decode_output_with_selector(selector, output_data)
     }
@@ -292,7 +295,7 @@ impl Network {
         let tx = contract.unwrap_transaction(callee, function_name, args);
         let execution_result = self.evm.call(tx);
         let execution_result = execution_result.result;
-        let output = result_to_output(contract.abi.abi(), function_name, execution_result);
+        let output = result_to_output(contract.abi.abi(), function_name, execution_result, true);
         let output_data: bytes::Bytes = output.into_data();
         contract.decode_output(function_name, output_data)
     }
@@ -309,6 +312,7 @@ impl Network {
             contract.abi.abi(),
             transaction.function_name,
             execution_result,
+            true,
         );
         let output_data = output.into_data();
         contract.decode_output(transaction.function_name, output_data)
@@ -317,9 +321,15 @@ impl Network {
     fn call_from_call(&mut self, call: Call) {
         let contract = self.contracts.get(call.contract_idx).unwrap();
         let function_name = call.function_name;
+        let check_call = call.checked;
         let tx = DeployedContract::unwrap_call(call);
         let execution_result = self.evm.execute(tx);
-        let _ = result_to_output(contract.abi.abi(), function_name, execution_result);
+        let _ = result_to_output(
+            contract.abi.abi(),
+            function_name,
+            execution_result,
+            check_call,
+        );
     }
 
     pub fn process_transactions<D: Detokenize, T: Tokenize>(
@@ -346,14 +356,23 @@ fn result_to_output(
     _contract: &ABI,
     function_name: &'static str,
     execution_result: ExecutionResult,
+    checked: bool,
 ) -> Output {
     match execution_result {
         ExecutionResult::Success { output, .. } => output,
         ExecutionResult::Revert { output, .. } => {
-            panic!(
-                "Failed to call {} due to revert: {:?}",
-                function_name, output
-            )
+            if checked {
+                panic!(
+                    "Failed to call {} due to revert: {:?}",
+                    function_name, output
+                )
+            } else {
+                println!(
+                    "Failed to call {} due to revert: {:?}",
+                    function_name, output
+                );
+                Output::Call(Bytes::default())
+            }
         }
         ExecutionResult::Halt { reason, .. } => {
             panic!("Failed to call {} due to halt: {:?}", function_name, reason)

@@ -35,6 +35,7 @@ pub struct Call {
     pub callee: Address,
     pub transact_to: Address,
     pub args: EthersBytes,
+    pub checked: bool,
 }
 
 impl DeployedContract {
@@ -50,6 +51,7 @@ impl DeployedContract {
             callee: transaction.callee,
             transact_to: self.address,
             args: encoded_args,
+            checked: true,
         }
     }
 

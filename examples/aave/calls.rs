@@ -21,6 +21,7 @@ pub fn supply_call(
             user_address,
             U256::zero(),
         ),
+        true,
     )
 }
 
@@ -35,6 +36,7 @@ pub fn borrow_call(
         POOL_INDEX,
         "borrow",
         (token_address, amount, 1u128, 0u16, user_address),
+        true,
     )
 }
 
@@ -57,6 +59,7 @@ pub fn liquidation_call(
             amount,
             true,
         ),
+        false,
     )
 }
 
