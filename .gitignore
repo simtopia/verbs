@@ -8,6 +8,3 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
-examples/aave/contracts
-examples/uniswap_v2/contracts
