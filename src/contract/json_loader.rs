@@ -6,12 +6,24 @@ use revm::primitives::{Address, Bytecode, Bytes, U256};
 use serde_json::value::Value as SerdeVale;
 use std::collections::HashMap;
 
+/// Load contract ABI from a pre-generated ABI file.
+///
+/// # Arguments
+///
+/// * `abi_path` - Path to the ABI file
+///
 pub fn load_abi(abi_path: &str) -> BaseContract {
     let abi_file = std::fs::File::open(abi_path).unwrap();
     let abi = Contract::load(abi_file).unwrap();
     BaseContract::from(abi)
 }
 
+/// Unpack storage values loaded from a JSON file.
+///
+/// # Arguments
+///
+/// * `v` - Tuple containing a String - SerdeValue pair representing a key-value pair
+///
 fn unpack_storage(v: (&String, &SerdeVale)) -> (U256, U256) {
     let slot = v.0.strip_prefix("0x").unwrap();
     let slot = U256::from_str_radix(slot, 16).unwrap();
@@ -21,6 +33,14 @@ fn unpack_storage(v: (&String, &SerdeVale)) -> (U256, U256) {
     (slot, value)
 }
 
+/// Load contract bytecode and parameters from a pre-generated JSON file.
+///
+/// # Arguments
+///
+/// * `abi` - This contracts ABI object
+/// * `params_path` - Path to parameters JSON file
+/// * `deployment_args` - Optionally manually provide deployment arguments
+///
 pub fn load_params(
     abi: &BaseContract,
     params_path: &str,
@@ -125,6 +145,14 @@ pub fn load_params(
     )
 }
 
+/// Load a contract definition from ABI and parameters JSON file
+///
+/// # Arguments
+///
+/// * `abi_path` - Path to the ABI file
+/// * `params_path` - Path to parameters JSON file
+/// * `deployment_args` - Optionally manually provide deployment arguments
+///
 pub fn load_contract(
     abi_path: &str,
     params_path: &str,

@@ -48,10 +48,10 @@ pub fn main() {
 
     let mut agent_set = AgentVec::from(agents);
 
-    let mut sim_runner: SimRunner<DummyAdminAgent> = SimRunner::new(sim, admin_agent, n_steps);
+    let mut sim_runner: SimRunner<DummyAdminAgent> = SimRunner::new(sim, admin_agent);
     sim_runner.insert_agent_set(&mut agent_set);
 
-    sim_runner.run(0);
+    sim_runner.run(0, n_steps);
 
     let _agent_data = agent_set.get_records();
 }

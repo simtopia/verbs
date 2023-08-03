@@ -1,5 +1,5 @@
 use crate::agent::AgentSet;
-use crate::contract::{Call, ContractDefinition, DeployedContract, Transaction};
+use crate::contract::{Call, ContractDefinition, DeployedContract};
 use crate::utils::{address_from_hex, Cast, Eth};
 use bytes::Bytes;
 use ethabi::Contract as ABI;
@@ -300,24 +300,6 @@ impl Network {
         contract.decode_output(function_name, output_data)
     }
 
-    pub fn call_contract<D: Detokenize, T: Tokenize>(&mut self, transaction: Transaction<T>) -> D {
-        let contract = self.contracts.get(transaction.contract_idx).unwrap();
-        let tx = contract.unwrap_transaction(
-            transaction.callee,
-            transaction.function_name,
-            transaction.args,
-        );
-        let execution_result = self.evm.execute(tx);
-        let output = result_to_output(
-            contract.abi.abi(),
-            transaction.function_name,
-            execution_result,
-            true,
-        );
-        let output_data = output.into_data();
-        contract.decode_output(transaction.function_name, output_data)
-    }
-
     fn call_from_call(&mut self, call: Call) {
         let contract = self.contracts.get(call.contract_idx).unwrap();
         let function_name = call.function_name;
@@ -330,15 +312,6 @@ impl Network {
             execution_result,
             check_call,
         );
-    }
-
-    pub fn process_transactions<D: Detokenize, T: Tokenize>(
-        &mut self,
-        transactions: Vec<Transaction<T>>,
-    ) {
-        for call in transactions {
-            self.call_contract::<D, T>(call);
-        }
     }
 
     pub fn process_calls(&mut self, calls: Vec<Call>) {

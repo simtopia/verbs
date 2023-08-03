@@ -4,7 +4,13 @@ use revm::primitives::Address as RevmAddress;
 use revm::primitives::U256 as RevmU256;
 use std::fs::File;
 
-/// Write a vector series of agent values to a csv file
+/// Write a time-series of agent values to a csv file.
+///
+/// # Arguments
+///
+/// * `records` - 2d vector of agent state records.
+/// * `output_path` - Path to write the csv file to.
+///
 pub fn csv_writer<T: ToString>(records: &Vec<Vec<T>>, output_path: &str) {
     let output_file = File::create(output_path).expect("Could not open csv file");
 
@@ -18,14 +24,26 @@ pub fn csv_writer<T: ToString>(records: &Vec<Vec<T>>, output_path: &str) {
     wtr.flush().expect("Error flushing csv");
 }
 
-/// Create a revm address from a hex string
-pub fn address_from_hex(x: &str) -> RevmAddress {
-    let address = x.strip_prefix("0x").expect("Addresses require '0x' prefix");
+/// Create a revm address from a hex string.
+///
+/// # Arguments
+///
+/// * `hx` - Hex-string, should be prefixed with `0x`.
+///
+pub fn address_from_hex(hx: &str) -> RevmAddress {
+    let address = hx
+        .strip_prefix("0x")
+        .expect("Addresses require '0x' prefix");
     let address = hex::decode(address).expect("Decoding hex string failed");
     RevmAddress::from_slice(address.as_slice())
 }
 
-/// Create a Bytes object from a hex string
+/// Create a Bytes object from a hex string.
+///
+/// # Arguments
+///
+/// * `hx` - Hex string.
+///
 pub fn data_bytes_from_hex(hx: &str) -> Bytes {
     let data = hex::decode(hx).expect("Decoding hex failed");
     Bytes::from(data)
