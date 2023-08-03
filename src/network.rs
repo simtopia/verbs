@@ -6,7 +6,7 @@ use ethabi::Contract as ABI;
 use ethers_contract::BaseContract;
 use ethers_core::abi::{Detokenize, Tokenize};
 use ethers_core::types::{Address as EthAddress, Selector};
-use log::debug;
+use log::{debug, warn};
 use revm::{
     db::{CacheDB, EmptyDB},
     primitives::{
@@ -340,7 +340,7 @@ fn result_to_output(
                     function_name, output
                 )
             } else {
-                println!(
+                warn!(
                     "Failed to call {} due to revert: {:?}",
                     function_name, output
                 );
