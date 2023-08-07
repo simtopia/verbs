@@ -53,5 +53,5 @@ pub fn main() {
 
     sim_runner.run(0, n_steps);
 
-    let _agent_data = agent_set.get_records();
+    let _agent_data = agent_set.take_records();
 }

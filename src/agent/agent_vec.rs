@@ -3,6 +3,7 @@ use crate::contract::Call;
 use crate::network::Network;
 use ethers_core::types::Address;
 use revm::primitives::Address as RevmAddress;
+use std::mem;
 
 /// Implementation of agent set tracking agents as a vector.
 pub struct AgentVec<R, A: Agent + RecordedAgent<R>> {
@@ -44,6 +45,11 @@ impl<R, A: Agent + RecordedAgent<R>> AgentVec<R, A> {
     /// Get the recorded history of agents in this set.
     pub fn get_records(&self) -> &Vec<Vec<R>> {
         &self.records
+    }
+
+    /// Take ownership of recorded data from the agent-set
+    pub fn take_records(&mut self) -> Vec<Vec<R>> {
+        mem::replace(&mut self.records, Vec::new())
     }
 }
 
