@@ -38,7 +38,7 @@ pub trait RecordedAgent<R> {
     /// Get a record of the current state of the agent. Records are
     /// collected as a vector of vectors representing the state of a
     /// collection of agents over the history of the simulation.
-    fn record(&self) -> R;
+    fn record(&mut self) -> R;
 }
 
 /// A collection of homogenous agents
