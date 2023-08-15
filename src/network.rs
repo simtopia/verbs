@@ -2,7 +2,6 @@ use crate::agent::AgentSet;
 use crate::contract::{Call, ContractDefinition, DeployedContract};
 use crate::utils::{address_from_hex, Cast, Eth};
 use bytes::Bytes;
-use ethabi::Contract as ABI;
 use ethers_contract::BaseContract;
 use ethers_core::abi::{Detokenize, Tokenize};
 use ethers_core::types::{Address as EthAddress, Selector};
@@ -10,8 +9,8 @@ use log::{debug, warn};
 use revm::{
     db::{CacheDB, EmptyDB},
     primitives::{
-        AccountInfo, Address, Bytecode, ExecutionResult, Output, ResultAndState, TransactTo, TxEnv,
-        U256,
+        AccountInfo, Address, Bytecode, ExecutionResult, Log, Output, ResultAndState, TransactTo,
+        TxEnv, U256,
     },
     EVM,
 };
@@ -21,6 +20,7 @@ pub struct Network {
     pub evm: EVM<CacheDB<EmptyDB>>,
     pub admin_address: Address,
     pub contracts: Vec<DeployedContract>,
+    pub events: Vec<Log>,
 }
 
 trait CallEVM {
@@ -52,6 +52,12 @@ impl CallEVM for EVM<CacheDB<EmptyDB>> {
     }
 }
 
+pub struct CallResult {
+    pub success: bool,
+    pub output: Output,
+    pub events: Vec<Log>,
+}
+
 impl Network {
     pub fn insert_account(&mut self, address: Address, start_balance: U256) {
         self.evm.db().unwrap().insert_account_info(
@@ -76,6 +82,7 @@ impl Network {
             evm,
             admin_address,
             contracts: Vec::new(),
+            events: Vec::new(),
         };
 
         network.insert_account(admin_address, start_balance);
@@ -128,7 +135,7 @@ impl Network {
             access_list: Vec::new(),
         };
         let result = self.evm.execute(tx);
-        let output = result_to_output(&contract.abi.abi(), "manually_deploy", result, true);
+        let output = deployment_output(&contract.name, result);
         let deploy_address = match output {
             revm::primitives::Output::Create(_, address) => address.unwrap(),
             _ => panic!("Deployment of {} failed", contract.name),
@@ -156,8 +163,7 @@ impl Network {
                 };
 
                 let account_changes = self.evm.call(tx);
-                let output =
-                    result_to_output(&contract.abi.abi(), "deploy", account_changes.result, true);
+                let output = deployment_output(&contract.name, account_changes.result);
                 let deploy_address = match output {
                     revm::primitives::Output::Create(_, address) => address.unwrap(),
                     _ => panic!("Deployment of {} failed", contract.name),
@@ -264,8 +270,8 @@ impl Network {
         let contract = self.contracts.get(contract_idx).unwrap();
         let tx = contract.unwrap_transaction(callee, function_name, args);
         let execution_result: ExecutionResult = self.evm.execute(tx);
-        let output = result_to_output(contract.abi.abi(), function_name, execution_result, true);
-        let output_data = output.into_data();
+        let result = result_to_output(function_name, execution_result, true);
+        let output_data = result.output.into_data();
         contract.decode_output(function_name, output_data)
     }
 
@@ -279,8 +285,8 @@ impl Network {
         let contract = self.contracts.get(contract_idx).unwrap();
         let tx = contract.unwrap_transaction_with_selector(callee, selector, args);
         let execution_result: ExecutionResult = self.evm.execute(tx);
-        let output = result_to_output(contract.abi.abi(), "Selected", execution_result, true);
-        let output_data: bytes::Bytes = output.into_data();
+        let result = result_to_output("Selected", execution_result, true);
+        let output_data: bytes::Bytes = result.output.into_data();
         contract.decode_output_with_selector(selector, output_data)
     }
 
@@ -295,23 +301,19 @@ impl Network {
         let tx = contract.unwrap_transaction(callee, function_name, args);
         let execution_result = self.evm.call(tx);
         let execution_result = execution_result.result;
-        let output = result_to_output(contract.abi.abi(), function_name, execution_result, true);
-        let output_data: bytes::Bytes = output.into_data();
+        let result = result_to_output(function_name, execution_result, true);
+        let output_data: bytes::Bytes = result.output.into_data();
         contract.decode_output(function_name, output_data)
     }
 
     fn call_from_call(&mut self, call: Call) {
-        let contract = self.contracts.get(call.contract_idx).unwrap();
+        let _contract = self.contracts.get(call.contract_idx).unwrap();
         let function_name = call.function_name;
         let check_call = call.checked;
         let tx = DeployedContract::unwrap_call(call);
         let execution_result = self.evm.execute(tx);
-        let _ = result_to_output(
-            contract.abi.abi(),
-            function_name,
-            execution_result,
-            check_call,
-        );
+        let mut result = result_to_output(function_name, execution_result, check_call);
+        self.events.append(&mut result.events)
     }
 
     pub fn process_calls(&mut self, calls: Vec<Call>) {
@@ -326,13 +328,21 @@ impl Network {
 }
 
 fn result_to_output(
-    _contract: &ABI,
     function_name: &'static str,
     execution_result: ExecutionResult,
     checked: bool,
-) -> Output {
+) -> CallResult {
     match execution_result {
-        ExecutionResult::Success { output, .. } => output,
+        ExecutionResult::Success { output, logs, .. } => match output {
+            Output::Call(_) => CallResult {
+                success: true,
+                output,
+                events: logs,
+            },
+            Output::Create(..) => {
+                panic!("Unexpected call to create contract during simulation.")
+            }
+        },
         ExecutionResult::Revert { output, .. } => {
             if checked {
                 panic!(
@@ -344,11 +354,33 @@ fn result_to_output(
                     "Failed to call {} due to revert: {:?}",
                     function_name, output
                 );
-                Output::Call(Bytes::default())
+                CallResult {
+                    success: false,
+                    output: Output::Call(Bytes::default()),
+                    events: Vec::default(),
+                }
             }
         }
         ExecutionResult::Halt { reason, .. } => {
             panic!("Failed to call {} due to halt: {:?}", function_name, reason)
+        }
+    }
+}
+
+fn deployment_output(contract_name: &String, execution_result: ExecutionResult) -> Output {
+    match execution_result {
+        ExecutionResult::Success { output, .. } => output,
+        ExecutionResult::Revert { output, .. } => {
+            panic!(
+                "Failed to deploy {} due to revert: {:?}",
+                contract_name, output
+            )
+        }
+        ExecutionResult::Halt { reason, .. } => {
+            panic!(
+                "Failed to deploy {} due to halt: {:?}",
+                contract_name, reason
+            )
         }
     }
 }
