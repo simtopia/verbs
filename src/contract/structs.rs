@@ -1,9 +1,7 @@
 use ethers_contract::BaseContract;
 use ethers_core::abi::{Detokenize, Tokenize};
-use ethers_core::types::Selector;
-use ethers_core::types::{Address as EthAddress, Bytes as EthersBytes};
-use revm::primitives::{Address, Bytecode, Bytes, U256};
-use revm::primitives::{TransactTo, TxEnv};
+use ethers_core::types::{Address as EthAddress, Bytes as EthersBytes, Selector, H256};
+use revm::primitives::{Address, Bytecode, Bytes, Log, TransactTo, TxEnv, U256};
 use std::collections::HashMap;
 
 /// Collection of data used to deploy a new contract.
@@ -166,6 +164,23 @@ impl DeployedContract {
     ) -> D {
         self.abi
             .decode_output_with_selector(selector, output_data)
+            .unwrap()
+    }
+
+    /// Decode contract event
+    ///
+    /// # Arguments
+    ///
+    /// * `event_name` - Name of the event.
+    /// * `event` - Vector of topic addresses
+    ///
+    pub fn decode_event<D: Detokenize>(&self, event_name: &'static str, event: Log) -> D {
+        self.abi
+            .decode_event(
+                event_name,
+                event.topics.into_iter().map(|x| H256::from(x.0)).collect(),
+                EthersBytes::from(event.data),
+            )
             .unwrap()
     }
 }
