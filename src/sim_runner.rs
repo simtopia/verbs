@@ -19,7 +19,7 @@ impl<'a> AgentSetVecMethods<'a> for AgentSetVec<'a> {
 /// Stepped simulation runner
 pub struct SimRunner<'a, A: AdminAgent> {
     /// Network/protocol deployment used in the simulation
-    network: Network,
+    pub network: Network,
     /// Admin agent
     pub admin_agent: A,
     /// Collection of agents sets
