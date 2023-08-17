@@ -50,16 +50,22 @@ pub struct Call {
 }
 
 pub struct CallResult {
-    /// Name of the function being called.
-    pub function_name: &'static str,
-    /// Index of the contract being called.
-    pub contract_idx: usize,
     /// Flag whether transaction was successful.
     pub success: bool,
     /// Output data.
     pub output: Output,
     /// Vec of events returned by call.
-    pub events: Vec<Log>,
+    pub events: Vec<Event>,
+}
+
+/// Wraps event logs along with event information
+pub struct Event {
+    /// Name of the function being called.
+    pub function_name: &'static str,
+    /// Index of the contract being called.
+    pub contract_idx: usize,
+    /// Event data
+    pub log: Log,
 }
 
 /// Functionality attached to a deployed contract.

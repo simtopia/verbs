@@ -1,5 +1,5 @@
 use crate::agent::AgentSet;
-use crate::contract::{Call, CallResult, ContractDefinition, DeployedContract};
+use crate::contract::{Call, CallResult, ContractDefinition, DeployedContract, Event};
 use crate::utils::{address_from_hex, Cast, Eth};
 use bytes::Bytes;
 use ethers_contract::BaseContract;
@@ -9,8 +9,8 @@ use log::{debug, warn};
 use revm::{
     db::{CacheDB, EmptyDB},
     primitives::{
-        AccountInfo, Address, Bytecode, ExecutionResult, Log, Output, ResultAndState, TransactTo,
-        TxEnv, U256,
+        AccountInfo, Address, Bytecode, ExecutionResult, Output, ResultAndState, TransactTo, TxEnv,
+        U256,
     },
     EVM,
 };
@@ -20,7 +20,7 @@ pub struct Network {
     pub evm: EVM<CacheDB<EmptyDB>>,
     pub admin_address: Address,
     pub contracts: Vec<DeployedContract>,
-    pub events: Vec<Log>,
+    pub events: Vec<Event>,
 }
 
 trait CallEVM {
@@ -332,11 +332,16 @@ fn result_to_output(
     match execution_result {
         ExecutionResult::Success { output, logs, .. } => match output {
             Output::Call(_) => CallResult {
-                function_name,
-                contract_idx,
                 success: true,
                 output,
-                events: logs,
+                events: logs
+                    .into_iter()
+                    .map(|x| Event {
+                        function_name,
+                        contract_idx,
+                        log: x,
+                    })
+                    .collect(),
             },
             Output::Create(..) => {
                 panic!("Unexpected call to create contract during simulation.")
@@ -355,8 +360,6 @@ fn result_to_output(
                 );
                 CallResult {
                     success: false,
-                    function_name,
-                    contract_idx,
                     output: Output::Call(Bytes::default()),
                     events: Vec::default(),
                 }
