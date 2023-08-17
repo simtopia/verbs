@@ -1,5 +1,5 @@
 use crate::agent::AgentSet;
-use crate::contract::{Call, ContractDefinition, DeployedContract};
+use crate::contract::{Call, CallResult, ContractDefinition, DeployedContract};
 use crate::utils::{address_from_hex, Cast, Eth};
 use bytes::Bytes;
 use ethers_contract::BaseContract;
@@ -50,12 +50,6 @@ impl CallEVM for EVM<CacheDB<EmptyDB>> {
 
         execution_result
     }
-}
-
-pub struct CallResult {
-    pub success: bool,
-    pub output: Output,
-    pub events: Vec<Log>,
 }
 
 impl Network {
@@ -270,7 +264,7 @@ impl Network {
         let contract = self.contracts.get(contract_idx).unwrap();
         let tx = contract.unwrap_transaction(callee, function_name, args);
         let execution_result: ExecutionResult = self.evm.execute(tx);
-        let result = result_to_output(function_name, execution_result, true);
+        let result = result_to_output(contract_idx, function_name, execution_result, true);
         let output_data = result.output.into_data();
         contract.decode_output(function_name, output_data)
     }
@@ -285,7 +279,7 @@ impl Network {
         let contract = self.contracts.get(contract_idx).unwrap();
         let tx = contract.unwrap_transaction_with_selector(callee, selector, args);
         let execution_result: ExecutionResult = self.evm.execute(tx);
-        let result = result_to_output("Selected", execution_result, true);
+        let result = result_to_output(contract_idx, "Selected", execution_result, true);
         let output_data: bytes::Bytes = result.output.into_data();
         contract.decode_output_with_selector(selector, output_data)
     }
@@ -301,7 +295,7 @@ impl Network {
         let tx = contract.unwrap_transaction(callee, function_name, args);
         let execution_result = self.evm.call(tx);
         let execution_result = execution_result.result;
-        let result = result_to_output(function_name, execution_result, true);
+        let result = result_to_output(contract_idx, function_name, execution_result, true);
         let output_data: bytes::Bytes = result.output.into_data();
         contract.decode_output(function_name, output_data)
     }
@@ -309,10 +303,12 @@ impl Network {
     fn call_from_call(&mut self, call: Call) {
         let _contract = self.contracts.get(call.contract_idx).unwrap();
         let function_name = call.function_name;
+        let contract_idx = call.contract_idx;
         let check_call = call.checked;
         let tx = DeployedContract::unwrap_call(call);
         let execution_result = self.evm.execute(tx);
-        let mut result = result_to_output(function_name, execution_result, check_call);
+        let mut result =
+            result_to_output(contract_idx, function_name, execution_result, check_call);
         self.events.append(&mut result.events)
     }
 
@@ -328,6 +324,7 @@ impl Network {
 }
 
 fn result_to_output(
+    contract_idx: usize,
     function_name: &'static str,
     execution_result: ExecutionResult,
     checked: bool,
@@ -335,6 +332,8 @@ fn result_to_output(
     match execution_result {
         ExecutionResult::Success { output, logs, .. } => match output {
             Output::Call(_) => CallResult {
+                function_name,
+                contract_idx,
                 success: true,
                 output,
                 events: logs,
@@ -356,6 +355,8 @@ fn result_to_output(
                 );
                 CallResult {
                     success: false,
+                    function_name,
+                    contract_idx,
                     output: Output::Call(Bytes::default()),
                     events: Vec::default(),
                 }

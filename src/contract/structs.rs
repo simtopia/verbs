@@ -1,7 +1,7 @@
 use ethers_contract::BaseContract;
 use ethers_core::abi::{Detokenize, Tokenize};
 use ethers_core::types::{Address as EthAddress, Bytes as EthersBytes, Selector, H256};
-use revm::primitives::{Address, Bytecode, Bytes, Log, TransactTo, TxEnv, U256};
+use revm::primitives::{Address, Bytecode, Bytes, Log, Output, TransactTo, TxEnv, U256};
 use std::collections::HashMap;
 
 /// Collection of data used to deploy a new contract.
@@ -47,6 +47,19 @@ pub struct Call {
     /// Flag if `true` the simulation will halt (panic)
     /// if this transaction fails.
     pub checked: bool,
+}
+
+pub struct CallResult {
+    /// Name of the function being called.
+    pub function_name: &'static str,
+    /// Index of the contract being called.
+    pub contract_idx: usize,
+    /// Flag whether transaction was successful.
+    pub success: bool,
+    /// Output data.
+    pub output: Output,
+    /// Vec of events returned by call.
+    pub events: Vec<Log>,
 }
 
 /// Functionality attached to a deployed contract.
