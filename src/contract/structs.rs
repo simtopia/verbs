@@ -191,14 +191,18 @@ impl DeployedContract {
     /// # Arguments
     ///
     /// * `event_name` - Name of the event.
-    /// * `event` - Vector of topic addresses
+    /// * `event` - Event struct
     ///
     pub fn decode_event<D: Detokenize>(&self, event_name: &'static str, event: Log) -> D {
         self.abi
             .decode_event(
                 event_name,
-                event.topics.into_iter().map(|x| H256::from(x.0)).collect(),
-                EthersBytes::from(event.data),
+                event
+                    .topics
+                    .into_iter()
+                    .map(|x| H256::from_slice(x.as_bytes()))
+                    .collect(),
+                EthersBytes(event.data),
             )
             .unwrap()
     }
