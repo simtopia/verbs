@@ -85,7 +85,11 @@ impl DeployedContract {
         function_name: &'static str,
         args: T,
     ) -> TxEnv {
-        let encoded = self.abi.encode(function_name, args).unwrap();
+        let result = self.abi.encode(function_name, args);
+        let encoded = match result {
+            Ok(encoded) => encoded,
+            Err(err) => panic!("Error encoding arguments to {}: {:?}", function_name, err),
+        };
 
         TxEnv {
             caller: callee,
@@ -117,7 +121,11 @@ impl DeployedContract {
         selector: Selector,
         args: T,
     ) -> TxEnv {
-        let encoded = self.abi.encode_with_selector(selector, args).unwrap();
+        let result = self.abi.encode_with_selector(selector, args);
+        let encoded = match result {
+            Ok(encoded) => encoded,
+            Err(err) => panic!("Error encoding arguments: {:?}", err),
+        };
 
         TxEnv {
             caller: callee,
@@ -166,7 +174,11 @@ impl DeployedContract {
         function_name: &'static str,
         output_data: bytes::Bytes,
     ) -> D {
-        self.abi.decode_output(function_name, output_data).unwrap()
+        let result = self.abi.decode_output(function_name, output_data);
+        match result {
+            Ok(result) => result,
+            Err(err) => panic!("Error decoding output from {}: {:?}", function_name, err),
+        }
     }
 
     /// Decode output using a function selector.
@@ -181,9 +193,11 @@ impl DeployedContract {
         selector: Selector,
         output_data: bytes::Bytes,
     ) -> D {
-        self.abi
-            .decode_output_with_selector(selector, output_data)
-            .unwrap()
+        let result = self.abi.decode_output_with_selector(selector, output_data);
+        match result {
+            Ok(result) => result,
+            Err(err) => panic!("Error decoding output: {:?}", err),
+        }
     }
 
     /// Decode contract event
@@ -194,16 +208,18 @@ impl DeployedContract {
     /// * `event` - Event struct
     ///
     pub fn decode_event<D: Detokenize>(&self, event_name: &'static str, event: Log) -> D {
-        self.abi
-            .decode_event(
-                event_name,
-                event
-                    .topics
-                    .into_iter()
-                    .map(|x| H256::from_slice(x.as_bytes()))
-                    .collect(),
-                EthersBytes(event.data),
-            )
-            .unwrap()
+        let result = self.abi.decode_event(
+            event_name,
+            event
+                .topics
+                .into_iter()
+                .map(|x| H256::from_slice(x.as_bytes()))
+                .collect(),
+            EthersBytes(event.data),
+        );
+        match result {
+            Ok(result) => result,
+            Err(err) => panic!("Error decoding event {}: {:?}", event_name, err),
+        }
     }
 }
