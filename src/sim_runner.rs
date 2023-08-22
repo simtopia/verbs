@@ -24,6 +24,8 @@ pub struct SimRunner<'a, A: AdminAgent> {
     pub admin_agent: A,
     /// Collection of agents sets
     pub agents: AgentSetVec<'a>,
+    /// Current simulation step/block
+    pub step: i64,
 }
 
 impl<'a, A: AdminAgent> SimRunner<'a, A> {
@@ -39,6 +41,7 @@ impl<'a, A: AdminAgent> SimRunner<'a, A> {
             network,
             admin_agent,
             agents: AgentSetVec::new(),
+            step: 0,
         }
     }
 
@@ -55,6 +58,7 @@ impl<'a, A: AdminAgent> SimRunner<'a, A> {
             network,
             admin_agent,
             agents,
+            step: 0,
         }
     }
 
@@ -90,10 +94,11 @@ impl<'a, A: AdminAgent> SimRunner<'a, A> {
                 .collect();
 
             rng.shuffle(calls.as_mut_slice());
-            self.network.process_calls(calls);
+            self.network.process_calls(calls, self.step);
             for agent_set in &mut self.agents {
                 agent_set.record_agents();
             }
+            self.step += 1;
         }
     }
 }

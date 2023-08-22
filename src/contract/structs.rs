@@ -66,6 +66,8 @@ pub struct Event {
     pub contract_idx: usize,
     /// Event data
     pub log: Log,
+    /// Step event was created
+    pub step: i64,
 }
 
 /// Functionality attached to a deployed contract.
@@ -208,15 +210,14 @@ impl DeployedContract {
     /// * `event` - Event struct
     ///
     pub fn decode_event<D: Detokenize>(&self, event_name: &'static str, event: Log) -> D {
-        let result = self.abi.decode_event(
-            event_name,
-            event
-                .topics
-                .into_iter()
-                .map(|x| H256::from_slice(x.as_bytes()))
-                .collect(),
-            EthersBytes(event.data),
-        );
+        let topics: Vec<H256> = event
+            .topics
+            .into_iter()
+            .map(|x| H256::from_slice(x.as_bytes()))
+            .collect();
+        let result = self
+            .abi
+            .decode_event(event_name, topics, EthersBytes(event.data));
         match result {
             Ok(result) => result,
             Err(err) => panic!("Error decoding event {}: {:?}", event_name, err),
