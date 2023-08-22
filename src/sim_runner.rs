@@ -1,6 +1,7 @@
 use crate::agent::{traits::AdminAgent, AgentSet};
 use crate::contract::Call;
 use crate::network::Network;
+use ethers_core::abi::Detokenize;
 use kdam::tqdm;
 
 pub type AgentSetRef<'a> = Box<&'a mut dyn AgentSet>;
@@ -100,5 +101,31 @@ impl<'a, A: AdminAgent> SimRunner<'a, A> {
             }
             self.step += 1;
         }
+    }
+
+    /// Decode events of a specific type into actual data
+    ///
+    /// # Arguments
+    ///
+    /// * `function_name` - Name of the function that produced the events
+    /// * `event_name` - Name of the actual event to decode
+    ///
+    pub fn process_events<R: Detokenize>(
+        &self,
+        function_name: &'static str,
+        event_name: &'static str,
+    ) -> Vec<(i64, R)> {
+        self.network
+            .events
+            .iter()
+            .filter(|x| x.function_name == function_name)
+            .map(|x| {
+                (
+                    x.step,
+                    self.network.contracts[x.contract_idx]
+                        .decode_event(event_name, x.logs.last().unwrap().to_owned()),
+                )
+            })
+            .collect()
     }
 }
