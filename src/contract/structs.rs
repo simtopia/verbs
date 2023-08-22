@@ -36,6 +36,7 @@ pub struct Call {
     pub checked: bool,
 }
 
+// Result if a transaction also wrapping any returned events
 pub struct CallResult {
     /// Flag whether transaction was successful.
     pub success: bool,
@@ -45,7 +46,7 @@ pub struct CallResult {
     pub events: Vec<Event>,
 }
 
-/// Wraps event logs along with event information
+/// Wraps event logs with additional event information
 pub struct Event {
     /// Name of the function being called.
     pub function_name: &'static str,

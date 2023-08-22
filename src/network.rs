@@ -242,7 +242,10 @@ impl Network {
         checked: bool,
     ) -> Call {
         let contract = self.contracts.get(contract_idx).unwrap();
-        let args = contract.abi.encode(function_name, args).unwrap();
+        let args = match contract.abi.encode(function_name, args) {
+            Ok(bytes) => bytes,
+            Err(err) => panic!("Error encoding arguments to {}: {:?}", function_name, err),
+        };
 
         Call {
             function_name,
