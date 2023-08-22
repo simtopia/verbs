@@ -310,14 +310,17 @@ impl Network {
         let check_call = call.checked;
         let tx = DeployedContract::unwrap_call(call);
         let execution_result = self.evm.execute(tx);
-        let mut result = result_to_output_with_events(
+        let result = result_to_output_with_events(
             step,
             contract_idx,
             function_name,
             execution_result,
             check_call,
         );
-        self.events.append(&mut result.events)
+        match result.events {
+            Some(event) => self.events.push(event),
+            None => {}
+        }
     }
 
     pub fn process_calls(&mut self, calls: Vec<Call>, step: i64) {
@@ -343,15 +346,12 @@ fn result_to_output_with_events(
             Output::Call(_) => CallResult {
                 success: true,
                 output,
-                events: logs
-                    .into_iter()
-                    .map(|x| Event {
-                        function_name,
-                        contract_idx,
-                        log: x,
-                        step,
-                    })
-                    .collect(),
+                events: Some(Event {
+                    function_name,
+                    contract_idx,
+                    logs,
+                    step,
+                }),
             },
             Output::Create(..) => {
                 panic!("Unexpected call to create contract during simulation.")
@@ -371,7 +371,7 @@ fn result_to_output_with_events(
                 CallResult {
                     success: false,
                     output: Output::Call(Bytes::default()),
-                    events: Vec::default(),
+                    events: None,
                 }
             }
         }

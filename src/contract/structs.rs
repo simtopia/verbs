@@ -43,7 +43,7 @@ pub struct CallResult {
     /// Output data.
     pub output: Output,
     /// Vec of events returned by call.
-    pub events: Vec<Event>,
+    pub events: Option<Event>,
 }
 
 /// Wraps event logs with additional event information
@@ -53,7 +53,7 @@ pub struct Event {
     /// Index of the contract being called.
     pub contract_idx: usize,
     /// Event data
-    pub log: Log,
+    pub logs: Vec<Log>,
     /// Step event was created
     pub step: i64,
 }
