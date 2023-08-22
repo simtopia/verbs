@@ -264,7 +264,7 @@ impl Network {
         let contract = self.contracts.get(contract_idx).unwrap();
         let tx = contract.unwrap_transaction(callee, function_name, args);
         let execution_result: ExecutionResult = self.evm.execute(tx);
-        let output = result_to_output(contract_idx, function_name, execution_result, true);
+        let output = result_to_output(function_name, execution_result, true);
         let output_data = output.into_data();
         contract.decode_output(function_name, output_data)
     }
@@ -279,7 +279,7 @@ impl Network {
         let contract = self.contracts.get(contract_idx).unwrap();
         let tx = contract.unwrap_transaction_with_selector(callee, selector, args);
         let execution_result: ExecutionResult = self.evm.execute(tx);
-        let output = result_to_output(contract_idx, "Selected", execution_result, true);
+        let output = result_to_output("Selected", execution_result, true);
         let output_data: bytes::Bytes = output.into_data();
         contract.decode_output_with_selector(selector, output_data)
     }
@@ -295,7 +295,7 @@ impl Network {
         let tx = contract.unwrap_transaction(callee, function_name, args);
         let execution_result = self.evm.call(tx);
         let execution_result = execution_result.result;
-        let output = result_to_output(contract_idx, function_name, execution_result, true);
+        let output = result_to_output(function_name, execution_result, true);
         let output_data: bytes::Bytes = output.into_data();
         contract.decode_output(function_name, output_data)
     }
@@ -379,7 +379,6 @@ fn result_to_output_with_events(
 }
 
 fn result_to_output(
-    contract_idx: usize,
     function_name: &'static str,
     execution_result: ExecutionResult,
     checked: bool,
