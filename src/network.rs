@@ -304,7 +304,7 @@ impl Network {
     }
 
     /// Transact a Tx from a call, but do not write it on the DB
-    fn transact_from_call(&mut self, call: Call, step: i64) -> State {
+    fn transact_from_call(&mut self, call: Call) -> State {
         let _contract = self.contracts.get(call.contract_idx).unwrap();
         let function_name = call.function_name;
         let contract_idx = call.contract_idx;
