@@ -9,8 +9,8 @@ use log::{debug, warn};
 use revm::{
     db::{CacheDB, EmptyDB},
     primitives::{
-        AccountInfo, Address, Bytecode, ExecutionResult, Output, ResultAndState, TransactTo, TxEnv,
-        U256,
+        AccountInfo, Address, Bytecode, ExecutionResult, Output, ResultAndState, State, TransactTo,
+        TxEnv, U256,
     },
     EVM,
 };
@@ -298,6 +298,17 @@ impl Network {
         let output = result_to_output(function_name, execution_result, true);
         let output_data: bytes::Bytes = output.into_data();
         contract.decode_output(function_name, output_data)
+    }
+
+    /// Transact a Tx from a call, but do not write it on the DB
+    fn transact_from_call(&mut self, call: Call, step: i64) -> State {
+        let _contract = self.contracts.get(call.contract_idx).unwrap();
+        let function_name = call.function_name;
+        let contract_idx = call.contract_idx;
+        let check_call = call.checked;
+        let tx = DeployedContract::unwrap_call(call);
+        let result_and_state = self.evm.call(tx);
+        result_and_state.state
     }
 
     fn call_from_call(&mut self, call: Call, step: i64) {
