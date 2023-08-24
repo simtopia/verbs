@@ -36,23 +36,24 @@ pub struct Call {
     pub checked: bool,
 }
 
+// Result if a transaction also wrapping any returned events
 pub struct CallResult {
     /// Flag whether transaction was successful.
     pub success: bool,
     /// Output data.
     pub output: Output,
     /// Vec of events returned by call.
-    pub events: Vec<Event>,
+    pub events: Option<Event>,
 }
 
-/// Wraps event logs along with event information
+/// Wraps event logs with additional event information
 pub struct Event {
     /// Name of the function being called.
     pub function_name: &'static str,
     /// Index of the contract being called.
     pub contract_idx: usize,
     /// Event data
-    pub log: Log,
+    pub logs: Vec<Log>,
     /// Step event was created
     pub step: i64,
 }

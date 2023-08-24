@@ -242,7 +242,10 @@ impl Network {
         checked: bool,
     ) -> Call {
         let contract = self.contracts.get(contract_idx).unwrap();
-        let args = contract.abi.encode(function_name, args).unwrap();
+        let args = match contract.abi.encode(function_name, args) {
+            Ok(bytes) => bytes,
+            Err(err) => panic!("Error encoding arguments to {}: {:?}", function_name, err),
+        };
 
         Call {
             function_name,
@@ -264,7 +267,7 @@ impl Network {
         let contract = self.contracts.get(contract_idx).unwrap();
         let tx = contract.unwrap_transaction(callee, function_name, args);
         let execution_result: ExecutionResult = self.evm.execute(tx);
-        let output = result_to_output(function_name, execution_result, true);
+        let output = result_to_output(function_name, execution_result);
         let output_data = output.into_data();
         contract.decode_output(function_name, output_data)
     }
@@ -279,7 +282,7 @@ impl Network {
         let contract = self.contracts.get(contract_idx).unwrap();
         let tx = contract.unwrap_transaction_with_selector(callee, selector, args);
         let execution_result: ExecutionResult = self.evm.execute(tx);
-        let output = result_to_output("Selected", execution_result, true);
+        let output = result_to_output("Selected", execution_result);
         let output_data: bytes::Bytes = output.into_data();
         contract.decode_output_with_selector(selector, output_data)
     }
@@ -295,7 +298,7 @@ impl Network {
         let tx = contract.unwrap_transaction(callee, function_name, args);
         let execution_result = self.evm.call(tx);
         let execution_result = execution_result.result;
-        let output = result_to_output(function_name, execution_result, true);
+        let output = result_to_output(function_name, execution_result);
         let output_data: bytes::Bytes = output.into_data();
         contract.decode_output(function_name, output_data)
     }
@@ -318,14 +321,17 @@ impl Network {
         let check_call = call.checked;
         let tx = DeployedContract::unwrap_call(call);
         let execution_result = self.evm.execute(tx);
-        let mut result = result_to_output_with_events(
+        let result = result_to_output_with_events(
             step,
             contract_idx,
             function_name,
             execution_result,
             check_call,
         );
-        self.events.append(&mut result.events)
+        match result.events {
+            Some(event) => self.events.push(event),
+            None => {}
+        }
     }
 
     pub fn process_calls(&mut self, calls: Vec<Call>, step: i64) {
@@ -351,15 +357,12 @@ fn result_to_output_with_events(
             Output::Call(_) => CallResult {
                 success: true,
                 output,
-                events: logs
-                    .into_iter()
-                    .map(|x| Event {
-                        function_name,
-                        contract_idx,
-                        log: x,
-                        step,
-                    })
-                    .collect(),
+                events: Some(Event {
+                    function_name,
+                    contract_idx,
+                    logs,
+                    step,
+                }),
             },
             Output::Create(..) => {
                 panic!("Unexpected call to create contract during simulation.")
@@ -379,7 +382,7 @@ fn result_to_output_with_events(
                 CallResult {
                     success: false,
                     output: Output::Call(Bytes::default()),
-                    events: Vec::default(),
+                    events: None,
                 }
             }
         }
@@ -389,26 +392,14 @@ fn result_to_output_with_events(
     }
 }
 
-fn result_to_output(
-    function_name: &'static str,
-    execution_result: ExecutionResult,
-    checked: bool,
-) -> Output {
+fn result_to_output(function_name: &'static str, execution_result: ExecutionResult) -> Output {
     match execution_result {
         ExecutionResult::Success { output, .. } => output,
         ExecutionResult::Revert { output, .. } => {
-            if checked {
-                panic!(
-                    "Failed to call {} due to revert: {:?}",
-                    function_name, output
-                )
-            } else {
-                warn!(
-                    "Failed to call {} due to revert: {:?}",
-                    function_name, output
-                );
-                Output::Call(Bytes::default())
-            }
+            panic!(
+                "Failed to call {} due to revert: {:?}",
+                function_name, output
+            )
         }
         ExecutionResult::Halt { reason, .. } => {
             panic!("Failed to call {} due to halt: {:?}", function_name, reason)
