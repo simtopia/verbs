@@ -304,14 +304,14 @@ impl Network {
     }
 
     /// Transact a Tx from a call, but do not write it on the DB
-    pub fn transact_from_call(&mut self, call: Call) -> State {
+    pub fn transact_from_call(&mut self, call: Call) -> ExecutionResult {
         let _contract = self.contracts.get(call.contract_idx).unwrap();
         let function_name = call.function_name;
         let contract_idx = call.contract_idx;
         let check_call = call.checked;
         let tx = DeployedContract::unwrap_call(call);
         let result_and_state = self.evm.call(tx);
-        result_and_state.state
+        result_and_state.result
     }
 
     fn call_from_call(&mut self, call: Call, step: i64) {
