@@ -20,6 +20,7 @@ pub struct ContractDefinition {
 }
 
 /// EVM call/transaction
+#[derive(Clone)]
 pub struct Call {
     /// Name of the function being called.
     pub function_name: &'static str,
