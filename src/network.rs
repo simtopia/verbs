@@ -9,7 +9,7 @@ use log::{debug, warn};
 use revm::{
     db::{CacheDB, EmptyDB},
     primitives::{
-        AccountInfo, Address, Bytecode, ExecutionResult, Output, ResultAndState, State, TransactTo,
+        AccountInfo, Address, Bytecode, ExecutionResult, Log, Output, ResultAndState, TransactTo,
         TxEnv, U256,
     },
     EVM,
@@ -263,28 +263,31 @@ impl Network {
         contract_idx: usize,
         function_name: &'static str,
         args: T,
-    ) -> D {
+    ) -> (D, Vec<Log>) {
         let contract = self.contracts.get(contract_idx).unwrap();
         let tx = contract.unwrap_transaction(callee, function_name, args);
         let execution_result: ExecutionResult = self.evm.execute(tx);
-        let output = result_to_output(function_name, execution_result);
+        let (output, events) = result_to_output(function_name, execution_result);
         let output_data = output.into_data();
-        contract.decode_output(function_name, output_data)
+        (contract.decode_output(function_name, output_data), events)
     }
 
-    pub fn direct_execute_with_selector<T: Tokenize>(
+    pub fn direct_execute_with_selector<D: Detokenize, T: Tokenize>(
         &mut self,
         callee: Address,
         contract_idx: usize,
         selector: Selector,
         args: T,
-    ) {
+    ) -> (D, Vec<Log>) {
         let contract = self.contracts.get(contract_idx).unwrap();
         let tx = contract.unwrap_transaction_with_selector(callee, selector, args);
         let execution_result: ExecutionResult = self.evm.execute(tx);
-        let output = result_to_output("Selected", execution_result);
+        let (output, events) = result_to_output("Selected", execution_result);
         let output_data: bytes::Bytes = output.into_data();
-        contract.decode_output_with_selector(selector, output_data)
+        (
+            contract.decode_output_with_selector(selector, output_data),
+            events,
+        )
     }
 
     pub fn direct_call<D: Detokenize, T: Tokenize>(
@@ -293,31 +296,14 @@ impl Network {
         contract_idx: usize,
         function_name: &'static str,
         args: T,
-    ) -> D {
+    ) -> (D, Vec<Log>) {
         let contract = self.contracts.get(contract_idx).unwrap();
         let tx = contract.unwrap_transaction(callee, function_name, args);
         let execution_result = self.evm.call(tx);
         let execution_result = execution_result.result;
-        let output = result_to_output(function_name, execution_result);
+        let (output, events) = result_to_output(function_name, execution_result);
         let output_data: bytes::Bytes = output.into_data();
-        contract.decode_output(function_name, output_data)
-    }
-
-    /// Transact a Tx from a call, but do not write it on the DB
-    pub fn transact_from_call(&mut self, call: Call, step: i64) -> CallResult {
-        let _contract = self.contracts.get(call.contract_idx).unwrap();
-        let function_name = call.function_name;
-        let contract_idx = call.contract_idx;
-        let check_call = call.checked;
-        let tx = DeployedContract::unwrap_call(call);
-        let result_and_state = self.evm.call(tx);
-        result_to_output_with_events(
-            step,
-            contract_idx,
-            function_name,
-            result_and_state.result,
-            check_call            
-        )
+        (contract.decode_output(function_name, output_data), events)
     }
 
     fn call_from_call(&mut self, call: Call, step: i64) {
@@ -398,9 +384,12 @@ fn result_to_output_with_events(
     }
 }
 
-fn result_to_output(function_name: &'static str, execution_result: ExecutionResult) -> Output {
+fn result_to_output(
+    function_name: &'static str,
+    execution_result: ExecutionResult,
+) -> (Output, Vec<Log>) {
     match execution_result {
-        ExecutionResult::Success { output, .. } => output,
+        ExecutionResult::Success { output, logs, .. } => (output, logs),
         ExecutionResult::Revert { output, .. } => {
             panic!(
                 "Failed to call {} due to revert: {:?}",

@@ -38,12 +38,14 @@ pub fn main() {
     let start_balance = U256::from(start_balance);
 
     for agent in &agents {
-        let _result: bool = sim.direct_execute(
-            agent.get_call_address(),
-            0,
-            "approve",
-            (agent.get_address(), start_balance),
-        );
+        let _result: bool = sim
+            .direct_execute(
+                agent.get_call_address(),
+                0,
+                "approve",
+                (agent.get_address(), start_balance),
+            )
+            .0;
     }
 
     let mut agent_set = AgentVec::from(agents);
