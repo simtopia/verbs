@@ -14,7 +14,7 @@ use revm::{
     },
     EVM,
 };
-use std::ops::Range;
+use std::{fmt, ops::Range};
 
 pub struct Network {
     pub evm: EVM<CacheDB<EmptyDB>>,
@@ -49,6 +49,22 @@ impl CallEVM for EVM<CacheDB<EmptyDB>> {
         };
 
         execution_result
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct RevertError {
+    pub function_name: &'static str,
+    output: Bytes,
+}
+
+impl fmt::Display for RevertError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "Failed to call {} due to revert: {:?}",
+            self.function_name, self.output
+        )
     }
 }
 
@@ -263,13 +279,14 @@ impl Network {
         contract_idx: usize,
         function_name: &'static str,
         args: T,
-    ) -> (D, Vec<Log>) {
+    ) -> Result<(D, Vec<Log>), RevertError> {
         let contract = self.contracts.get(contract_idx).unwrap();
         let tx = contract.unwrap_transaction(callee, function_name, args);
         let execution_result: ExecutionResult = self.evm.execute(tx);
-        let (output, events) = result_to_output(function_name, execution_result);
+        let (output, events) = result_to_output(function_name, execution_result)?;
         let output_data = output.into_data();
-        (contract.decode_output(function_name, output_data), events)
+        let decoded_output = contract.decode_output::<D>(function_name, output_data);
+        Ok((decoded_output, events))
     }
 
     pub fn direct_execute_with_selector<D: Detokenize, T: Tokenize>(
@@ -278,16 +295,14 @@ impl Network {
         contract_idx: usize,
         selector: Selector,
         args: T,
-    ) -> (D, Vec<Log>) {
+    ) -> Result<(D, Vec<Log>), RevertError> {
         let contract = self.contracts.get(contract_idx).unwrap();
         let tx = contract.unwrap_transaction_with_selector(callee, selector, args);
         let execution_result: ExecutionResult = self.evm.execute(tx);
-        let (output, events) = result_to_output("Selected", execution_result);
+        let (output, events) = result_to_output("Selected", execution_result)?;
         let output_data: bytes::Bytes = output.into_data();
-        (
-            contract.decode_output_with_selector(selector, output_data),
-            events,
-        )
+        let decoded_output = contract.decode_output_with_selector::<D>(selector, output_data);
+        Ok((decoded_output, events))
     }
 
     pub fn direct_call<D: Detokenize, T: Tokenize>(
@@ -296,14 +311,15 @@ impl Network {
         contract_idx: usize,
         function_name: &'static str,
         args: T,
-    ) -> (D, Vec<Log>) {
+    ) -> Result<(D, Vec<Log>), RevertError> {
         let contract = self.contracts.get(contract_idx).unwrap();
         let tx = contract.unwrap_transaction(callee, function_name, args);
         let execution_result = self.evm.call(tx);
         let execution_result = execution_result.result;
-        let (output, events) = result_to_output(function_name, execution_result);
+        let (output, events) = result_to_output(function_name, execution_result)?;
         let output_data: bytes::Bytes = output.into_data();
-        (contract.decode_output(function_name, output_data), events)
+        let decoded_output = contract.decode_output::<D>(function_name, output_data);
+        Ok((decoded_output, events))
     }
 
     fn call_from_call(&mut self, call: Call, step: i64) {
@@ -387,15 +403,13 @@ fn result_to_output_with_events(
 fn result_to_output(
     function_name: &'static str,
     execution_result: ExecutionResult,
-) -> (Output, Vec<Log>) {
+) -> Result<(Output, Vec<Log>), RevertError> {
     match execution_result {
-        ExecutionResult::Success { output, logs, .. } => (output, logs),
-        ExecutionResult::Revert { output, .. } => {
-            panic!(
-                "Failed to call {} due to revert: {:?}",
-                function_name, output
-            )
-        }
+        ExecutionResult::Success { output, logs, .. } => Ok((output, logs)),
+        ExecutionResult::Revert { output, .. } => Err(RevertError {
+            function_name,
+            output,
+        }),
         ExecutionResult::Halt { reason, .. } => {
             panic!("Failed to call {} due to halt: {:?}", function_name, reason)
         }

@@ -45,6 +45,7 @@ pub fn main() {
                 "approve",
                 (agent.get_address(), start_balance),
             )
+            .unwrap()
             .0;
     }
 

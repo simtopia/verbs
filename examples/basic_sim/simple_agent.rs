@@ -36,6 +36,7 @@ impl Agent for SimpleAgent {
     fn update(&mut self, rng: &mut Rng, network: &mut Network) -> Vec<Call> {
         self.current_balance = network
             .direct_call(self.call_address, 0, "balanceOf", (self.address,))
+            .unwrap()
             .0;
 
         if self.current_balance > U256::from(0u64) {
