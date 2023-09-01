@@ -66,8 +66,7 @@ impl<R, A: Agent + RecordedAgent<R>> AgentSet for AgentVec<R, A> {
         (&mut self.agents)
             .into_iter()
             .map(|x| x.update(rng, network))
-            .filter(|x| x.is_some())
-            .map(|x| x.unwrap())
+            .flatten()
             .collect()
     }
     /// Record the current state of the agents in this set.
