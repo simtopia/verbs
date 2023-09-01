@@ -26,7 +26,7 @@ pub trait Agent {
     /// * `rng` - Fastrand rng state
     /// * `network` - Protocol deployment(s)
     ///
-    fn update(&mut self, rng: &mut Rng, network: &mut Network) -> Option<Call>;
+    fn update(&mut self, rng: &mut Rng, network: &mut Network) -> Vec<Call>;
     /// Get the revm address of the agent.
     fn get_call_address(&self) -> RevmAddress;
     /// Get the ethers-core address of the agent.

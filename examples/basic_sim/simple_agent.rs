@@ -33,7 +33,7 @@ impl SimpleAgent {
 }
 
 impl Agent for SimpleAgent {
-    fn update(&mut self, rng: &mut Rng, network: &mut Network) -> Option<Call> {
+    fn update(&mut self, rng: &mut Rng, network: &mut Network) -> Vec<Call> {
         self.current_balance = network
             .direct_call(self.call_address, 0, "balanceOf", (self.address,))
             .0;
@@ -49,9 +49,9 @@ impl Agent for SimpleAgent {
                 (receiver, send_amount),
                 true,
             );
-            Some(send_call)
+            vec![send_call]
         } else {
-            None
+            Vec::default()
         }
     }
 

@@ -47,12 +47,7 @@ impl<R, A: Agent + RecordedAgent<R>> AgentSet for SingletonAgent<R, A> {
     /// * `network` - Protocol deployment(s)
     ///
     fn call_agents(&mut self, rng: &mut fastrand::Rng, network: &mut Network) -> Vec<Call> {
-        let call = self.agent.update(rng, network);
-
-        match call {
-            Some(c) => vec![c],
-            None => Vec::default(),
-        }
+        self.agent.update(rng, network)
     }
     /// Record the current state of the agent.
     fn record_agents(&mut self) {
