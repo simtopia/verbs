@@ -112,15 +112,15 @@ impl Network {
         network
     }
 
-    pub fn from_agents(start_balance: u128, agents: AgentSetVec, admin_address: &str) -> Self {
+    pub fn from_agents(start_balance: u128, agents: &AgentSetVec, admin_address: &str) -> Self {
         let mut network = Network::init(admin_address);
         network.insert_agents(start_balance, agents);
         network
     }
 
-    pub fn insert_agents(&mut self, start_balance: u128, agents: AgentSetVec) {
+    pub fn insert_agents(&mut self, start_balance: u128, agents: &AgentSetVec) {
         let start_balance = U256::from(start_balance);
-        for agent_set in agents.0 {
+        for agent_set in agents.0.as_slice() {
             for address in agent_set.get_call_addresses() {
                 self.insert_account(address, start_balance);
             }
