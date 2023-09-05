@@ -5,6 +5,7 @@ use crate::agent::{
 use crate::contract::Call;
 use crate::network::Network;
 use ethers_core::abi::Detokenize;
+use ethers_core::types::Address;
 use kdam::tqdm;
 
 pub type AgentSetRef<'a> = Box<&'a mut dyn AgentSet>;
@@ -16,6 +17,9 @@ impl<'a> AgentSetVec<'a> {
     }
     pub fn push_agent_set<A: AgentSet>(&mut self, agent_set: &'a mut A) {
         self.0.push(Box::new(agent_set))
+    }
+    pub fn get_addresses(&self, index: usize) -> Vec<Address> {
+        self.0.get(index).unwrap().get_addresses()
     }
     pub fn get_records<R, A: RecordedAgentSet<R> + 'static>(
         &mut self,
