@@ -1,8 +1,9 @@
-use crate::agent::traits::{Agent, AgentSet, RecordedAgent};
+use crate::agent::traits::{Agent, AgentSet, RecordedAgent, RecordedAgentSet};
 use crate::contract::Call;
 use crate::network::Network;
 use ethers_core::types::Address;
 use revm::primitives::Address as RevmAddress;
+use std::any::Any;
 use std::mem;
 
 /// Implementation of agent set for a single agent.
@@ -37,8 +38,8 @@ impl<R, A: Agent + RecordedAgent<R>> SingletonAgent<R, A> {
     }
 }
 
-/// Implimentations of agent updates and recording.
-impl<R, A: Agent + RecordedAgent<R>> AgentSet for SingletonAgent<R, A> {
+/// Implementations of agent updates and recording.
+impl<R: 'static, A: Agent + RecordedAgent<R> + 'static> AgentSet for SingletonAgent<R, A> {
     /// Call the agent and optionally return EVM call.
     ///
     /// # Arguments
@@ -60,5 +61,15 @@ impl<R, A: Agent + RecordedAgent<R>> AgentSet for SingletonAgent<R, A> {
     /// Get the ethers-core addresses of the agent.
     fn get_addresses(&self) -> Vec<Address> {
         vec![self.agent.get_address()]
+    }
+    fn as_mut_any(&mut self) -> &mut dyn Any {
+        self
+    }
+}
+
+impl<R, A: Agent + RecordedAgent<R>> RecordedAgentSet<R> for SingletonAgent<R, A> {
+    fn take_records(&mut self) -> Vec<Vec<R>> {
+        let x = mem::replace(&mut self.records, Vec::new());
+        x.into_iter().map(|y| vec![y]).collect()
     }
 }

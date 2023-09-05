@@ -56,5 +56,7 @@ pub fn main() {
 
     sim_runner.run(0, n_steps);
 
-    let _agent_data = agent_set.take_records();
+    let _agent_data = sim_runner
+        .agents
+        .get_records::<U256, AgentVec<U256, simple_agent::SimpleAgent>>(0);
 }

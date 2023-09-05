@@ -1,19 +1,32 @@
-use crate::agent::{traits::AdminAgent, AgentSet};
+use crate::agent::{
+    traits::{AdminAgent, RecordedAgentSet},
+    AgentSet,
+};
 use crate::contract::Call;
 use crate::network::Network;
 use ethers_core::abi::Detokenize;
 use kdam::tqdm;
 
 pub type AgentSetRef<'a> = Box<&'a mut dyn AgentSet>;
-pub type AgentSetVec<'a> = Vec<AgentSetRef<'a>>;
+pub struct AgentSetVec<'a>(Vec<AgentSetRef<'a>>);
 
-pub trait AgentSetVecMethods<'a> {
-    fn push_agent_set<A: AgentSet>(&mut self, agent_set: &'a mut A);
-}
-
-impl<'a> AgentSetVecMethods<'a> for AgentSetVec<'a> {
-    fn push_agent_set<A: AgentSet>(&mut self, agent_set: &'a mut A) {
-        self.push(Box::new(agent_set))
+impl<'a> AgentSetVec<'a> {
+    fn new() -> Self {
+        Self(Vec::new())
+    }
+    pub fn push_agent_set<A: AgentSet>(&mut self, agent_set: &'a mut A) {
+        self.0.push(Box::new(agent_set))
+    }
+    pub fn get_records<R, A: RecordedAgentSet<R> + 'static>(
+        &mut self,
+        index: usize,
+    ) -> Vec<Vec<R>> {
+        let x = self.0.get_mut(index).unwrap();
+        let x = match x.as_mut_any().downcast_mut::<A>() {
+            Some(a) => a,
+            None => panic!("Incorrect downcast when retrieving records"),
+        };
+        x.take_records()
     }
 }
 
@@ -70,7 +83,7 @@ impl<'a, A: AdminAgent> SimRunner<'a, A> {
     /// * `agent_set` - Reference to a set of agents
     ///
     pub fn insert_agent_set<S: AgentSet>(&mut self, agent_set: &'a mut S) {
-        self.agents.push(Box::new(agent_set));
+        self.agents.0.push(Box::new(agent_set));
     }
 
     /// Run the simulation.
@@ -88,7 +101,7 @@ impl<'a, A: AdminAgent> SimRunner<'a, A> {
 
             self.admin_agent.update(&mut rng, n);
 
-            let mut calls: Vec<Call> = (&mut self.agents)
+            let mut calls: Vec<Call> = (&mut self.agents.0)
                 .into_iter()
                 .map(|x| x.call_agents(&mut rng, n))
                 .flatten()
@@ -96,7 +109,7 @@ impl<'a, A: AdminAgent> SimRunner<'a, A> {
 
             rng.shuffle(calls.as_mut_slice());
             self.network.process_calls(calls, self.step);
-            for agent_set in &mut self.agents {
+            for agent_set in &mut self.agents.0 {
                 agent_set.record_agents();
             }
             self.step += 1;

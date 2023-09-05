@@ -3,6 +3,7 @@ use crate::network::Network;
 use ethers_core::types::Address;
 use fastrand::Rng;
 use revm::primitives::Address as RevmAddress;
+use std::any::Any;
 
 /// Admin agent type called at that start of each simulation step.
 pub trait AdminAgent {
@@ -57,4 +58,10 @@ pub trait AgentSet {
     fn get_call_addresses(&self) -> Vec<RevmAddress>;
     /// Get a vector of agent ethers-core addresses contained in this set
     fn get_addresses(&self) -> Vec<Address>;
+    fn as_mut_any(&mut self) -> &mut dyn Any;
+}
+
+// Take time-series data from a set of agents
+pub trait RecordedAgentSet<R> {
+    fn take_records(&mut self) -> Vec<Vec<R>>;
 }

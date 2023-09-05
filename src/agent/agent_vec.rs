@@ -1,8 +1,9 @@
-use crate::agent::traits::{Agent, AgentSet, RecordedAgent};
+use crate::agent::traits::{Agent, AgentSet, RecordedAgent, RecordedAgentSet};
 use crate::contract::Call;
 use crate::network::Network;
 use ethers_core::types::Address;
 use revm::primitives::Address as RevmAddress;
+use std::any::Any;
 use std::mem;
 
 /// Implementation of agent set tracking agents as a vector.
@@ -46,15 +47,16 @@ impl<R, A: Agent + RecordedAgent<R>> AgentVec<R, A> {
     pub fn get_records(&self) -> &Vec<Vec<R>> {
         &self.records
     }
+}
 
-    /// Take ownership of recorded data from the agent-set
-    pub fn take_records(&mut self) -> Vec<Vec<R>> {
+impl<R, A: Agent + RecordedAgent<R>> RecordedAgentSet<R> for AgentVec<R, A> {
+    fn take_records(&mut self) -> Vec<Vec<R>> {
         mem::replace(&mut self.records, Vec::new())
     }
 }
 
-/// Implimentations of agent updates and recording.
-impl<R, A: Agent + RecordedAgent<R>> AgentSet for AgentVec<R, A> {
+/// Implementations of agent updates and recording.
+impl<R: 'static, A: Agent + RecordedAgent<R> + 'static> AgentSet for AgentVec<R, A> {
     /// Call the agents in the set and collect any returned EVM calls.
     ///
     /// # Arguments
@@ -81,5 +83,8 @@ impl<R, A: Agent + RecordedAgent<R>> AgentSet for AgentVec<R, A> {
     /// Get the ethers-core addresses of the agents in this set.
     fn get_addresses(&self) -> Vec<Address> {
         self.agents.iter().map(|x| x.get_address()).collect()
+    }
+    fn as_mut_any(&mut self) -> &mut dyn Any {
+        self
     }
 }
