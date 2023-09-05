@@ -5,18 +5,18 @@ use ethers_core::abi::Detokenize;
 use kdam::tqdm;
 
 /// Stepped simulation runner
-pub struct SimRunner<'a, A: AdminAgent> {
+pub struct SimRunner<A: AdminAgent> {
     /// Network/protocol deployment used in the simulation
     pub network: Network,
     /// Admin agent
     pub admin_agent: A,
     /// Collection of agents sets
-    pub agents: AgentSetVec<'a>,
+    pub agents: AgentSetVec,
     /// Current simulation step/block
     pub step: i64,
 }
 
-impl<'a, A: AdminAgent> SimRunner<'a, A> {
+impl<A: AdminAgent> SimRunner<A> {
     /// Initialise a new empty sim-runner.
     ///
     /// # Arguments
@@ -41,7 +41,7 @@ impl<'a, A: AdminAgent> SimRunner<'a, A> {
     /// * `admin_agents` - Simulation admin agent, updated at that start of each step.
     /// * `agents` - Collection of simulation agents.
     ///
-    pub fn from_agents(network: Network, admin_agent: A, agents: AgentSetVec<'a>) -> Self {
+    pub fn from_agents(network: Network, admin_agent: A, agents: AgentSetVec) -> Self {
         SimRunner {
             network,
             admin_agent,
@@ -56,7 +56,7 @@ impl<'a, A: AdminAgent> SimRunner<'a, A> {
     ///
     /// * `agent_set` - Reference to a set of agents
     ///
-    pub fn insert_agent_set<S: AgentSet>(&mut self, agent_set: &'a mut S) {
+    pub fn insert_agent_set<S: AgentSet + 'static>(&mut self, agent_set: S) {
         self.agents.0.push(Box::new(agent_set));
     }
 

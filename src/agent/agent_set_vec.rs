@@ -1,14 +1,14 @@
 use crate::agent::{traits::RecordedAgentSet, AgentSet};
 use ethers_core::types::Address;
 
-pub type AgentSetRef<'a> = Box<&'a mut dyn AgentSet>;
-pub struct AgentSetVec<'a>(pub Vec<AgentSetRef<'a>>);
+pub type AgentSetRef = Box<dyn AgentSet>;
+pub struct AgentSetVec(pub Vec<AgentSetRef>);
 
-impl<'a> AgentSetVec<'a> {
+impl AgentSetVec {
     pub fn new() -> Self {
         Self(Vec::new())
     }
-    pub fn push_agent_set<A: AgentSet>(&mut self, agent_set: &'a mut A) {
+    pub fn push_agent_set<A: AgentSet + 'static>(&mut self, agent_set: A) {
         self.0.push(Box::new(agent_set))
     }
     pub fn get_addresses(&self, index: usize) -> Vec<Address> {
