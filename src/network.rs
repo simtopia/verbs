@@ -1,4 +1,4 @@
-use crate::agent::AgentSet;
+use crate::agent::AgentSetVec;
 use crate::contract::{Call, CallResult, ContractDefinition, DeployedContract, Event};
 use crate::utils::{address_from_hex, Cast, Eth};
 use bytes::Bytes;
@@ -112,19 +112,15 @@ impl Network {
         network
     }
 
-    pub fn from_agents(
-        start_balance: u128,
-        agents: &Vec<Box<&mut dyn AgentSet>>,
-        admin_address: &str,
-    ) -> Self {
+    pub fn from_agents(start_balance: u128, agents: AgentSetVec, admin_address: &str) -> Self {
         let mut network = Network::init(admin_address);
         network.insert_agents(start_balance, agents);
         network
     }
 
-    pub fn insert_agents(&mut self, start_balance: u128, agents: &Vec<Box<&mut dyn AgentSet>>) {
+    pub fn insert_agents(&mut self, start_balance: u128, agents: AgentSetVec) {
         let start_balance = U256::from(start_balance);
-        for agent_set in agents {
+        for agent_set in agents.0 {
             for address in agent_set.get_call_addresses() {
                 self.insert_account(address, start_balance);
             }
