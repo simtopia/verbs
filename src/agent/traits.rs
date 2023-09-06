@@ -15,6 +15,8 @@ pub trait AdminAgent {
     /// * `network` - Protocol deployment(s)
     ///
     fn update(&mut self, rng: &mut Rng, network: &mut Network);
+    /// Post block update, can be used to process events
+    fn post_update(&mut self, network: &mut Network);
 }
 
 /// Agent trait used to update all agents each model update.

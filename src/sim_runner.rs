@@ -71,21 +71,27 @@ impl<A: AdminAgent> SimRunner<A> {
         let mut rng = fastrand::Rng::with_seed(seed);
 
         for _ in tqdm!(0..n_steps) {
-            let n = &mut self.network;
-
-            self.admin_agent.update(&mut rng, n);
-
+            // Update admin-agent
+            self.admin_agent.update(&mut rng, &mut self.network);
+            // Update all agents
             let mut calls: Vec<Call> = (&mut self.agents.0)
                 .into_iter()
-                .map(|x| x.call_agents(&mut rng, n))
+                .map(|x| x.call_agents(&mut rng, &mut self.network))
                 .flatten()
                 .collect();
-
+            // Shuffle calls
             rng.shuffle(calls.as_mut_slice());
+            // Process calls in order
             self.network.process_calls(calls, self.step);
+            // Record data from agents
             for agent_set in &mut self.agents.0 {
                 agent_set.record_agents();
             }
+            // Post block update admin agent
+            self.admin_agent.post_update(&mut self.network);
+            // Move the events from this block into historical storage
+            self.network.clear_events();
+            // Increment the block count
             self.step += 1;
         }
     }
@@ -103,16 +109,6 @@ impl<A: AdminAgent> SimRunner<A> {
         event_name: &'static str,
     ) -> Vec<(i64, R)> {
         self.network
-            .events
-            .iter()
-            .filter(|x| x.function_name == function_name)
-            .map(|x| {
-                (
-                    x.step,
-                    self.network.contracts[x.contract_idx]
-                        .decode_event(event_name, x.logs.last().unwrap().to_owned()),
-                )
-            })
-            .collect()
+            .process_event_history(function_name, event_name)
     }
 }
