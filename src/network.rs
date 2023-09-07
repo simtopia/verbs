@@ -20,7 +20,8 @@ pub struct Network {
     pub evm: EVM<CacheDB<EmptyDB>>,
     pub admin_address: Address,
     pub contracts: Vec<DeployedContract>,
-    pub events: Vec<Event>,
+    pub last_events: Vec<Event>,
+    pub event_history: Vec<Event>,
 }
 
 trait CallEVM {
@@ -92,7 +93,8 @@ impl Network {
             evm,
             admin_address,
             contracts: Vec::new(),
-            events: Vec::new(),
+            last_events: Vec::new(),
+            event_history: Vec::new(),
         };
 
         network.insert_account(admin_address, start_balance);
@@ -333,7 +335,7 @@ impl Network {
             check_call,
         );
         match result.events {
-            Some(event) => self.events.push(event),
+            Some(event) => self.last_events.push(event),
             None => {}
         }
     }
@@ -346,6 +348,58 @@ impl Network {
 
     pub fn get_contract_address(&self, contract_idx: usize) -> EthAddress {
         self.contracts.get(contract_idx).unwrap().arg_address
+    }
+
+    pub fn clear_events(&mut self) {
+        self.event_history.append(&mut self.last_events);
+    }
+    /// Decode events of a specific type from the last events into actual data
+    ///
+    /// # Arguments
+    ///
+    /// * `function_name` - Name of the function that produced the events
+    /// * `event_name` - Name of the actual event to decode
+    ///
+    pub fn process_last_events<R: Detokenize>(
+        &self,
+        function_name: &'static str,
+        event_name: &'static str,
+    ) -> Vec<(i64, R)> {
+        self.last_events
+            .iter()
+            .filter(|x| x.function_name == function_name)
+            .map(|x| {
+                (
+                    x.step,
+                    self.contracts[x.contract_idx]
+                        .decode_event(event_name, x.logs.last().unwrap().to_owned()),
+                )
+            })
+            .collect()
+    }
+    /// Decode events of a specific type from the full event history into actual data
+    ///
+    /// # Arguments
+    ///
+    /// * `function_name` - Name of the function that produced the events
+    /// * `event_name` - Name of the actual event to decode
+    ///
+    pub fn process_event_history<R: Detokenize>(
+        &self,
+        function_name: &'static str,
+        event_name: &'static str,
+    ) -> Vec<(i64, R)> {
+        self.event_history
+            .iter()
+            .filter(|x| x.function_name == function_name)
+            .map(|x| {
+                (
+                    x.step,
+                    self.contracts[x.contract_idx]
+                        .decode_event(event_name, x.logs.last().unwrap().to_owned()),
+                )
+            })
+            .collect()
     }
 }
 

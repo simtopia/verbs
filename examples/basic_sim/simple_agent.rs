@@ -9,6 +9,7 @@ pub struct DummyAdminAgent {}
 
 impl AdminAgent for DummyAdminAgent {
     fn update(&mut self, _rng: &mut Rng, _network: &mut Network) {}
+    fn post_update(&mut self, _network: &mut Network) {}
 }
 
 pub struct SimpleAgent {
