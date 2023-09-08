@@ -353,6 +353,15 @@ impl Network {
     pub fn clear_events(&mut self) {
         self.event_history.append(&mut self.last_events);
     }
+
+    pub fn decode_event<R: Detokenize>(&self, event_name: &'static str, event: &Event) -> (i64, R) {
+        (
+            event.step,
+            self.contracts[event.contract_idx]
+                .decode_event(event_name, event.logs.last().unwrap().to_owned()),
+        )
+    }
+
     /// Decode events of a specific type from the last events into actual data
     ///
     /// # Arguments
@@ -368,13 +377,7 @@ impl Network {
         self.last_events
             .iter()
             .filter(|x| x.function_name == function_name)
-            .map(|x| {
-                (
-                    x.step,
-                    self.contracts[x.contract_idx]
-                        .decode_event(event_name, x.logs.last().unwrap().to_owned()),
-                )
-            })
+            .map(|x| self.decode_event(event_name, x))
             .collect()
     }
     /// Decode events of a specific type from the full event history into actual data
@@ -392,13 +395,7 @@ impl Network {
         self.event_history
             .iter()
             .filter(|x| x.function_name == function_name)
-            .map(|x| {
-                (
-                    x.step,
-                    self.contracts[x.contract_idx]
-                        .decode_event(event_name, x.logs.last().unwrap().to_owned()),
-                )
-            })
+            .map(|x| self.decode_event(event_name, x))
             .collect()
     }
 }
