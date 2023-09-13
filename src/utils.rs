@@ -93,21 +93,19 @@ impl Eth for U256 {
 /// Scale a U256 value representing a fixed number
 /// of decimals into a value that fits a f64 (discarding some precision)
 ///
-/// S1 and s2 should add up to the total number of decimals to
-/// correctly scale the value
-///
 /// # Arguments
 ///
 /// * `x` - U256 value
-/// * `s1` - Number of decimals to scale to u64
-/// * `s2` - Number of decimals to scale float to final decimal value
+/// * `decimals` - Number of decimals represented by `x`
+/// * `precision` - Desired precision of the output
 ///
-pub fn scale_data_value(x: U256, s1: usize, s2: i32) -> f64 {
+pub fn scale_data_value(x: U256, decimals: usize, precision: usize) -> f64 {
+    let s1 = decimals - precision;
     let x = x / U256::exp10(s1);
     // This will check for overflow
     //let x = x.as_u64();
     let x = x.clamp(U256::zero(), U256::MAX).as_u64();
-    x.as_f64() / 10f64.powi(s2)
+    x.as_f64() / 10f64.powi(precision.as_i32())
 }
 
 /// Clamp a u256 to the u128 range and cast
@@ -154,19 +152,19 @@ mod tests {
     #[test]
     fn scaling_values() {
         let x = U256::from(5) * U256::exp10(17);
-        let y = scale_data_value(x, 9, 9);
+        let y = scale_data_value(x, 18, 6);
         assert_approx_eq!(y, 0.5f64);
 
         let x = U256::from(1) * U256::exp10(15);
-        let y = scale_data_value(x, 9, 9);
+        let y = scale_data_value(x, 18, 6);
         assert_approx_eq!(y, 0.001f64);
 
         let x = U256::from(15) * U256::exp10(17);
-        let y = scale_data_value(x, 9, 9);
+        let y = scale_data_value(x, 18, 6);
         assert_approx_eq!(y, 1.5f64);
 
         let x = U256::from(1000000005) * U256::exp10(12);
-        let y = scale_data_value(x, 9, 9);
+        let y = scale_data_value(x, 18, 6);
         assert_approx_eq!(y, 1000.000005f64);
     }
 
