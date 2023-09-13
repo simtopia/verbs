@@ -7,4 +7,4 @@ jobs:
     container: rust:slim
     steps:
       - uses: actions/checkout@v2
-      - run: cargo test -v
+      - run: cargo test
