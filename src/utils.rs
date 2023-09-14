@@ -104,7 +104,7 @@ pub fn scale_data_value(x: U256, decimals: usize, precision: usize) -> f64 {
     let x = x / U256::exp10(s1);
     // This will check for overflow
     //let x = x.as_u64();
-    let x = x.clamp(U256::zero(), U256::MAX).as_u64();
+    let x = x.clamp(U256::zero(), U256::from(u64::MAX)).as_u64();
     x.as_f64() / 10f64.powi(precision.as_i32())
 }
 
@@ -128,7 +128,7 @@ pub fn clamp_u256_to_u128(x: U256) -> u128 {
 ///
 pub fn div_u256(x: U256, y: U256, precision: i32) -> f64 {
     let z = x * U256::exp10(precision.as_usize()) / y;
-    let z = z.clamp(U256::zero(), U256::MAX).as_u64();
+    let z = z.clamp(U256::zero(), U256::from(u64::MAX)).as_u64();
     z.as_f64() / 10f64.powi(precision)
 }
 
@@ -169,6 +169,14 @@ mod tests {
     }
 
     #[test]
+    fn scaling_out_of_bounds() {
+        // Test if value is too large we continue
+        let x = U256::MAX;
+        let y = scale_data_value(x, 4, 0);
+        assert_approx_eq!(y, u64::MAX.as_f64());
+    }
+
+    #[test]
     fn dividing_u256() {
         let x = U256::from(10) * U256::exp10(15);
         let y = U256::from(5) * U256::exp10(15);
@@ -187,5 +195,13 @@ mod tests {
 
         let z = div_u256(y, x, 6);
         assert_approx_eq!(z, 0.0001f64);
+    }
+
+    #[test]
+    fn div_out_of_bounds() {
+        let x = U256::exp10(30);
+        let y = U256::one();
+        let z = div_u256(x, y, 0);
+        assert_approx_eq!(z, u64::MAX.as_f64())
     }
 }
