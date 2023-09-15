@@ -1,4 +1,4 @@
-name: testing
+name: tests
 run-name: ${{ github.actor }} tests
 on: [pull_request]
 jobs:
