@@ -13,7 +13,7 @@ pub struct SimRunner<A: AdminAgent> {
     /// Collection of agents sets
     pub agents: AgentSetVec,
     /// Current simulation step/block
-    pub step: i64,
+    pub step: usize,
 }
 
 impl<A: AdminAgent> SimRunner<A> {
@@ -107,7 +107,7 @@ impl<A: AdminAgent> SimRunner<A> {
         &self,
         function_name: &'static str,
         event_name: &'static str,
-    ) -> Vec<(i64, R)> {
+    ) -> Vec<(usize, usize, R)> {
         self.network
             .process_event_history(function_name, event_name)
     }

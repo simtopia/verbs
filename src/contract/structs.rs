@@ -56,5 +56,7 @@ pub struct Event {
     /// Event data
     pub logs: Vec<Log>,
     /// Step event was created
-    pub step: i64,
+    pub step: usize,
+    /// Sequence event created inside a block
+    pub sequence: usize,
 }
