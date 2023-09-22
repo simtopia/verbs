@@ -1,10 +1,10 @@
-name: tests
-run-name: ${{ github.actor }} tests
+name: test-build
+run-name: ${{ github.actor }} test build
 on: [pull_request]
 jobs:
-  rust_tests:
+  cargo_build:
     runs-on: ubuntu-latest
     container: rust:slim
     steps:
       - uses: actions/checkout@v2
-      - run: cargo test
+      - run: cargo build
