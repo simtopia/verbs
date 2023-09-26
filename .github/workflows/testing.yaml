@@ -3,6 +3,7 @@ run-name: ${{ github.actor }} tests
 on: [pull_request]
 jobs:
   rust_tests:
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     container: rust:slim
     steps:

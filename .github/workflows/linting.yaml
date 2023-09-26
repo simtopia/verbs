@@ -3,6 +3,7 @@ run-name: ${{ github.actor }} code format checks
 on: [pull_request]
 jobs:
   python_linting:
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -18,6 +19,7 @@ jobs:
       - run: pre-commit install
       - run: task lint
   rust_linting:
+    if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     container: rust:slim
     steps:
