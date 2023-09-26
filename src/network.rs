@@ -320,7 +320,7 @@ impl Network {
         Ok((decoded_output, events))
     }
 
-    fn call_from_call(&mut self, call: Call, step: i64) {
+    fn call_from_call(&mut self, call: Call, step: usize, sequence: usize) {
         let _contract = self.contracts.get(call.contract_idx).unwrap();
         let function_name = call.function_name;
         let contract_idx = call.contract_idx;
@@ -329,6 +329,7 @@ impl Network {
         let execution_result = self.evm.execute(tx);
         let result = result_to_output_with_events(
             step,
+            sequence,
             contract_idx,
             function_name,
             execution_result,
@@ -340,9 +341,9 @@ impl Network {
         }
     }
 
-    pub fn process_calls(&mut self, calls: Vec<Call>, step: i64) {
-        for call in calls {
-            self.call_from_call(call, step);
+    pub fn process_calls(&mut self, calls: Vec<Call>, step: usize) {
+        for (i, call) in calls.into_iter().enumerate() {
+            self.call_from_call(call, step, i);
         }
     }
 
@@ -354,9 +355,14 @@ impl Network {
         self.event_history.append(&mut self.last_events);
     }
 
-    pub fn decode_event<R: Detokenize>(&self, event_name: &'static str, event: &Event) -> (i64, R) {
+    pub fn decode_event<R: Detokenize>(
+        &self,
+        event_name: &'static str,
+        event: &Event,
+    ) -> (usize, usize, R) {
         (
             event.step,
+            event.sequence,
             self.contracts[event.contract_idx]
                 .decode_event(event_name, event.logs.last().unwrap().to_owned()),
         )
@@ -373,7 +379,7 @@ impl Network {
         &self,
         function_name: &'static str,
         event_name: &'static str,
-    ) -> Vec<(i64, R)> {
+    ) -> Vec<(usize, usize, R)> {
         self.last_events
             .iter()
             .filter(|x| x.function_name == function_name)
@@ -391,7 +397,7 @@ impl Network {
         &self,
         function_name: &'static str,
         event_name: &'static str,
-    ) -> Vec<(i64, R)> {
+    ) -> Vec<(usize, usize, R)> {
         self.event_history
             .iter()
             .filter(|x| x.function_name == function_name)
@@ -401,7 +407,8 @@ impl Network {
 }
 
 fn result_to_output_with_events(
-    step: i64,
+    step: usize,
+    sequence: usize,
     contract_idx: usize,
     function_name: &'static str,
     execution_result: ExecutionResult,
@@ -417,6 +424,7 @@ fn result_to_output_with_events(
                     contract_idx,
                     logs,
                     step,
+                    sequence,
                 }),
             },
             Output::Create(..) => {
