@@ -24,12 +24,22 @@ def process_contract(contract_path, solc_version, output_path):
 
         if bin and abi:
 
+            if not bin[:2] == "0x":
+                bin = "0x" + bin
+
             with open(f"{output_path}/{contract_name}.abi", "w") as f:
                 json.dump(abi, f, indent=4)
 
-            params = dict(bin=bin, constructor_args=[], deploy_address="")
+            deploy_address = "0x0000000000000000000000000000000000000000"
 
-            with open(f"{output_path}/{contract_name}_params.json", "w") as f:
+            params = dict(
+                bytecode=bin,
+                constructor_args=[],
+                deploy_address=deploy_address,
+                name=contract_name,
+            )
+
+            with open(f"{output_path}/{contract_name}.json", "w") as f:
                 json.dump(params, f, indent=4)
 
 
