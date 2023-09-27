@@ -27,7 +27,7 @@ impl DeployedContract {
     /// * `function_name` - Name of the function being called.
     /// * `args` - Function arguments (a tuple if multiple).
     ///
-    pub fn unwrap_transaction<'a, T: Tokenize>(
+    pub fn unwrap_transaction<T: Tokenize>(
         &self,
         callee: Address,
         function_name: &'static str,
@@ -63,7 +63,7 @@ impl DeployedContract {
     /// * `selector` - Selector encoding the id of the function to call.
     /// * `args` - Function arguments (a tuple if multiple).
     ///
-    pub fn unwrap_transaction_with_selector<'a, T: Tokenize>(
+    pub fn unwrap_transaction_with_selector<T: Tokenize>(
         &self,
         callee: Address,
         selector: Selector,

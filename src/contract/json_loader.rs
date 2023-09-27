@@ -86,25 +86,22 @@ pub fn load_params(
 
     let storage_values = params_json.get("storage");
 
-    let storage_values = match storage_values {
-        None => Option::None,
-        Some(x) => Option::Some(
-            x.as_object()
-                .unwrap()
-                .into_iter()
-                .map(unpack_storage)
-                .collect(),
-        ),
-    };
+    let storage_values = storage_values.map(|x| {
+        x.as_object()
+            .unwrap()
+            .into_iter()
+            .map(unpack_storage)
+            .collect()
+    });
 
     let encoded_constructor_args: Bytes;
 
-    if (abi.abi().constructor.is_none()) || (!storage_values.is_none()) {
+    if (abi.abi().constructor.is_none()) || (storage_values.is_some()) {
         encoded_constructor_args = Bytes::from(bytes2);
     } else {
         let mut constructor_tokens: Vec<Token>;
 
-        if deployment_args.is_none() {
+        if let Some(..) = deployment_args {
             let constructor_args = params_json
                 .get("constructor_args")
                 .unwrap()
@@ -119,7 +116,7 @@ pub fn load_params(
             ) {
                 let arg_str = a.as_str().unwrap();
                 let token = StrictTokenizer::tokenize(&b.kind, arg_str)
-                    .expect(format!("Could not parse token {} as {}", arg_str, b.kind).as_str());
+                    .unwrap_or_else(|_| panic!("Could not parse token {} as {}", arg_str, b.kind));
                 constructor_tokens.push(token);
             }
         } else {

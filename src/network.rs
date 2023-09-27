@@ -33,23 +33,19 @@ impl CallEVM for EVM<CacheDB<EmptyDB>> {
     fn execute(&mut self, tx: TxEnv) -> ExecutionResult {
         self.env.tx = tx;
 
-        let execution_result = match self.transact_commit() {
+        match self.transact_commit() {
             Ok(val) => val,
             Err(_) => panic!("Execution failed"),
-        };
-
-        execution_result
+        }
     }
 
     fn call(&mut self, tx: TxEnv) -> ResultAndState {
         self.env.tx = tx;
 
-        let execution_result = match self.transact() {
+        match self.transact() {
             Ok(val) => val,
             Err(_) => panic!("Call failed"),
-        };
-
-        execution_result
+        }
     }
 }
 
@@ -190,7 +186,7 @@ impl Network {
                         let storage_changes: hashbrown::HashMap<U256, U256> = v
                             .storage
                             .into_iter()
-                            .map(|(k, v)| (k.clone(), v.present_value().clone()))
+                            .map(|(k, v)| (k, v.present_value()))
                             .collect();
                         db.replace_account_storage(contract.deploy_address, storage_changes)
                             .unwrap_or_else(|_| {
@@ -231,7 +227,7 @@ impl Network {
         }
 
         self.insert_contract(contract.name, contract.abi, contract.deploy_address);
-        return contract.deploy_address;
+        contract.deploy_address
     }
 
     pub fn insert_contract(&mut self, name: String, abi: BaseContract, address: Address) {
@@ -335,9 +331,8 @@ impl Network {
             execution_result,
             check_call,
         );
-        match result.events {
-            Some(event) => self.last_events.push(event),
-            None => {}
+        if let Some(event) = result.events {
+            self.last_events.push(event)
         }
     }
 

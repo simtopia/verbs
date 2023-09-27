@@ -14,6 +14,15 @@ pub struct AgentVec<R, A: Agent + RecordedAgent<R>> {
     records: Vec<Vec<R>>,
 }
 
+impl<R, A: Agent + RecordedAgent<R>> Default for AgentVec<R, A> {
+    fn default() -> Self {
+        AgentVec {
+            agents: Vec::<A>::new(),
+            records: Vec::<Vec<R>>::new(),
+        }
+    }
+}
+
 impl<R, A: Agent + RecordedAgent<R>> AgentVec<R, A> {
     /// Initialise an empty vector agent-set.
     pub fn new() -> Self {
@@ -51,7 +60,7 @@ impl<R, A: Agent + RecordedAgent<R>> AgentVec<R, A> {
 
 impl<R, A: Agent + RecordedAgent<R>> RecordedAgentSet<R> for AgentVec<R, A> {
     fn take_records(&mut self) -> Vec<Vec<R>> {
-        mem::replace(&mut self.records, Vec::new())
+        mem::take(&mut self.records)
     }
 }
 
@@ -65,15 +74,14 @@ impl<R: 'static, A: Agent + RecordedAgent<R> + 'static> AgentSet for AgentVec<R,
     /// * `network` - Protocol deployment(s)
     ///
     fn call_agents(&mut self, rng: &mut fastrand::Rng, network: &mut Network) -> Vec<Call> {
-        (&mut self.agents)
-            .into_iter()
-            .map(|x| x.update(rng, network))
-            .flatten()
+        self.agents
+            .iter_mut()
+            .flat_map(|x| x.update(rng, network))
             .collect()
     }
     /// Record the current state of the agents in this set.
     fn record_agents(&mut self) {
-        let records: Vec<R> = (&mut self.agents).into_iter().map(|x| x.record()).collect();
+        let records: Vec<R> = self.agents.iter_mut().map(|x| x.record()).collect();
         self.records.push(records);
     }
     /// Get the revm addresses of the agents in this set.
