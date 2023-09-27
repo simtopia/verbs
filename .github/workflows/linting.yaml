@@ -28,3 +28,13 @@ jobs:
         with:
           components: rustfmt
       - run: cargo fmt --all -- --check
+  rust_clippy:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    container: rust:slim
+    steps:
+      - uses: actions/checkout@v2
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - run: cargo clippy -- -Dwarnings

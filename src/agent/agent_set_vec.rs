@@ -4,6 +4,12 @@ use ethers_core::types::Address;
 pub type AgentSetRef = Box<dyn AgentSet>;
 pub struct AgentSetVec(pub Vec<AgentSetRef>);
 
+impl Default for AgentSetVec {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl AgentSetVec {
     pub fn new() -> Self {
         Self(Vec::new())

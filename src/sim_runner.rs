@@ -74,10 +74,11 @@ impl<A: AdminAgent> SimRunner<A> {
             // Update admin-agent
             self.admin_agent.update(&mut rng, &mut self.network);
             // Update all agents
-            let mut calls: Vec<Call> = (&mut self.agents.0)
-                .into_iter()
-                .map(|x| x.call_agents(&mut rng, &mut self.network))
-                .flatten()
+            let mut calls: Vec<Call> = self
+                .agents
+                .0
+                .iter_mut()
+                .flat_map(|x| x.call_agents(&mut rng, &mut self.network))
                 .collect();
             // Shuffle calls
             rng.shuffle(calls.as_mut_slice());

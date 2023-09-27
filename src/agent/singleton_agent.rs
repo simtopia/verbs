@@ -34,7 +34,7 @@ impl<R, A: Agent + RecordedAgent<R>> SingletonAgent<R, A> {
 
     /// Take ownership of recorded data of the agent.
     pub fn take_records(&mut self) -> Vec<R> {
-        mem::replace(&mut self.records, Vec::new())
+        mem::take(&mut self.records)
     }
 }
 
@@ -69,7 +69,7 @@ impl<R: 'static, A: Agent + RecordedAgent<R> + 'static> AgentSet for SingletonAg
 
 impl<R, A: Agent + RecordedAgent<R>> RecordedAgentSet<R> for SingletonAgent<R, A> {
     fn take_records(&mut self) -> Vec<Vec<R>> {
-        let x = mem::replace(&mut self.records, Vec::new());
+        let x = mem::take(&mut self.records);
         x.into_iter().map(|y| vec![y]).collect()
     }
 }
