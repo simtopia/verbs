@@ -94,34 +94,36 @@ pub fn load_params(
             .collect()
     });
 
-    let encoded_constructor_args: Bytes;
-
-    if (abi.abi().constructor.is_none()) || (storage_values.is_some()) {
-        encoded_constructor_args = Bytes::from(bytes2);
+    let encoded_constructor_args: Bytes = if (abi.abi().constructor.is_none())
+        || (storage_values.is_some())
+    {
+        Bytes::from(bytes2)
     } else {
-        let mut constructor_tokens: Vec<Token>;
+        let constructor_tokens = match deployment_args {
+            Some(args) => args,
+            None => {
+                let constructor_args = params_json
+                    .get("constructor_args")
+                    .unwrap()
+                    .as_array()
+                    .unwrap();
 
-        if let Some(..) = deployment_args {
-            let constructor_args = params_json
-                .get("constructor_args")
-                .unwrap()
-                .as_array()
-                .unwrap();
+                let mut constructor_tokens = Vec::new();
 
-            constructor_tokens = Vec::new();
+                for (a, b) in Iterator::zip(
+                    constructor_args.iter(),
+                    abi.abi().constructor().unwrap().clone().inputs,
+                ) {
+                    let arg_str = a.as_str().unwrap();
+                    let token = StrictTokenizer::tokenize(&b.kind, arg_str).unwrap_or_else(|_| {
+                        panic!("Could not parse token {} as {}", arg_str, b.kind)
+                    });
+                    constructor_tokens.push(token);
+                }
 
-            for (a, b) in Iterator::zip(
-                constructor_args.iter(),
-                abi.abi().constructor().unwrap().clone().inputs,
-            ) {
-                let arg_str = a.as_str().unwrap();
-                let token = StrictTokenizer::tokenize(&b.kind, arg_str)
-                    .unwrap_or_else(|_| panic!("Could not parse token {} as {}", arg_str, b.kind));
-                constructor_tokens.push(token);
+                constructor_tokens
             }
-        } else {
-            constructor_tokens = deployment_args.unwrap();
-        }
+        };
 
         let constructor_args = abi
             .abi()
@@ -130,8 +132,8 @@ pub fn load_params(
             .encode_input(bytes2, &constructor_tokens)
             .unwrap();
 
-        encoded_constructor_args = Bytes::from(constructor_args);
-    }
+        Bytes::from(constructor_args)
+    };
 
     (
         name,
