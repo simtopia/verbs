@@ -1,7 +1,6 @@
 use crate::agent::{AdminAgent, AgentSet, AgentSetVec};
 use crate::contract::Call;
 use crate::network::Network;
-use ethers_core::abi::Detokenize;
 use kdam::tqdm;
 
 /// Stepped simulation runner
@@ -40,7 +39,14 @@ impl<A: AdminAgent> SimRunner<A> {
     /// * `network` - Network/deployment.
     /// * `admin_agents` - Simulation admin agent, updated at that start of each step.
     /// * `agents` - Collection of simulation agents.
-    ///
+    ///pub fn process_events<R: SolEvent>(
+    //     &self,
+    //     function_name: &'static str,
+    //     event_name: &'static str,
+    // ) -> Vec<(usize, usize, R)> {
+    //     self.network
+    //         .process_event_history(function_name, event_name)
+    // }
     pub fn from_agents(network: Network, admin_agent: A, agents: AgentSetVec) -> Self {
         SimRunner {
             network,
@@ -97,19 +103,19 @@ impl<A: AdminAgent> SimRunner<A> {
         }
     }
 
-    /// Decode events of a specific type into actual data
-    ///
-    /// # Arguments
-    ///
-    /// * `function_name` - Name of the function that produced the events
-    /// * `event_name` - Name of the actual event to decode
-    ///
-    pub fn process_events<R: Detokenize>(
-        &self,
-        function_name: &'static str,
-        event_name: &'static str,
-    ) -> Vec<(usize, usize, R)> {
-        self.network
-            .process_event_history(function_name, event_name)
-    }
+    // Decode events of a specific type into actual data
+    //
+    // # Arguments
+    //
+    // * `function_name` - Name of the function that produced the events
+    // * `event_name` - Name of the actual event to decode
+    //
+    // pub fn process_events<R: SolEvent>(
+    //     &self,
+    //     function_name: &'static str,
+    //     event_name: &'static str,
+    // ) -> Vec<(usize, usize, R)> {
+    //     self.network
+    //         .process_event_history(function_name, event_name)
+    // }
 }

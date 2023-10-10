@@ -1,8 +1,6 @@
+use alloy_primitives::{Address, Bytes, U256};
 use csv::Writer;
-use ethers_core::types::{Address, Bytes, U256};
 use revm::primitives::bitvec::macros::internal::funty::Fundamental;
-use revm::primitives::Address as RevmAddress;
-use revm::primitives::U256 as RevmU256;
 use std::fs::File;
 
 /// Write a time-series of agent values to a csv file.
@@ -31,12 +29,12 @@ pub fn csv_writer<T: ToString>(records: &Vec<Vec<T>>, output_path: &str) {
 ///
 /// * `hx` - Hex-string, should be prefixed with `0x`.
 ///
-pub fn address_from_hex(hx: &str) -> RevmAddress {
+pub fn address_from_hex(hx: &str) -> Address {
     let address = hx
         .strip_prefix("0x")
         .expect("Addresses require '0x' prefix");
     let address = hex::decode(address).expect("Decoding hex string failed");
-    RevmAddress::from_slice(address.as_slice())
+    Address::from_slice(address.as_slice())
 }
 
 /// Create a Bytes object from a hex string.
@@ -50,39 +48,12 @@ pub fn data_bytes_from_hex(hx: &str) -> Bytes {
     Bytes::from(data)
 }
 
-/// Casting between revm and ethers-core types
-pub trait Cast<Y> {
-    fn cast(self) -> Y;
-}
-
-/// Cast etheres-core address to revm address
-impl Cast<Address> for RevmAddress {
-    fn cast(self) -> Address {
-        Address::from(self.0)
-    }
-}
-
-/// Cast revm address to ethers-core address
-impl Cast<RevmAddress> for Address {
-    fn cast(self) -> RevmAddress {
-        RevmAddress::from(self.0)
-    }
-}
-
 /// Convert values in in eth to weth
 pub trait Eth {
     fn to_weth(x: u128) -> Self;
 }
 
 /// Convert revm u256 from eth to weth value
-impl Eth for RevmU256 {
-    fn to_weth(x: u128) -> Self {
-        let x: u128 = x * 10u128.pow(18);
-        Self::from(x)
-    }
-}
-
-/// Convert ethers-core u256 from eth to weth value
 impl Eth for U256 {
     fn to_weth(x: u128) -> Self {
         let x: u128 = x * 10u128.pow(18);
@@ -100,11 +71,14 @@ impl Eth for U256 {
 /// * `precision` - Desired precision of the output
 ///
 pub fn scale_data_value(x: U256, decimals: usize, precision: usize) -> f64 {
-    let s1 = decimals - precision;
-    let x = x / U256::exp10(s1);
+    let s1 = U256::from(decimals - precision);
+    let x = x / U256::from(10).pow(s1);
     // This will check for overflow
     //let x = x.as_u64();
-    let x = x.clamp(U256::zero(), U256::from(u64::MAX)).as_u64();
+    let x: u64 = x
+        .clamp(U256::ZERO, U256::from(u64::MAX))
+        .try_into()
+        .unwrap();
     x.as_f64() / 10f64.powi(precision.as_i32())
 }
 
@@ -115,7 +89,9 @@ pub fn scale_data_value(x: U256, decimals: usize, precision: usize) -> f64 {
 /// * `x` - u256 value
 ///
 pub fn clamp_u256_to_u128(x: U256) -> u128 {
-    x.clamp(U256::zero(), U256::from(u128::MAX)).as_u128()
+    x.clamp(U256::ZERO, U256::from(u128::MAX))
+        .try_into()
+        .unwrap()
 }
 
 /// Divide two u256 values returning a f64
@@ -127,8 +103,11 @@ pub fn clamp_u256_to_u128(x: U256) -> u128 {
 /// * `precision` - decimal precision of the result
 ///
 pub fn div_u256(x: U256, y: U256, precision: i32) -> f64 {
-    let z = x * U256::exp10(precision.as_usize()) / y;
-    let z = z.clamp(U256::zero(), U256::from(u64::MAX)).as_u64();
+    let z = x * U256::from(10).pow(U256::from(precision)) / y;
+    let z: u64 = z
+        .clamp(U256::ZERO, U256::from(u64::MAX))
+        .try_into()
+        .unwrap();
     z.as_f64() / 10f64.powi(precision)
 }
 
@@ -139,31 +118,20 @@ mod tests {
     use assert_approx_eq::assert_approx_eq;
 
     #[test]
-    fn cast_addresses() {
-        let w = RevmAddress::random();
-        let x = w.cast();
-        let y = x.cast();
-        let z = y.cast();
-
-        assert_eq!(w, y);
-        assert_eq!(x, z);
-    }
-
-    #[test]
     fn scaling_values() {
-        let x = U256::from(5) * U256::exp10(17);
+        let x = U256::from(5) * U256::from(10).pow(U256::from(17));
         let y = scale_data_value(x, 18, 6);
         assert_approx_eq!(y, 0.5f64);
 
-        let x = U256::from(1) * U256::exp10(15);
+        let x = U256::from(1) * U256::from(10).pow(U256::from(15));
         let y = scale_data_value(x, 18, 6);
         assert_approx_eq!(y, 0.001f64);
 
-        let x = U256::from(15) * U256::exp10(17);
+        let x = U256::from(15) * U256::from(10).pow(U256::from(17));
         let y = scale_data_value(x, 18, 6);
         assert_approx_eq!(y, 1.5f64);
 
-        let x = U256::from(1000000005) * U256::exp10(12);
+        let x = U256::from(1000000005) * U256::from(10).pow(U256::from(12));
         let y = scale_data_value(x, 18, 6);
         assert_approx_eq!(y, 1000.000005f64);
     }
@@ -178,8 +146,8 @@ mod tests {
 
     #[test]
     fn dividing_u256() {
-        let x = U256::from(10) * U256::exp10(15);
-        let y = U256::from(5) * U256::exp10(15);
+        let x = U256::from(10) * U256::from(10).pow(U256::from(15));
+        let y = U256::from(5) * U256::from(10).pow(U256::from(15));
 
         let z = div_u256(x, y, 6);
         assert_approx_eq!(z, 2.0f64);
@@ -187,8 +155,8 @@ mod tests {
         let z = div_u256(y, x, 6);
         assert_approx_eq!(z, 0.5f64);
 
-        let x = U256::exp10(20);
-        let y = U256::exp10(16);
+        let x = U256::from(10).pow(U256::from(20));
+        let y = U256::from(10).pow(U256::from(16));
 
         let z = div_u256(x, y, 6);
         assert_approx_eq!(z, 10000.0f64);
@@ -199,8 +167,8 @@ mod tests {
 
     #[test]
     fn div_out_of_bounds() {
-        let x = U256::exp10(30);
-        let y = U256::one();
+        let x = U256::from(10).pow(U256::from(30));
+        let y = U256::from(1);
         let z = div_u256(x, y, 0);
         assert_approx_eq!(z, u64::MAX.as_f64())
     }

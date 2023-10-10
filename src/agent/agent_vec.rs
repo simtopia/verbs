@@ -1,8 +1,7 @@
 use crate::agent::traits::{Agent, AgentSet, RecordedAgent, RecordedAgentSet};
 use crate::contract::Call;
 use crate::network::Network;
-use ethers_core::types::Address;
-use revm::primitives::Address as RevmAddress;
+use alloy_primitives::Address;
 use std::any::Any;
 use std::mem;
 
@@ -83,10 +82,6 @@ impl<R: 'static, A: Agent + RecordedAgent<R> + 'static> AgentSet for AgentVec<R,
     fn record_agents(&mut self) {
         let records: Vec<R> = self.agents.iter_mut().map(|x| x.record()).collect();
         self.records.push(records);
-    }
-    /// Get the revm addresses of the agents in this set.
-    fn get_call_addresses(&self) -> Vec<RevmAddress> {
-        self.agents.iter().map(|x| x.get_call_address()).collect()
     }
     /// Get the ethers-core addresses of the agents in this set.
     fn get_addresses(&self) -> Vec<Address> {

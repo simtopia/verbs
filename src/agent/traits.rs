@@ -1,8 +1,7 @@
 use crate::contract::Call;
 use crate::network::Network;
-use ethers_core::types::Address;
+use alloy_primitives::Address;
 use fastrand::Rng;
-use revm::primitives::Address as RevmAddress;
 use std::any::Any;
 
 /// Admin agent type called at that start of each simulation step.
@@ -30,9 +29,7 @@ pub trait Agent {
     /// * `network` - Protocol deployment(s)
     ///
     fn update(&mut self, rng: &mut Rng, network: &mut Network) -> Vec<Call>;
-    /// Get the revm address of the agent.
-    fn get_call_address(&self) -> RevmAddress;
-    /// Get the ethers-core address of the agent.
+    /// Get the address of the agent.
     fn get_address(&self) -> Address;
 }
 
@@ -56,9 +53,7 @@ pub trait AgentSet {
     fn call_agents(&mut self, rng: &mut fastrand::Rng, network: &mut Network) -> Vec<Call>;
     /// Record the state of all the agents
     fn record_agents(&mut self);
-    /// Get a vector of agent revm addresses contained in this set
-    fn get_call_addresses(&self) -> Vec<RevmAddress>;
-    /// Get a vector of agent ethers-core addresses contained in this set
+    /// Get a vector of agent addresses contained in this set
     fn get_addresses(&self) -> Vec<Address>;
     fn as_mut_any(&mut self) -> &mut dyn Any;
 }

@@ -1,37 +1,17 @@
-use ethers_contract::BaseContract;
-use ethers_core::types::Bytes as EthersBytes;
-use revm::primitives::{Address, Bytecode, Bytes, Log, Output, U256};
-use std::collections::HashMap;
-
-/// Collection of data used to deploy a new contract.
-pub struct ContractDefinition {
-    /// Name of the contract.
-    pub name: String,
-    /// Contract ABI object.
-    pub abi: BaseContract,
-    /// Contract Bytecode.
-    pub bytecode: Bytecode,
-    /// Constructor arguments packed into bytes.
-    pub arguments: Bytes,
-    /// Desired deployment address of this contract.
-    pub deploy_address: Address,
-    /// Map of key-value storage pairs.
-    pub storage_values: Option<HashMap<U256, U256>>,
-}
+use alloy_primitives::Address;
+use revm::primitives::{Log, Output};
 
 /// EVM call/transaction
 #[derive(Clone)]
 pub struct Call {
     /// Name of the function being called.
     pub function_name: &'static str,
-    /// Index of the contract being called.
-    pub contract_idx: usize,
     /// Address of the contract caller
     pub callee: Address,
     /// Address to transact to
     pub transact_to: Address,
     /// Contract arguments represented as bytes
-    pub args: EthersBytes,
+    pub args: Vec<u8>,
     /// Flag if `true` the simulation will halt (panic)
     /// if this transaction fails.
     pub checked: bool,
@@ -51,8 +31,6 @@ pub struct CallResult {
 pub struct Event {
     /// Name of the function being called.
     pub function_name: &'static str,
-    /// Index of the contract being called.
-    pub contract_idx: usize,
     /// Event data
     pub logs: Vec<Log>,
     /// Step event was created

@@ -1,5 +1,5 @@
 use crate::agent::{traits::RecordedAgentSet, AgentSet};
-use ethers_core::types::Address;
+use alloy_primitives::Address;
 
 pub type AgentSetRef = Box<dyn AgentSet>;
 pub struct AgentSetVec(pub Vec<AgentSetRef>);
