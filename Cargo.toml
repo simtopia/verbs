@@ -6,9 +6,7 @@ edition = "2021"
 [dependencies]
 revm = { version="3.5.0", features=["optional_eip3607"]}
 
-alloy-json-abi = { version="0.4.2", features=["serde_json"]}
 alloy-primitives = "0.4.2"
-alloy-dyn-abi = "0.4.2"
 alloy-sol-types = { version="0.4.2", features=["json"]}
 primitive-types = "0.12.1"
 hex = "0.4.3"
