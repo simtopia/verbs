@@ -1,4 +1,4 @@
-use alloy_primitives::{Address, Bytes, U256};
+use alloy_primitives::{Address, U256};
 use csv::Writer;
 use revm::primitives::bitvec::macros::internal::funty::Fundamental;
 use std::fs::File;
@@ -43,9 +43,8 @@ pub fn address_from_hex(hx: &str) -> Address {
 ///
 /// * `hx` - Hex string.
 ///
-pub fn data_bytes_from_hex(hx: &str) -> Bytes {
-    let data = hex::decode(hx).expect("Decoding hex failed");
-    Bytes::from(data)
+pub fn data_bytes_from_hex(hx: &str) -> Vec<u8> {
+    hex::decode(hx).expect("Decoding hex failed")
 }
 
 /// Convert values in in eth to weth

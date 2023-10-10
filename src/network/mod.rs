@@ -1,7 +1,8 @@
 mod utils;
+use crate::agent::AgentSetVec;
 use crate::contract::{Call, CallResult, Event};
 use crate::utils::{address_from_hex, Eth};
-use alloy_primitives::{Address, Bytes, B256, U256};
+use alloy_primitives::{Address, Bytes, Uint, B256, U256};
 use alloy_sol_types::SolCall;
 use log::{debug, warn};
 use revm::db::{CacheDB, EmptyDB};
@@ -10,6 +11,7 @@ use revm::primitives::{
 };
 use revm::EVM;
 use std::fmt;
+use std::ops::Range;
 
 pub struct Network {
     pub evm: EVM<CacheDB<EmptyDB>>,
@@ -92,20 +94,31 @@ impl Network {
         network
     }
 
-    // pub fn from_agents(start_balance: u128, agents: &AgentSetVec, admin_address: &str) -> Self {
-    //     let mut network = Network::init(admin_address);
-    //     network.insert_agents(start_balance, agents);
-    //     network
-    // }
+    pub fn from_range(start_balance: u128, r: Range<u64>, admin_address: &str) -> Self {
+        let mut network = Network::init(admin_address);
+        let start_balance = U256::from(start_balance);
 
-    // pub fn insert_agents(&mut self, start_balance: u128, agents: &AgentSetVec) {
-    //     let start_balance = U256::from(start_balance);
-    //     for agent_set in agents.0.as_slice() {
-    //         for address in agent_set.get_call_addresses() {
-    //             self.insert_account(address, start_balance);
-    //         }
-    //     }
-    // }
+        for n in r {
+            network.insert_account(Address::from(Uint::from(n)), start_balance);
+        }
+
+        network
+    }
+
+    pub fn from_agents(start_balance: u128, agents: &AgentSetVec, admin_address: &str) -> Self {
+        let mut network = Network::init(admin_address);
+        network.insert_agents(start_balance, agents);
+        network
+    }
+
+    pub fn insert_agents(&mut self, start_balance: u128, agents: &AgentSetVec) {
+        let start_balance = U256::from(start_balance);
+        for agent_set in agents.0.as_slice() {
+            for address in agent_set.get_addresses() {
+                self.insert_account(address, start_balance);
+            }
+        }
+    }
 
     pub fn manually_deploy_contract(&mut self, contract_name: &str, data: Vec<u8>) -> Address {
         let tx = utils::init_create_transaction(self.admin_address, data);
@@ -325,7 +338,7 @@ mod tests {
         9f1c4e30ebbb603943f8e1e44a3b4c0c10c3ea53799a236d64736f6c634300\
         080a0033";
 
-        let mut bytecode: Vec<u8> = utils::data_bytes_from_hex(bytecode_hex).to_vec();
+        let mut bytecode: Vec<u8> = utils::data_bytes_from_hex(bytecode_hex);
         bytecode.extend(constructor_args);
         let contract_address = network.manually_deploy_contract("test", bytecode);
 

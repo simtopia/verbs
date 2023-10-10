@@ -1,10 +1,12 @@
-use ethers_core::types::U256;
-use rust_sim::agent::{Agent, AgentVec};
-use rust_sim::contract::load_contract;
+mod ecr20;
+mod simple_agent;
+
+use alloy_primitives::U256;
+use rust_sim::agent::AgentVec;
 use rust_sim::network::Network;
 use rust_sim::sim_runner::SimRunner;
+use rust_sim::utils;
 use simple_agent::{DummyAdminAgent, SimpleAgent};
-mod simple_agent;
 
 pub fn main() {
     let args: Vec<String> = std::env::args().collect();
@@ -12,41 +14,36 @@ pub fn main() {
     let n_users: usize = args[1].parse::<usize>().unwrap();
     let n_steps: usize = args[2].parse::<usize>().unwrap();
 
-    let contract_path = "./examples/basic_sim/basic_erc20_contract/";
-
-    let contract = load_contract(
-        format!("{}{}", contract_path, "basic_erc20.abi").as_str(),
-        format!("{}{}", contract_path, "basic_erc20_params.json").as_str(),
-        None,
-    );
-
     let start_balance = 1000000000000u128;
-    let admin_address = "0x0000000000000000000000000000000000000000";
+    let admin_address = "0x1000000000000000000000000000000000000000";
 
     let mut sim = Network::from_range(start_balance, 1..n_users.try_into().unwrap(), admin_address);
-    sim.deploy_contract(contract);
+
+    let token_address =
+        sim.manually_deploy_contract("ECR20", utils::data_bytes_from_hex(ecr20::BYTECODE));
 
     let admin_agent = DummyAdminAgent {};
 
     let mut agents = Vec::<SimpleAgent>::new();
 
     for i in 0..n_users {
-        let agent = simple_agent::SimpleAgent::new(i, n_users);
+        let agent = SimpleAgent::new(i, n_users, token_address);
         agents.push(agent);
     }
 
     let start_balance = U256::from(start_balance);
 
     for agent in &agents {
-        let _result: bool = sim
-            .direct_execute(
-                agent.get_call_address(),
-                0,
-                "approve",
-                (agent.get_address(), start_balance),
-            )
-            .unwrap()
-            .0;
+        sim.direct_execute(
+            agent.address,
+            token_address,
+            "approve",
+            ecr20::ABI::approveCall {
+                spender: agent.address,
+                tokens: start_balance,
+            },
+        )
+        .unwrap();
     }
 
     let agent_set = AgentVec::from(agents);
