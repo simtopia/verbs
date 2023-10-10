@@ -22,3 +22,4 @@ log = "0.4.19"
 
 [dev-dependencies]
 assert_approx_eq = "1.1.0"
+rstest = "0.18.2"

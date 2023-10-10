@@ -102,20 +102,4 @@ impl<A: AdminAgent> SimRunner<A> {
             self.step += 1;
         }
     }
-
-    // Decode events of a specific type into actual data
-    //
-    // # Arguments
-    //
-    // * `function_name` - Name of the function that produced the events
-    // * `event_name` - Name of the actual event to decode
-    //
-    // pub fn process_events<R: SolEvent>(
-    //     &self,
-    //     function_name: &'static str,
-    //     event_name: &'static str,
-    // ) -> Vec<(usize, usize, R)> {
-    //     self.network
-    //         .process_event_history(function_name, event_name)
-    // }
 }

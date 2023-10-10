@@ -115,24 +115,17 @@ mod tests {
 
     use super::*;
     use assert_approx_eq::assert_approx_eq;
+    use rstest::rstest;
 
-    #[test]
-    fn scaling_values() {
-        let x = U256::from(5) * U256::from(10).pow(U256::from(17));
+    #[rstest]
+    #[case(5, 17, 0.5)]
+    #[case(1, 15, 0.001)]
+    #[case(15, 17, 1.5)]
+    #[case(1000000005, 12, 1000.000005)]
+    fn scaling_values(#[case] a: u128, #[case] exp: u128, #[case] expected: f64) {
+        let x = U256::from(a) * U256::from(10).pow(U256::from(exp));
         let y = scale_data_value(x, 18, 6);
-        assert_approx_eq!(y, 0.5f64);
-
-        let x = U256::from(1) * U256::from(10).pow(U256::from(15));
-        let y = scale_data_value(x, 18, 6);
-        assert_approx_eq!(y, 0.001f64);
-
-        let x = U256::from(15) * U256::from(10).pow(U256::from(17));
-        let y = scale_data_value(x, 18, 6);
-        assert_approx_eq!(y, 1.5f64);
-
-        let x = U256::from(1000000005) * U256::from(10).pow(U256::from(12));
-        let y = scale_data_value(x, 18, 6);
-        assert_approx_eq!(y, 1000.000005f64);
+        assert_approx_eq!(y, expected);
     }
 
     #[test]
@@ -143,25 +136,25 @@ mod tests {
         assert_approx_eq!(y, u64::MAX.as_f64());
     }
 
-    #[test]
-    fn dividing_u256() {
-        let x = U256::from(10) * U256::from(10).pow(U256::from(15));
-        let y = U256::from(5) * U256::from(10).pow(U256::from(15));
+    #[rstest]
+    #[case(10, 5, 15, 15, 2.0, 0.5)]
+    #[case(1, 1, 20, 16, 10000.0, 0.0001)]
+    fn dividing_u256(
+        #[case] a: u128,
+        #[case] b: u128,
+        #[case] exp_a: u128,
+        #[case] exp_b: u128,
+        #[case] expected_a: f64,
+        #[case] expected_b: f64,
+    ) {
+        let x = U256::from(a) * U256::from(10).pow(U256::from(exp_a));
+        let y = U256::from(b) * U256::from(10).pow(U256::from(exp_b));
 
         let z = div_u256(x, y, 6);
-        assert_approx_eq!(z, 2.0f64);
+        assert_approx_eq!(z, expected_a);
 
         let z = div_u256(y, x, 6);
-        assert_approx_eq!(z, 0.5f64);
-
-        let x = U256::from(10).pow(U256::from(20));
-        let y = U256::from(10).pow(U256::from(16));
-
-        let z = div_u256(x, y, 6);
-        assert_approx_eq!(z, 10000.0f64);
-
-        let z = div_u256(y, x, 6);
-        assert_approx_eq!(z, 0.0001f64);
+        assert_approx_eq!(z, expected_b);
     }
 
     #[test]

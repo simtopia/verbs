@@ -1,16 +1,13 @@
 mod utils;
 use crate::agent::AgentSetVec;
-use crate::contract::{Call, CallResult, Event};
+use crate::contract::{Call, Event};
 use crate::utils::{address_from_hex, Eth};
-use alloy_primitives::{Address, Bytes, Uint, B256, U256};
+use alloy_primitives::{Address, Uint, B256, U256};
 use alloy_sol_types::SolCall;
-use log::{debug, warn};
+use log::debug;
 use revm::db::{CacheDB, EmptyDB};
-use revm::primitives::{
-    AccountInfo, Bytecode, ExecutionResult, Log, Output, ResultAndState, TxEnv,
-};
+use revm::primitives::{AccountInfo, Bytecode, ExecutionResult, Log, ResultAndState, TxEnv};
 use revm::EVM;
-use std::fmt;
 use std::ops::Range;
 
 pub struct Network {
@@ -42,22 +39,6 @@ impl CallEVM for EVM<CacheDB<EmptyDB>> {
             Ok(val) => val,
             Err(_) => panic!("Call failed"),
         }
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct RevertError {
-    pub function_name: &'static str,
-    output: Bytes,
-}
-
-impl fmt::Display for RevertError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "Failed to call {} due to revert: {:?}",
-            self.function_name, self.output
-        )
     }
 }
 
@@ -138,11 +119,11 @@ impl Network {
         contract: Address,
         function_name: &'static str,
         call_args: T,
-    ) -> Result<(<T as SolCall>::Return, Vec<Log>), RevertError> {
+    ) -> Result<(<T as SolCall>::Return, Vec<Log>), utils::RevertError> {
         let call_args = call_args.abi_encode();
         let tx = utils::init_create_call_transaction(callee, contract, call_args);
         let execution_result = self.evm.execute(tx);
-        let (output, events) = result_to_output(function_name, execution_result)?;
+        let (output, events) = utils::result_to_output(function_name, execution_result)?;
         let output_data = output.into_data();
         let decoded = T::abi_decode_returns(&output_data, true);
         let decoded = match decoded {
@@ -158,11 +139,11 @@ impl Network {
         contract: Address,
         function_name: &'static str,
         call_args: T,
-    ) -> Result<(<T as SolCall>::Return, Vec<Log>), RevertError> {
+    ) -> Result<(<T as SolCall>::Return, Vec<Log>), utils::RevertError> {
         let call_args = call_args.abi_encode();
         let tx = utils::init_create_call_transaction(callee, contract, call_args);
         let execution_result = self.evm.call(tx);
-        let (output, events) = result_to_output(function_name, execution_result.result)?;
+        let (output, events) = utils::result_to_output(function_name, execution_result.result)?;
         let output_data = output.into_data();
         let decoded = T::abi_decode_returns(&output_data, true);
         let decoded = match decoded {
@@ -177,7 +158,7 @@ impl Network {
         let check_call = call.checked;
         let tx = utils::init_create_call_transaction(call.callee, call.transact_to, call.args);
         let execution_result = self.evm.execute(tx);
-        let result = result_to_output_with_events(
+        let result = utils::result_to_output_with_events(
             step,
             sequence,
             function_name,
@@ -200,123 +181,61 @@ impl Network {
     }
 }
 
-fn result_to_output_with_events(
-    step: usize,
-    sequence: usize,
-    function_name: &'static str,
-    execution_result: ExecutionResult,
-    checked: bool,
-) -> CallResult {
-    match execution_result {
-        ExecutionResult::Success { output, logs, .. } => match output {
-            Output::Call(_) => CallResult {
-                success: true,
-                output,
-                events: Some(Event {
-                    function_name,
-                    logs,
-                    step,
-                    sequence,
-                }),
-            },
-            Output::Create(..) => {
-                panic!("Unexpected call to create contract during simulation.")
-            }
-        },
-        ExecutionResult::Revert { output, .. } => {
-            if checked {
-                panic!(
-                    "Failed to call {} due to revert: {:?}",
-                    function_name, output
-                )
-            } else {
-                warn!(
-                    "Failed to call {} due to revert: {:?}",
-                    function_name, output
-                );
-                CallResult {
-                    success: false,
-                    output: Output::Call(Bytes::default()),
-                    events: None,
-                }
-            }
-        }
-        ExecutionResult::Halt { reason, .. } => {
-            panic!("Failed to call {} due to halt: {:?}", function_name, reason)
-        }
-    }
-}
-
-fn result_to_output(
-    function_name: &'static str,
-    execution_result: ExecutionResult,
-) -> Result<(Output, Vec<Log>), RevertError> {
-    match execution_result {
-        ExecutionResult::Success { output, logs, .. } => Ok((output, logs)),
-        ExecutionResult::Revert { output, .. } => Err(RevertError {
-            function_name,
-            output,
-        }),
-        ExecutionResult::Halt { reason, .. } => {
-            panic!("Failed to call {} due to halt: {:?}", function_name, reason)
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
 
     use super::*;
     use crate::utils;
-    use alloy_primitives::{Signed, Uint};
+    use alloy_primitives::{Address, Signed, Uint};
     use alloy_sol_types::{sol, SolValue};
+    use rstest::*;
 
-    #[test]
-    fn direct_call() {
-        let mut network = Network::init(Address::from(Uint::from(101)).to_string().as_str());
+    sol!(
+        TestContract,
+        r#"[
+            {
+                "inputs": [
+                    {
+                        "internalType": "int256",
+                        "name": "x",
+                        "type": "int256"
+                    }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "constructor"
+            },
+            {
+                "inputs": [],
+                "name": "getValue",
+                "outputs": [
+                    {
+                        "internalType": "int256",
+                        "name": "",
+                        "type": "int256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "int256",
+                        "name": "x",
+                        "type": "int256"
+                    }
+                ],
+                "name": "setValue",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            }
+        ]"#
+    );
 
-        sol!(
-            TestContract,
-            r#"[
-                {
-                    "inputs": [
-                        {
-                            "internalType": "int256",
-                            "name": "x",
-                            "type": "int256"
-                        }
-                    ],
-                    "stateMutability": "nonpayable",
-                    "type": "constructor"
-                },
-                {
-                    "inputs": [],
-                    "name": "getValue",
-                    "outputs": [
-                        {
-                            "internalType": "int256",
-                            "name": "",
-                            "type": "int256"
-                        }
-                    ],
-                    "stateMutability": "view",
-                    "type": "function"
-                },
-                {
-                    "inputs": [
-                        {
-                            "internalType": "int256",
-                            "name": "x",
-                            "type": "int256"
-                        }
-                    ],
-                    "name": "setValue",
-                    "outputs": [],
-                    "stateMutability": "nonpayable",
-                    "type": "function"
-                }
-            ]"#
-        );
+    #[fixture]
+    fn deployment() -> (Network, Address) {
+        let mut network = Network::init(Address::from(Uint::from(999)).to_string().as_str());
 
         let constructor_args = <i128>::abi_encode(&101);
         let bytecode_hex = "608060405234801561001057600080fd5b50\
@@ -342,6 +261,24 @@ mod tests {
         bytecode.extend(constructor_args);
         let contract_address = network.manually_deploy_contract("test", bytecode);
 
+        (network, contract_address)
+    }
+
+    #[rstest]
+    fn direct_execute_and_call(deployment: (Network, Address)) {
+        let (mut network, contract_address) = deployment;
+
+        let (v, _) = network
+            .direct_call(
+                network.admin_address,
+                contract_address,
+                "test",
+                TestContract::getValueCall {},
+            )
+            .unwrap();
+
+        assert_eq!(v._0.as_i64(), 101i64);
+
         let _ = network
             .direct_execute(
                 network.admin_address,
@@ -360,6 +297,47 @@ mod tests {
             )
             .unwrap();
 
-        assert_eq!(v._0, Signed::ONE);
+        assert_eq!(v._0.as_i64(), 1i64);
+    }
+
+    #[rstest]
+    fn processing_calls(deployment: (Network, Address)) {
+        let (mut network, contract_address) = deployment;
+
+        let calls = vec![
+            Call {
+                function_name: "set_value",
+                callee: network.admin_address,
+                transact_to: contract_address,
+                args: TestContract::setValueCall {
+                    x: Signed::try_from_be_slice(&202u128.to_be_bytes()).unwrap(),
+                }
+                .abi_encode(),
+                checked: true,
+            },
+            Call {
+                function_name: "set_value",
+                callee: network.admin_address,
+                transact_to: contract_address,
+                args: TestContract::setValueCall {
+                    x: Signed::try_from_be_slice(&303u128.to_be_bytes()).unwrap(),
+                }
+                .abi_encode(),
+                checked: true,
+            },
+        ];
+
+        network.process_calls(calls, 1);
+
+        let (v, _) = network
+            .direct_call(
+                network.admin_address,
+                contract_address,
+                "test",
+                TestContract::getValueCall {},
+            )
+            .unwrap();
+
+        assert_eq!(v._0.as_i64(), 303i64);
     }
 }

@@ -83,11 +83,105 @@ impl<R: 'static, A: Agent + RecordedAgent<R> + 'static> AgentSet for AgentVec<R,
         let records: Vec<R> = self.agents.iter_mut().map(|x| x.record()).collect();
         self.records.push(records);
     }
-    /// Get the ethers-core addresses of the agents in this set.
+    /// Get the addresses of the agents in this set.
     fn get_addresses(&self) -> Vec<Address> {
         self.agents.iter().map(|x| x.get_address()).collect()
     }
     fn as_mut_any(&mut self) -> &mut dyn Any {
         self
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::agent::traits;
+    use alloy_primitives::Uint;
+    use rstest::*;
+
+    struct TestAgent {
+        address: Address,
+        value: u64,
+    }
+
+    impl traits::Agent for TestAgent {
+        fn update(
+            &mut self,
+            _rng: &mut fastrand::Rng,
+            _network: &mut crate::network::Network,
+        ) -> Vec<crate::contract::Call> {
+            self.value += 1;
+            vec![
+                Call {
+                    function_name: "foo",
+                    callee: Address::ZERO,
+                    transact_to: Address::ZERO,
+                    args: Vec::default(),
+                    checked: false,
+                },
+                Call {
+                    function_name: "foo",
+                    callee: Address::ZERO,
+                    transact_to: Address::ZERO,
+                    args: Vec::default(),
+                    checked: false,
+                },
+            ]
+        }
+
+        fn get_address(&self) -> Address {
+            self.address
+        }
+    }
+
+    impl traits::RecordedAgent<u64> for TestAgent {
+        fn record(&mut self) -> u64 {
+            self.value
+        }
+    }
+
+    #[fixture]
+    fn network() -> Network {
+        Network::init(Address::from(Uint::from(999)).to_string().as_str())
+    }
+
+    #[fixture]
+    fn rng() -> fastrand::Rng {
+        fastrand::Rng::default()
+    }
+
+    #[rstest]
+    fn test_agent_vec(mut network: Network, mut rng: fastrand::Rng) {
+        let a = Address::from(Uint::from(101u128));
+        let b = Address::from(Uint::from(202u128));
+
+        let agents = vec![
+            TestAgent {
+                address: a,
+                value: 0,
+            },
+            TestAgent {
+                address: b,
+                value: 1,
+            },
+        ];
+
+        let mut agent_vec = AgentVec::from(agents);
+
+        assert_eq!(agent_vec.get_addresses(), vec![a, b]);
+
+        agent_vec.record_agents();
+        assert_eq!(agent_vec.records.len(), 1);
+
+        let calls = agent_vec.call_agents(&mut rng, &mut network);
+        assert_eq!(calls.len(), 4);
+
+        agent_vec.record_agents();
+        assert_eq!(agent_vec.records.len(), 2);
+
+        let records = agent_vec.take_records();
+
+        assert_eq!(records[0], vec![0, 1]);
+        assert_eq!(records[1], vec![1, 2]);
     }
 }

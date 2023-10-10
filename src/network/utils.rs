@@ -1,5 +1,24 @@
+use crate::contract::{CallResult, Event};
 use alloy_primitives::{Address, Bytes, U256};
-use revm::primitives::{ExecutionResult, Output, TransactTo, TxEnv};
+use log::warn;
+use revm::primitives::{ExecutionResult, Log, Output, TransactTo, TxEnv};
+use std::fmt;
+
+#[derive(Debug, Clone)]
+pub struct RevertError {
+    pub function_name: &'static str,
+    output: Bytes,
+}
+
+impl fmt::Display for RevertError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "Failed to call {} due to revert: {:?}",
+            self.function_name, self.output
+        )
+    }
+}
 
 pub fn deployment_output(contract_name: &str, execution_result: ExecutionResult) -> Output {
     match execution_result {
@@ -50,5 +69,68 @@ pub fn init_create_call_transaction(caller: Address, contract: Address, data: Ve
         access_list: Vec::new(),
         blob_hashes: Vec::default(),
         max_fee_per_blob_gas: None,
+    }
+}
+
+pub fn result_to_output_with_events(
+    step: usize,
+    sequence: usize,
+    function_name: &'static str,
+    execution_result: ExecutionResult,
+    checked: bool,
+) -> CallResult {
+    match execution_result {
+        ExecutionResult::Success { output, logs, .. } => match output {
+            Output::Call(_) => CallResult {
+                success: true,
+                output,
+                events: Some(Event {
+                    function_name,
+                    logs,
+                    step,
+                    sequence,
+                }),
+            },
+            Output::Create(..) => {
+                panic!("Unexpected call to create contract during simulation.")
+            }
+        },
+        ExecutionResult::Revert { output, .. } => {
+            if checked {
+                panic!(
+                    "Failed to call {} due to revert: {:?}",
+                    function_name, output
+                )
+            } else {
+                warn!(
+                    "Failed to call {} due to revert: {:?}",
+                    function_name, output
+                );
+                CallResult {
+                    success: false,
+                    output: Output::Call(Bytes::default()),
+                    events: None,
+                }
+            }
+        }
+        ExecutionResult::Halt { reason, .. } => {
+            panic!("Failed to call {} due to halt: {:?}", function_name, reason)
+        }
+    }
+}
+
+pub fn result_to_output(
+    function_name: &'static str,
+    execution_result: ExecutionResult,
+) -> Result<(Output, Vec<Log>), RevertError> {
+    match execution_result {
+        ExecutionResult::Success { output, logs, .. } => Ok((output, logs)),
+        ExecutionResult::Revert { output, .. } => Err(RevertError {
+            function_name,
+            output,
+        }),
+        ExecutionResult::Halt { reason, .. } => {
+            panic!("Failed to call {} due to halt: {:?}", function_name, reason)
+        }
     }
 }
