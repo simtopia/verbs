@@ -10,17 +10,9 @@ alloy-json-abi = { version="0.4.2", features=["serde_json"]}
 alloy-primitives = "0.4.2"
 alloy-dyn-abi = "0.4.2"
 alloy-sol-types = { version="0.4.2", features=["json"]}
-
-# ethers = "2.0.4"
-# ethers-core = "2.0.4"
-# ethers-contract = "2.0.4"
-
 primitive-types = "0.12.1"
 hex = "0.4.3"
 serde_json = "1.0.96"
-
-# ethabi = "18.0.0"
-
 kdam = "0.3.0"
 bytes = "1.4.0"
 csv = "1.2.2"
