@@ -8,16 +8,20 @@ use std::fmt;
 #[derive(Debug, Clone)]
 pub struct RevertError {
     pub function_name: &'static str,
-    output: Bytes,
+    output: Option<String>,
 }
 
 impl fmt::Display for RevertError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let out_str = match &self.output {
+            Some(x) => x.as_str(),
+            None => "No output",
+        };
+
         write!(
             f,
-            "Failed to call {} due to revert: {:?}",
-            self.function_name,
-            decode_revert_reason(&self.output.0)
+            "Failed to call {} due to revert: {}",
+            self.function_name, out_str,
         )
     }
 }
@@ -131,7 +135,7 @@ pub fn result_to_output(
         ExecutionResult::Success { output, logs, .. } => Ok((output, logs)),
         ExecutionResult::Revert { output, .. } => Err(RevertError {
             function_name,
-            output,
+            output: decode_revert_reason(&output),
         }),
         ExecutionResult::Halt { reason, .. } => {
             panic!("Failed to call {} due to halt: {:?}", function_name, reason)
