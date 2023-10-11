@@ -101,7 +101,7 @@ impl Network {
         }
     }
 
-    pub fn manually_deploy_contract(&mut self, contract_name: &str, data: Vec<u8>) -> Address {
+    pub fn deploy_contract(&mut self, contract_name: &str, data: Vec<u8>) -> Address {
         let tx = utils::init_create_transaction(self.admin_address, data);
         let result = self.evm.execute(tx);
         let output = utils::deployment_output(contract_name, result);
@@ -259,7 +259,7 @@ mod tests {
 
         let mut bytecode: Vec<u8> = utils::data_bytes_from_hex(bytecode_hex);
         bytecode.extend(constructor_args);
-        let contract_address = network.manually_deploy_contract("test", bytecode);
+        let contract_address = network.deploy_contract("test", bytecode);
 
         (network, contract_address)
     }

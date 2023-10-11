@@ -19,8 +19,7 @@ pub fn main() {
 
     let mut sim = Network::from_range(start_balance, 1..n_users.try_into().unwrap(), admin_address);
 
-    let token_address =
-        sim.manually_deploy_contract("ECR20", utils::data_bytes_from_hex(ecr20::BYTECODE));
+    let token_address = sim.deploy_contract("ECR20", utils::data_bytes_from_hex(ecr20::BYTECODE));
 
     let admin_agent = DummyAdminAgent {};
 

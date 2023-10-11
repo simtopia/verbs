@@ -1,5 +1,6 @@
 use crate::contract::{CallResult, Event};
 use alloy_primitives::{Address, Bytes, U256};
+use alloy_sol_types::decode_revert_reason;
 use log::warn;
 use revm::primitives::{ExecutionResult, Log, Output, TransactTo, TxEnv};
 use std::fmt;
@@ -15,7 +16,8 @@ impl fmt::Display for RevertError {
         write!(
             f,
             "Failed to call {} due to revert: {:?}",
-            self.function_name, self.output
+            self.function_name,
+            decode_revert_reason(&self.output.0)
         )
     }
 }
@@ -26,7 +28,8 @@ pub fn deployment_output(contract_name: &str, execution_result: ExecutionResult)
         ExecutionResult::Revert { output, .. } => {
             panic!(
                 "Failed to deploy {} due to revert: {:?}",
-                contract_name, output
+                contract_name,
+                decode_revert_reason(&output.0)
             )
         }
         ExecutionResult::Halt { reason, .. } => {
@@ -104,7 +107,8 @@ pub fn result_to_output_with_events(
             } else {
                 warn!(
                     "Failed to call {} due to revert: {:?}",
-                    function_name, output
+                    function_name,
+                    decode_revert_reason(&output.0)
                 );
                 CallResult {
                     success: false,
