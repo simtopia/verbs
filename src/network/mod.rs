@@ -9,6 +9,7 @@ use revm::db::{CacheDB, EmptyDB};
 use revm::primitives::{AccountInfo, Bytecode, ExecutionResult, Log, ResultAndState, TxEnv};
 use revm::EVM;
 use std::ops::Range;
+pub use utils::RevertError;
 
 pub struct Network {
     pub evm: EVM<CacheDB<EmptyDB>>,
