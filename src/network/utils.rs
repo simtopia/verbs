@@ -161,10 +161,10 @@ fn decode_event<T: SolEvent>(event: &Event) -> (usize, usize, T) {
     (event.step, event.sequence, decoded_event)
 }
 
-pub fn process_events<S: SolCall, T: SolEvent>(events: &Vec<Event>) -> Vec<(usize, usize, T)> {
+pub fn process_events<S: SolCall, T: SolEvent>(events: &[Event]) -> Vec<(usize, usize, T)> {
     let function_name = S::SIGNATURE;
     events
-        .into_iter()
+        .iter()
         .filter(|x| x.function_name == function_name)
         .map(decode_event)
         .collect()
