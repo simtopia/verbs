@@ -154,7 +154,7 @@ pub fn create_call<T: SolCall>(callee: Address, contract: Address, args: T, chec
     }
 }
 
-fn decode_event<T: SolEvent>(event: &Event) -> (usize, usize, T) {
+pub fn decode_event<T: SolEvent>(event: &Event) -> (usize, usize, T) {
     let log = event.logs.last().unwrap();
     let decoded_event = T::decode_log(log.topics.clone(), log.data.as_ref(), false).unwrap();
 
