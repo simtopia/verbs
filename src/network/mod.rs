@@ -118,9 +118,9 @@ impl Network {
         &mut self,
         callee: Address,
         contract: Address,
-        function_name: &'static str,
         call_args: T,
     ) -> Result<(<T as SolCall>::Return, Vec<Log>), utils::RevertError> {
+        let function_name = T::SIGNATURE;
         let call_args = call_args.abi_encode();
         let tx = utils::init_create_call_transaction(callee, contract, call_args);
         let execution_result = self.evm.execute(tx);
@@ -138,9 +138,9 @@ impl Network {
         &mut self,
         callee: Address,
         contract: Address,
-        function_name: &'static str,
         call_args: T,
     ) -> Result<(<T as SolCall>::Return, Vec<Log>), utils::RevertError> {
+        let function_name = T::SIGNATURE;
         let call_args = call_args.abi_encode();
         let tx = utils::init_create_call_transaction(callee, contract, call_args);
         let execution_result = self.evm.call(tx);
@@ -273,7 +273,6 @@ mod tests {
             .direct_call(
                 network.admin_address,
                 contract_address,
-                "test",
                 TestContract::getValueCall {},
             )
             .unwrap();
@@ -284,7 +283,6 @@ mod tests {
             .direct_execute(
                 network.admin_address,
                 contract_address,
-                "test",
                 TestContract::setValueCall { x: Signed::ONE },
             )
             .unwrap();
@@ -293,7 +291,6 @@ mod tests {
             .direct_call(
                 network.admin_address,
                 contract_address,
-                "test",
                 TestContract::getValueCall {},
             )
             .unwrap();
@@ -334,7 +331,6 @@ mod tests {
             .direct_call(
                 network.admin_address,
                 contract_address,
-                "test",
                 TestContract::getValueCall {},
             )
             .unwrap();

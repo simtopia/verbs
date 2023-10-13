@@ -36,7 +36,6 @@ pub fn main() {
         sim.direct_execute(
             agent.address,
             token_address,
-            "approve",
             ecr20::ABI::approveCall {
                 spender: agent.address,
                 tokens: start_balance,

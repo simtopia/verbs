@@ -39,7 +39,6 @@ impl Agent for SimpleAgent {
             .direct_call(
                 self.address,
                 self.token_address,
-                "balanceOf",
                 ecr20::ABI::balanceOfCall {
                     tokenOwner: self.address,
                 },
