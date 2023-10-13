@@ -106,7 +106,8 @@ pub fn result_to_output_with_events(
             if checked {
                 panic!(
                     "Failed to call {} due to revert: {:?}",
-                    function_name, output
+                    function_name,
+                    decode_revert_reason(&output.0)
                 )
             } else {
                 warn!(
