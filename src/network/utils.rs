@@ -1,6 +1,6 @@
 use crate::contract::{Call, CallResult, Event};
 use alloy_primitives::{Address, Bytes, U256};
-use alloy_sol_types::{decode_revert_reason, SolCall};
+use alloy_sol_types::{decode_revert_reason, SolCall, SolEvent};
 use log::warn;
 use revm::primitives::{ExecutionResult, Log, Output, TransactTo, TxEnv};
 use std::fmt;
@@ -152,4 +152,20 @@ pub fn create_call<T: SolCall>(callee: Address, contract: Address, args: T, chec
         args: args.abi_encode(),
         checked,
     }
+}
+
+fn decode_event<T: SolEvent>(event: &Event) -> (usize, usize, T) {
+    let log = event.logs.last().unwrap();
+    let decoded_event = T::decode_log(log.topics.clone(), log.data.as_ref(), false).unwrap();
+
+    (event.step, event.sequence, decoded_event)
+}
+
+pub fn process_events<S: SolCall, T: SolEvent>(events: &Vec<Event>) -> Vec<(usize, usize, T)> {
+    let function_name = S::SIGNATURE;
+    events
+        .into_iter()
+        .filter(|x| x.function_name == function_name)
+        .map(decode_event)
+        .collect()
 }
