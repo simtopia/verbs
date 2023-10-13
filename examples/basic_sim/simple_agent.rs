@@ -1,10 +1,9 @@
 use crate::ecr20;
 use alloy_primitives::{Address, Uint, U256};
-use alloy_sol_types::SolCall;
 use fastrand::Rng;
 use rust_sim::agent::{AdminAgent, Agent, RecordedAgent};
 use rust_sim::contract::Call;
-use rust_sim::network::Network;
+use rust_sim::network::{create_call, Network};
 
 pub struct DummyAdminAgent {}
 
@@ -51,17 +50,15 @@ impl Agent for SimpleAgent {
             let receiver = rng.u64(0..self.n_agents);
             let receiver = Address::from(Uint::from(receiver));
             let send_amount = std::cmp::min(self.current_balance, U256::from(1000));
-            let send_call = Call {
-                function_name: "transfer",
-                callee: self.address,
-                transact_to: self.token_address,
-                args: ecr20::ABI::transferCall {
+            let send_call = create_call(
+                self.address,
+                self.token_address,
+                ecr20::ABI::transferCall {
                     to: receiver,
                     tokens: send_amount,
-                }
-                .abi_encode(),
-                checked: true,
-            };
+                },
+                true,
+            );
             vec![send_call]
         } else {
             Vec::default()

@@ -1,6 +1,6 @@
-use crate::contract::{CallResult, Event};
+use crate::contract::{Call, CallResult, Event};
 use alloy_primitives::{Address, Bytes, U256};
-use alloy_sol_types::decode_revert_reason;
+use alloy_sol_types::{decode_revert_reason, SolCall};
 use log::warn;
 use revm::primitives::{ExecutionResult, Log, Output, TransactTo, TxEnv};
 use std::fmt;
@@ -140,5 +140,15 @@ pub fn result_to_output(
         ExecutionResult::Halt { reason, .. } => {
             panic!("Failed to call {} due to halt: {:?}", function_name, reason)
         }
+    }
+}
+
+pub fn create_call<T: SolCall>(callee: Address, contract: Address, args: T, checked: bool) -> Call {
+    Call {
+        function_name: T::SIGNATURE,
+        callee,
+        transact_to: contract,
+        args: args.abi_encode(),
+        checked,
     }
 }
