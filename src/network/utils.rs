@@ -156,7 +156,12 @@ pub fn create_call<T: SolCall>(callee: Address, contract: Address, args: T, chec
 
 pub fn decode_event<T: SolEvent>(event: &Event) -> (usize, usize, T) {
     let log = event.logs.last().unwrap();
-    let decoded_event = T::decode_log(log.topics.clone(), log.data.as_ref(), false).unwrap();
+    let decoded_event = T::decode_log(log.topics.clone(), log.data.as_ref(), false);
+
+    let decoded_event = match decoded_event {
+        Ok(e) => e,
+        Err(_) => panic!("Failed to decode event from {}", event.function_name),
+    };
 
     (event.step, event.sequence, decoded_event)
 }
