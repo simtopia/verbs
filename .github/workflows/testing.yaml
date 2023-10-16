@@ -8,7 +8,6 @@ jobs:
     container: rust:slim
     steps:
       - uses: actions/checkout@v2
-      - run: apt update && apt install -y libclang-dev
       - run: cargo test
   rust_examples:
     if: github.event.pull_request.draft == false
@@ -16,5 +15,4 @@ jobs:
     container: rust:slim
     steps:
       - uses: actions/checkout@v2
-      - run: apt update && apt install -y libclang-dev
       - run: cargo run --example basic_sim 200 100

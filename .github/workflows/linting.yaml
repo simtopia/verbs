@@ -37,5 +37,4 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
-      - run: apt update && apt install -y libclang-dev
       - run: cargo clippy -- -Dwarnings
