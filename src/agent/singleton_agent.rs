@@ -1,8 +1,7 @@
 use crate::agent::traits::{Agent, AgentSet, RecordedAgent, RecordedAgentSet};
 use crate::contract::Call;
 use crate::network::Network;
-use ethers_core::types::Address;
-use revm::primitives::Address as RevmAddress;
+use alloy_primitives::Address;
 use std::any::Any;
 use std::mem;
 
@@ -53,10 +52,6 @@ impl<R: 'static, A: Agent + RecordedAgent<R> + 'static> AgentSet for SingletonAg
     /// Record the current state of the agent.
     fn record_agents(&mut self) {
         self.records.push(self.agent.record());
-    }
-    /// Get the revm addresses of the agent.
-    fn get_call_addresses(&self) -> Vec<RevmAddress> {
-        vec![self.agent.get_call_address()]
     }
     /// Get the ethers-core addresses of the agent.
     fn get_addresses(&self) -> Vec<Address> {

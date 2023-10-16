@@ -1,9 +1,9 @@
-use ethers_core::types::{Address, U256};
+use crate::ecr20;
+use alloy_primitives::{Address, Uint, U256};
 use fastrand::Rng;
-use revm::primitives::Address as RevmAddress;
 use rust_sim::agent::{AdminAgent, Agent, RecordedAgent};
 use rust_sim::contract::Call;
-use rust_sim::network::Network;
+use rust_sim::network::{create_call, Network};
 
 pub struct DummyAdminAgent {}
 
@@ -13,22 +13,21 @@ impl AdminAgent for DummyAdminAgent {
 }
 
 pub struct SimpleAgent {
-    pub call_address: RevmAddress,
     pub address: Address,
     current_balance: U256,
     n_agents: u64,
+    token_address: Address,
 }
 
 impl SimpleAgent {
-    pub fn new(idx: usize, n_agents: usize) -> Self {
+    pub fn new(idx: usize, n_agents: usize, token_address: Address) -> Self {
         let idx_u64 = u64::try_from(idx).unwrap();
-        let call_address = RevmAddress::from(idx_u64);
-        let address = Address::from(primitive_types::H160::from_low_u64_be(idx_u64));
+        let address = Address::from(Uint::from(idx_u64));
         SimpleAgent {
-            call_address,
             address,
-            current_balance: U256::zero(),
+            current_balance: U256::ZERO,
             n_agents: u64::try_from(n_agents).unwrap(),
+            token_address,
         }
     }
 }
@@ -36,29 +35,34 @@ impl SimpleAgent {
 impl Agent for SimpleAgent {
     fn update(&mut self, rng: &mut Rng, network: &mut Network) -> Vec<Call> {
         self.current_balance = network
-            .direct_call(self.call_address, 0, "balanceOf", (self.address,))
+            .direct_call(
+                self.address,
+                self.token_address,
+                ecr20::ABI::balanceOfCall {
+                    tokenOwner: self.address,
+                },
+            )
             .unwrap()
-            .0;
+            .0
+            .balance;
 
         if self.current_balance > U256::from(0u64) {
             let receiver = rng.u64(0..self.n_agents);
-            let receiver = Address::from(primitive_types::H160::from_low_u64_be(receiver));
+            let receiver = Address::from(Uint::from(receiver));
             let send_amount = std::cmp::min(self.current_balance, U256::from(1000));
-            let send_call = network.create_call(
-                self.call_address,
-                0,
-                "transfer",
-                (receiver, send_amount),
+            let send_call = create_call(
+                self.address,
+                self.token_address,
+                ecr20::ABI::transferCall {
+                    to: receiver,
+                    tokens: send_amount,
+                },
                 true,
             );
             vec![send_call]
         } else {
             Vec::default()
         }
-    }
-
-    fn get_call_address(&self) -> RevmAddress {
-        self.call_address
     }
 
     fn get_address(&self) -> Address {
