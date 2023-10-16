@@ -8,5 +8,4 @@ jobs:
     container: rust:slim
     steps:
       - uses: actions/checkout@v2
-      - run: apt update && apt install -y libclang-dev
       - run: cargo build

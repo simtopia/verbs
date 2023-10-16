@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-revm = { version="3.5.0", features=["optional_eip3607"]}
+revm = { version="3.5.0", default-features = false, features=["optional_eip3607"]}
 
 alloy-primitives = "0.4.2"
 alloy-sol-types = { version="0.4.2", features=["json"]}
