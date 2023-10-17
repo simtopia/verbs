@@ -5,17 +5,11 @@ edition = "2021"
 
 [dependencies]
 revm = { version="3.5.0", default-features = false, features=["optional_eip3607"]}
-
 alloy-primitives = "0.4.2"
 alloy-sol-types = { version="0.4.2", features=["json"]}
-primitive-types = "0.12.1"
 hex = "0.4.3"
-serde_json = "1.0.96"
 kdam = "0.3.0"
-bytes = "1.4.0"
-csv = "1.2.2"
 fastrand = "2.0.0"
-hashbrown = "0.13.2"
 log = "0.4.19"
 
 [dev-dependencies]

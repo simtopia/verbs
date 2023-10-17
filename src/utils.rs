@@ -1,27 +1,5 @@
 use alloy_primitives::{Address, U256};
-use csv::Writer;
 use revm::primitives::bitvec::macros::internal::funty::Fundamental;
-use std::fs::File;
-
-/// Write a time-series of agent values to a csv file.
-///
-/// # Arguments
-///
-/// * `records` - 2d vector of agent state records.
-/// * `output_path` - Path to write the csv file to.
-///
-pub fn csv_writer<T: ToString>(records: &Vec<Vec<T>>, output_path: &str) {
-    let output_file = File::create(output_path).expect("Could not open csv file");
-
-    let mut wtr = Writer::from_writer(output_file);
-
-    for record in records {
-        wtr.write_record(record.iter().map(|x| x.to_string()))
-            .expect("Could not write record");
-    }
-
-    wtr.flush().expect("Error flushing csv");
-}
 
 /// Create a revm address from a hex string.
 ///
