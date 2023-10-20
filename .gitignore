@@ -1,4 +1,5 @@
-/target
+/lib_sim/target
+/lib_macros/target
 .vscode
 *.csv
 

@@ -11,6 +11,7 @@ hex = "0.4.3"
 kdam = "0.3.0"
 fastrand = "2.0.0"
 log = "0.4.19"
+rust_sim_macros = { path="../lib_macros" }
 
 [dev-dependencies]
 assert_approx_eq = "1.1.0"
