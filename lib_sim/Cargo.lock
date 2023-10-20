@@ -1376,12 +1376,8 @@ dependencies = [
  "log",
  "revm",
  "rstest",
- "rust_sim_macros",
+ "sim_macros",
 ]
-
-[[package]]
-name = "rust_sim_macros"
-version = "0.1.0"
 
 [[package]]
 name = "rustc-hex"
@@ -1539,6 +1535,14 @@ checksum = "5e1788eed21689f9cf370582dfc467ef36ed9c707f073528ddafa8d83e3b8500"
 dependencies = [
  "digest 0.10.7",
  "rand_core",
+]
+
+[[package]]
+name = "sim_macros"
+version = "0.1.0"
+dependencies = [
+ "quote",
+ "syn 1.0.109",
 ]
 
 [[package]]

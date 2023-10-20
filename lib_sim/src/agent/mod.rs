@@ -1,4 +1,5 @@
 pub mod agent_set_vec;
+pub mod agent_state;
 pub mod agent_vec;
 pub mod singleton_agent;
 pub mod traits;
