@@ -19,23 +19,36 @@ fn impl_sim_state_macro(ast: &syn::DeriveInput) -> TokenStream {
         _ => panic!("expected a struct with named fields"),
     };
 
-    let mut tokens = quote!();
+    let mut call_tokens = quote!();
+    let mut record_tokens = quote!();
 
     for field in fields {
         let field_name = field.ident.clone();
-        tokens.extend(quote!(
-            calls.extend(self.#field_name.call());
-        ));
+
+        if field_name.is_some() {
+            call_tokens.extend(quote!(
+                calls.extend(self.#field_name.call(rng, network));
+            ));
+            record_tokens.extend(quote!(
+                self.#field_name.record();
+            ));
+        }
     }
 
     let output = quote! {
         impl SimState for #name {
-            fn call_agents(&mut self) -> Vec<Call> {
+            fn call_agents(
+                &mut self, rng: &mut Rng, network: &mut Network
+            ) -> Vec<Call> {
                 let mut calls = Vec::<Call>::new();
-                #tokens
+                #call_tokens
                 calls
+            }
+            fn record_agents(&mut self){
+                #record_tokens
             }
         }
     };
+
     TokenStream::from(output)
 }

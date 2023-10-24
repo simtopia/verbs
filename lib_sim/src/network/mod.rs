@@ -1,5 +1,4 @@
 mod utils;
-use crate::agent::AgentSetVec;
 use crate::contract::{Call, Event};
 use crate::utils::{address_from_hex, Eth};
 use alloy_primitives::{Address, Uint, B256, U256};
@@ -87,18 +86,20 @@ impl Network {
         network
     }
 
-    pub fn from_agents(start_balance: u128, agents: &AgentSetVec, admin_address: &str) -> Self {
+    pub fn from_agents(
+        start_balance: u128,
+        agent_addresses: Vec<Address>,
+        admin_address: &str,
+    ) -> Self {
         let mut network = Network::init(admin_address);
-        network.insert_agents(start_balance, agents);
+        network.insert_agents(start_balance, agent_addresses);
         network
     }
 
-    pub fn insert_agents(&mut self, start_balance: u128, agents: &AgentSetVec) {
+    pub fn insert_agents(&mut self, start_balance: u128, addresses: Vec<Address>) {
         let start_balance = U256::from(start_balance);
-        for agent_set in agents.0.as_slice() {
-            for address in agent_set.get_addresses() {
-                self.insert_account(address, start_balance);
-            }
+        for address in addresses {
+            self.insert_account(address, start_balance);
         }
     }
 

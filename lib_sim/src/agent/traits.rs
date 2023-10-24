@@ -2,7 +2,12 @@ use crate::contract::Call;
 use crate::network::Network;
 use alloy_primitives::Address;
 use fastrand::Rng;
-use std::any::Any;
+pub use sim_macros::SimState;
+
+pub trait SimState {
+    fn call_agents(&mut self, rng: &mut Rng, network: &mut Network) -> Vec<Call>;
+    fn record_agents(&mut self);
+}
 
 /// Admin agent type called at that start of each simulation step.
 pub trait AdminAgent {
@@ -50,15 +55,65 @@ pub trait AgentSet {
     /// * `rng` - Fastrand rng state
     /// * `network` - Protocol deployment(s)
     ///
-    fn call_agents(&mut self, rng: &mut fastrand::Rng, network: &mut Network) -> Vec<Call>;
+    fn call(&mut self, rng: &mut fastrand::Rng, network: &mut Network) -> Vec<Call>;
     /// Record the state of all the agents
-    fn record_agents(&mut self);
+    fn record(&mut self);
     /// Get a vector of agent addresses contained in this set
     fn get_addresses(&self) -> Vec<Address>;
-    fn as_mut_any(&mut self) -> &mut dyn Any;
 }
 
 // Take time-series data from a set of agents
 pub trait RecordedAgentSet<R> {
     fn take_records(&mut self) -> Vec<Vec<R>>;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use alloy_primitives::Address;
+
+    struct DummyAgentSet {
+        v: bool,
+    }
+
+    impl AgentSet for DummyAgentSet {
+        fn call(&mut self, _rng: &mut Rng, _network: &mut Network) -> Vec<Call> {
+            vec![Call {
+                function_name: "foo",
+                callee: Address::ZERO,
+                transact_to: Address::ZERO,
+                args: Vec::default(),
+                checked: self.v,
+            }]
+        }
+
+        fn record(&mut self) {}
+
+        fn get_addresses(&self) -> Vec<Address> {
+            vec![Address::ZERO]
+        }
+    }
+
+    #[test]
+    fn test_macro() {
+        #[derive(SimState)]
+        struct TestState {
+            a: DummyAgentSet,
+            b: DummyAgentSet,
+        }
+
+        let mut x = TestState {
+            a: DummyAgentSet { v: true },
+            b: DummyAgentSet { v: false },
+        };
+
+        let mut rng = fastrand::Rng::with_seed(101);
+        let mut network = &mut Network::init(Address::ZERO.to_string().as_str());
+
+        let calls = x.call_agents(&mut rng, &mut network);
+
+        assert_eq!(calls.len(), 2);
+        assert_eq!(calls[0].checked, true);
+        assert_eq!(calls[1].checked, false);
+    }
 }

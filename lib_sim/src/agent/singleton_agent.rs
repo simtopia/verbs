@@ -2,7 +2,6 @@ use crate::agent::traits::{Agent, AgentSet, RecordedAgent, RecordedAgentSet};
 use crate::contract::Call;
 use crate::network::Network;
 use alloy_primitives::Address;
-use std::any::Any;
 use std::mem;
 
 /// Implementation of agent set for a single agent.
@@ -46,19 +45,16 @@ impl<R: 'static, A: Agent + RecordedAgent<R> + 'static> AgentSet for SingletonAg
     /// * `rng` - Fastrand rng state
     /// * `network` - Protocol deployment(s)
     ///
-    fn call_agents(&mut self, rng: &mut fastrand::Rng, network: &mut Network) -> Vec<Call> {
+    fn call(&mut self, rng: &mut fastrand::Rng, network: &mut Network) -> Vec<Call> {
         self.agent.update(rng, network)
     }
     /// Record the current state of the agent.
-    fn record_agents(&mut self) {
+    fn record(&mut self) {
         self.records.push(self.agent.record());
     }
     /// Get the ethers-core addresses of the agent.
     fn get_addresses(&self) -> Vec<Address> {
         vec![self.agent.get_address()]
-    }
-    fn as_mut_any(&mut self) -> &mut dyn Any {
-        self
     }
 }
 
