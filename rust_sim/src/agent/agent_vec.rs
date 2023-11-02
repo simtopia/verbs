@@ -2,7 +2,6 @@ use crate::agent::traits::{Agent, AgentSet, RecordedAgent, RecordedAgentSet};
 use crate::contract::Call;
 use crate::network::Network;
 use alloy_primitives::Address;
-use std::any::Any;
 use std::mem;
 
 /// Implementation of agent set tracking agents as a vector.
@@ -72,23 +71,20 @@ impl<R: 'static, A: Agent + RecordedAgent<R> + 'static> AgentSet for AgentVec<R,
     /// * `rng` - Fastrand rng state
     /// * `network` - Protocol deployment(s)
     ///
-    fn call_agents(&mut self, rng: &mut fastrand::Rng, network: &mut Network) -> Vec<Call> {
+    fn call(&mut self, rng: &mut fastrand::Rng, network: &mut Network) -> Vec<Call> {
         self.agents
             .iter_mut()
             .flat_map(|x| x.update(rng, network))
             .collect()
     }
     /// Record the current state of the agents in this set.
-    fn record_agents(&mut self) {
+    fn record(&mut self) {
         let records: Vec<R> = self.agents.iter_mut().map(|x| x.record()).collect();
         self.records.push(records);
     }
     /// Get the addresses of the agents in this set.
     fn get_addresses(&self) -> Vec<Address> {
         self.agents.iter().map(|x| x.get_address()).collect()
-    }
-    fn as_mut_any(&mut self) -> &mut dyn Any {
-        self
     }
 }
 
@@ -170,13 +166,13 @@ mod tests {
 
         assert_eq!(agent_vec.get_addresses(), vec![a, b]);
 
-        agent_vec.record_agents();
+        agent_vec.record();
         assert_eq!(agent_vec.records.len(), 1);
 
-        let calls = agent_vec.call_agents(&mut rng, &mut network);
+        let calls = agent_vec.call(&mut rng, &mut network);
         assert_eq!(calls.len(), 4);
 
-        agent_vec.record_agents();
+        agent_vec.record();
         assert_eq!(agent_vec.records.len(), 2);
 
         let records = agent_vec.take_records();
