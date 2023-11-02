@@ -1,0 +1,6 @@
+[workspace]
+
+members = [
+    "rust_sim",
+    "macros",
+]

@@ -1,7 +1,7 @@
 use crate::ecr20;
 use alloy_primitives::{Address, Uint, U256};
 use fastrand::Rng;
-use rust_sim::agent::{AdminAgent, Agent, RecordedAgent};
+use rust_sim::agent::{AdminAgent, Agent, AgentSet, AgentVec, RecordedAgent, SimState};
 use rust_sim::contract::Call;
 use rust_sim::network::{create_call, Network};
 
@@ -74,4 +74,9 @@ impl RecordedAgent<U256> for SimpleAgent {
     fn record(&mut self) -> U256 {
         self.current_balance
     }
+}
+
+#[derive(SimState)]
+pub struct AgentState {
+    pub agents: AgentVec<U256, SimpleAgent>,
 }

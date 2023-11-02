@@ -1,12 +1,12 @@
 mod ecr20;
-mod simple_agent;
+mod state;
 
 use alloy_primitives::U256;
 use rust_sim::agent::AgentVec;
 use rust_sim::network::Network;
-use rust_sim::sim_runner::SimRunner;
+use rust_sim::sim_runner::run;
 use rust_sim::utils;
-use simple_agent::{DummyAdminAgent, SimpleAgent};
+use state::{AgentState, DummyAdminAgent, SimpleAgent};
 
 pub fn main() {
     let args: Vec<String> = std::env::args().collect();
@@ -22,14 +22,12 @@ pub fn main() {
     let token_address =
         sim.deploy_contract("ECR20", utils::constructor_data(ecr20::BYTECODE, None));
 
-    let admin_agent = DummyAdminAgent {};
+    let mut admin_agent = DummyAdminAgent {};
 
-    let mut agents = Vec::<SimpleAgent>::new();
-
-    for i in 0..n_users {
-        let agent = SimpleAgent::new(i, n_users, token_address);
-        agents.push(agent);
-    }
+    let agents: Vec<SimpleAgent> = (0..n_users)
+        .into_iter()
+        .map(|x| SimpleAgent::new(x, n_users, token_address))
+        .collect();
 
     let start_balance = U256::from(start_balance);
 
@@ -45,14 +43,11 @@ pub fn main() {
         .unwrap();
     }
 
-    let agent_set = AgentVec::from(agents);
+    let mut state = AgentState {
+        agents: AgentVec::from(agents),
+    };
 
-    let mut sim_runner: SimRunner<DummyAdminAgent> = SimRunner::new(sim, admin_agent);
-    sim_runner.insert_agent_set(agent_set);
+    run(&mut sim, &mut admin_agent, &mut state, 101, n_steps);
 
-    sim_runner.run(0, n_steps);
-
-    let _agent_data = sim_runner
-        .agents
-        .get_records::<U256, AgentVec<U256, simple_agent::SimpleAgent>>(0);
+    let _agent_data = state.agents.get_records();
 }

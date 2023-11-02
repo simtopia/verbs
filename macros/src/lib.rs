@@ -1,6 +1,5 @@
 use proc_macro::TokenStream;
 use quote::quote;
-use syn;
 
 #[proc_macro_derive(SimState)]
 pub fn sim_state_derive(input: TokenStream) -> TokenStream {
