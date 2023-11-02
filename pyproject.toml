@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "rust-sim"
+name = "rust-sim-python"
 version = "0.1.0"
 description = ""
 authors = []
