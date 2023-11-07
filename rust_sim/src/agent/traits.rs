@@ -77,6 +77,7 @@ pub trait RecordedAgentSet<R> {
 mod tests {
     use super::*;
     use alloy_primitives::Address;
+    use revm::db::EmptyDB;
 
     struct DummyAgentSet {
         v: bool,
@@ -114,7 +115,7 @@ mod tests {
         };
 
         let mut rng = fastrand::Rng::with_seed(101);
-        let mut network = &mut Network::init(Address::ZERO.to_string().as_str());
+        let mut network = &mut Network::<EmptyDB>::init(Address::ZERO.to_string().as_str());
 
         let calls = x.call_agents(&mut rng, &mut network);
 

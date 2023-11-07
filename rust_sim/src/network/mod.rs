@@ -48,7 +48,7 @@ impl<D: DatabaseRef> CallEVM for EVM<CacheDB<D>> {
 }
 
 impl Network<SharedBackend> {
-    pub async fn init_forked<M: Middleware + 'static>(provider: Arc<M>) -> Result<Self> {
+    pub async fn init<M: Middleware + 'static>(provider: Arc<M>) -> Result<Self> {
         let block = provider
             .get_block(BlockNumber::Latest)
             .await?
@@ -110,7 +110,7 @@ impl Network<EmptyDB> {
     }
 
     pub fn from_range(start_balance: u128, r: Range<u64>, admin_address: &str) -> Self {
-        let mut network = Network::init(admin_address);
+        let mut network = Network::<EmptyDB>::init(admin_address);
         let start_balance = U256::from(start_balance);
 
         for n in r {
@@ -125,7 +125,7 @@ impl Network<EmptyDB> {
         agent_addresses: Vec<Address>,
         admin_address: &str,
     ) -> Self {
-        let mut network = Network::init(admin_address);
+        let mut network = Network::<EmptyDB>::init(admin_address);
         network.insert_agents(start_balance, agent_addresses);
         network
     }
@@ -280,7 +280,8 @@ mod tests {
 
     #[fixture]
     fn deployment() -> (Network<EmptyDB>, Address) {
-        let mut network = Network::init(Address::from(Uint::from(999)).to_string().as_str());
+        let mut network =
+            Network::<EmptyDB>::init(Address::from(Uint::from(999)).to_string().as_str());
 
         let constructor_args = <i128>::abi_encode(&101);
         let bytecode_hex = "608060405234801561001057600080fd5b50\
