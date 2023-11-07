@@ -1,9 +1,10 @@
 use crate::agent::{AdminAgent, SimState};
 use crate::network::Network;
 use kdam::tqdm;
+use revm::db::DatabaseRef;
 
-pub fn run<A: AdminAgent, S: SimState>(
-    network: &mut Network,
+pub fn run<A: AdminAgent, S: SimState, D: DatabaseRef>(
+    network: &mut Network<D>,
     admin_agent: &mut A,
     agents: &mut S,
     seed: u64,

@@ -3,4 +3,5 @@
 members = [
     "rust_sim",
     "macros",
+    "fork_evm",
 ]

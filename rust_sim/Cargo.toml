@@ -4,14 +4,19 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-revm = { version="3.5.0", default-features = false, features=["optional_eip3607"]}
+revm = { version="3.5.0", default-features = false, features=["optional_eip3607", "ethersdb"]}
 alloy-primitives = "0.4.2"
 alloy-sol-types = { version="0.4.2", features=["json"]}
 hex = "0.4.3"
 kdam = "0.3.0"
 fastrand = "2.0.0"
 log = "0.4.19"
-sim_macros = { path="../macros" }
+anyhow = "1.0.75"
+
+sim-macros = { path="../macros" }
+fork-evm = { path="../fork_evm" }
+
+ethers = { git = "https://github.com/gakonst/ethers-rs", rev = "841ff8c47980798fbb47991e047f8481b1d5eb39" }
 
 [dev-dependencies]
 assert_approx_eq = "1.1.0"

@@ -3,15 +3,20 @@ use crate::contract::{Call, Event};
 use crate::utils::{address_from_hex, Eth};
 use alloy_primitives::{Address, Uint, B256, U256};
 use alloy_sol_types::SolCall;
+use anyhow::{anyhow, Result};
+use ethers::{providers::Middleware, types::BlockNumber};
+use fork_evm::fork::{BlockchainDb, BlockchainDbMeta, SharedBackend};
 use log::debug;
-use revm::db::{CacheDB, EmptyDB};
+use revm::db::{CacheDB, DatabaseRef, EmptyDB};
 use revm::primitives::{AccountInfo, Bytecode, ExecutionResult, Log, ResultAndState, TxEnv};
 use revm::EVM;
+use std::collections::BTreeSet;
 use std::ops::Range;
+use std::sync::Arc;
 pub use utils::{create_call, decode_event, process_events, RevertError};
 
-pub struct Network {
-    pub evm: EVM<CacheDB<EmptyDB>>,
+pub struct Network<D: DatabaseRef> {
+    pub evm: EVM<CacheDB<D>>,
     pub admin_address: Address,
     pub last_events: Vec<Event>,
     pub event_history: Vec<Event>,
@@ -22,7 +27,7 @@ trait CallEVM {
     fn call(&mut self, tx: TxEnv) -> ResultAndState;
 }
 
-impl CallEVM for EVM<CacheDB<EmptyDB>> {
+impl<D: DatabaseRef> CallEVM for EVM<CacheDB<D>> {
     fn execute(&mut self, tx: TxEnv) -> ExecutionResult {
         self.env.tx = tx;
 
@@ -42,14 +47,43 @@ impl CallEVM for EVM<CacheDB<EmptyDB>> {
     }
 }
 
-impl Network {
-    pub fn insert_account(&mut self, address: Address, start_balance: U256) {
-        self.evm.db().unwrap().insert_account_info(
-            address,
-            AccountInfo::new(start_balance, 0, B256::default(), Bytecode::default()),
-        );
-    }
+impl Network<SharedBackend> {
+    pub async fn init_forked<M: Middleware + 'static>(provider: Arc<M>) -> Result<Self> {
+        let block = provider
+            .get_block(BlockNumber::Latest)
+            .await?
+            .ok_or(anyhow!("failed to retrieve block"))?;
 
+        let shared_backend = SharedBackend::spawn_backend_thread(
+            provider.clone(),
+            BlockchainDb::new(
+                BlockchainDbMeta {
+                    cfg_env: Default::default(),
+                    block_env: Default::default(),
+                    hosts: BTreeSet::from(["".to_string()]),
+                },
+                None,
+            ),
+            Some(block.number.unwrap().into()),
+        );
+
+        let db = CacheDB::new(shared_backend);
+        let mut evm = EVM::new();
+        evm.database(db);
+        evm.env.cfg.limit_contract_code_size = Some(0x1000000);
+        evm.env.cfg.disable_eip3607 = true;
+        evm.env.block.gas_limit = U256::MAX;
+
+        Ok(Self {
+            evm,
+            admin_address: Address::ZERO,
+            last_events: Vec::new(),
+            event_history: Vec::new(),
+        })
+    }
+}
+
+impl Network<EmptyDB> {
     pub fn init(admin_address: &str) -> Self {
         let admin_address = address_from_hex(admin_address);
         let mut evm = EVM::new();
@@ -94,6 +128,15 @@ impl Network {
         let mut network = Network::init(admin_address);
         network.insert_agents(start_balance, agent_addresses);
         network
+    }
+}
+
+impl<D: DatabaseRef> Network<D> {
+    pub fn insert_account(&mut self, address: Address, start_balance: U256) {
+        self.evm.db().unwrap().insert_account_info(
+            address,
+            AccountInfo::new(start_balance, 0, B256::default(), Bytecode::default()),
+        );
     }
 
     pub fn insert_agents(&mut self, start_balance: u128, addresses: Vec<Address>) {
@@ -236,7 +279,7 @@ mod tests {
     );
 
     #[fixture]
-    fn deployment() -> (Network, Address) {
+    fn deployment() -> (Network<EmptyDB>, Address) {
         let mut network = Network::init(Address::from(Uint::from(999)).to_string().as_str());
 
         let constructor_args = <i128>::abi_encode(&101);
@@ -267,7 +310,7 @@ mod tests {
     }
 
     #[rstest]
-    fn direct_execute_and_call(deployment: (Network, Address)) {
+    fn direct_execute_and_call(deployment: (Network<EmptyDB>, Address)) {
         let (mut network, contract_address) = deployment;
 
         let (v, _) = network
@@ -300,7 +343,7 @@ mod tests {
     }
 
     #[rstest]
-    fn processing_calls(deployment: (Network, Address)) {
+    fn processing_calls(deployment: (Network<EmptyDB>, Address)) {
         let (mut network, contract_address) = deployment;
 
         let calls = vec![

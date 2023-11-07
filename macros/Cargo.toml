@@ -1,5 +1,5 @@
 [package]
-name = "sim_macros"
+name = "sim-macros"
 version = "0.1.0"
 edition = "2021"
 

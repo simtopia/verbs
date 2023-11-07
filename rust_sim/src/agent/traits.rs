@@ -2,10 +2,12 @@ use crate::contract::Call;
 use crate::network::Network;
 use alloy_primitives::Address;
 use fastrand::Rng;
+use revm::db::DatabaseRef;
 pub use sim_macros::SimState;
 
 pub trait SimState {
-    fn call_agents(&mut self, rng: &mut Rng, network: &mut Network) -> Vec<Call>;
+    fn call_agents<D: DatabaseRef>(&mut self, rng: &mut Rng, network: &mut Network<D>)
+        -> Vec<Call>;
     fn record_agents(&mut self);
 }
 
@@ -18,9 +20,9 @@ pub trait AdminAgent {
     /// * `rng` - Fastrand rng state
     /// * `network` - Protocol deployment(s)
     ///
-    fn update(&mut self, rng: &mut Rng, network: &mut Network);
+    fn update<D: DatabaseRef>(&mut self, rng: &mut Rng, network: &mut Network<D>);
     /// Post block update, can be used to process events
-    fn post_update(&mut self, network: &mut Network);
+    fn post_update<D: DatabaseRef>(&mut self, network: &mut Network<D>);
 }
 
 /// Agent trait used to update all agents each model update.
@@ -33,7 +35,7 @@ pub trait Agent {
     /// * `rng` - Fastrand rng state
     /// * `network` - Protocol deployment(s)
     ///
-    fn update(&mut self, rng: &mut Rng, network: &mut Network) -> Vec<Call>;
+    fn update<D: DatabaseRef>(&mut self, rng: &mut Rng, network: &mut Network<D>) -> Vec<Call>;
     /// Get the address of the agent.
     fn get_address(&self) -> Address;
 }
@@ -55,7 +57,11 @@ pub trait AgentSet {
     /// * `rng` - Fastrand rng state
     /// * `network` - Protocol deployment(s)
     ///
-    fn call(&mut self, rng: &mut fastrand::Rng, network: &mut Network) -> Vec<Call>;
+    fn call<D: DatabaseRef>(
+        &mut self,
+        rng: &mut fastrand::Rng,
+        network: &mut Network<D>,
+    ) -> Vec<Call>;
     /// Record the state of all the agents
     fn record(&mut self);
     /// Get a vector of agent addresses contained in this set
@@ -77,7 +83,7 @@ mod tests {
     }
 
     impl AgentSet for DummyAgentSet {
-        fn call(&mut self, _rng: &mut Rng, _network: &mut Network) -> Vec<Call> {
+        fn call<D: DatabaseRef>(&mut self, _rng: &mut Rng, _network: &mut Network<D>) -> Vec<Call> {
             vec![Call {
                 function_name: "foo",
                 callee: Address::ZERO,
