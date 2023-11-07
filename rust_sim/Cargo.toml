@@ -18,6 +18,8 @@ fork-evm = { path="../fork_evm" }
 
 ethers = { git = "https://github.com/gakonst/ethers-rs", rev = "841ff8c47980798fbb47991e047f8481b1d5eb39" }
 
+tokio = { version = "1", features = ["time", "macros"] }
+
 [dev-dependencies]
 assert_approx_eq = "1.1.0"
 rstest = "0.18.2"
