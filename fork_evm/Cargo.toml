@@ -45,6 +45,4 @@ url = "2"
 auto_impl = "1"
 itertools = "0.11.0"
 async-trait = "0.1.74"
-reqwest = "0.11.22"
-openssl-sys = "0.9.95"
-openssl = { version = "0.10", features = ["vendored"] }
+reqwest = { version = "0.11.22", default-features = false }
