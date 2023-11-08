@@ -8,5 +8,5 @@ jobs:
     container: rust:slim
     steps:
       - uses: actions/checkout@v2
-      - run: apt install -y perl
+      - uses: shogo82148/actions-setup-perl@v1
       - run: cargo build
