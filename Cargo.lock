@@ -1499,6 +1499,7 @@ dependencies = [
  "hex",
  "itertools 0.11.0",
  "openssl",
+ "openssl-sys",
  "parking_lot",
  "reqwest",
  "revm",
