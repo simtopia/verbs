@@ -27,14 +27,6 @@ pub type RpcUrl = String;
 /// # Panics
 ///
 /// Panics if the URL is invalid.
-///
-/// # Examples
-///
-/// ```
-/// use foundry_common::get_http_provider;
-///
-/// let retry_provider = get_http_provider("http://localhost:8545");
-/// ```
 #[inline]
 #[track_caller]
 pub fn get_http_provider(builder: impl AsRef<str>) -> RetryProvider {
