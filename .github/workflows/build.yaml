@@ -8,5 +8,4 @@ jobs:
     container: rust:slim
     steps:
       - uses: actions/checkout@v2
-      - run: apt-get update && apt-get install -y pkg-config libssl-dev perl
       - run: cargo build
