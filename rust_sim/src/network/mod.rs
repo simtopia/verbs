@@ -73,6 +73,7 @@ impl Network<SharedBackend> {
         evm.env.cfg.limit_contract_code_size = Some(0x1000000);
         evm.env.cfg.disable_eip3607 = true;
         evm.env.block.gas_limit = U256::MAX;
+        evm.env.block.timestamp = U256::try_from(block.timestamp.as_u128()).unwrap();
 
         Ok(Self {
             evm,
