@@ -164,10 +164,11 @@ impl<D: DatabaseRef> Network<D> {
         callee: Address,
         contract: Address,
         call_args: T,
+        value: U256,
     ) -> Result<(<T as SolCall>::Return, Vec<Log>), utils::RevertError> {
         let function_name = T::SIGNATURE;
         let call_args = call_args.abi_encode();
-        let tx = utils::init_create_call_transaction(callee, contract, call_args);
+        let tx = utils::init_call_transaction(callee, contract, call_args, value);
         let execution_result = self.evm.execute(tx);
         let (output, events) = utils::result_to_output(function_name, execution_result)?;
         let output_data = output.into_data();
@@ -184,10 +185,11 @@ impl<D: DatabaseRef> Network<D> {
         callee: Address,
         contract: Address,
         call_args: T,
+        value: U256,
     ) -> Result<(<T as SolCall>::Return, Vec<Log>), utils::RevertError> {
         let function_name = T::SIGNATURE;
         let call_args = call_args.abi_encode();
-        let tx = utils::init_create_call_transaction(callee, contract, call_args);
+        let tx = utils::init_call_transaction(callee, contract, call_args, value);
         let execution_result = self.evm.call(tx);
         let (output, events) = utils::result_to_output(function_name, execution_result.result)?;
         let output_data = output.into_data();
@@ -202,7 +204,7 @@ impl<D: DatabaseRef> Network<D> {
     fn call_from_call(&mut self, call: Call, step: usize, sequence: usize) {
         let function_name = call.function_name;
         let check_call = call.checked;
-        let tx = utils::init_create_call_transaction(call.callee, call.transact_to, call.args);
+        let tx = utils::init_call_transaction(call.callee, call.transact_to, call.args, U256::ZERO);
         let execution_result = self.evm.execute(tx);
         let result = utils::result_to_output_with_events(
             step,
@@ -320,6 +322,7 @@ mod tests {
                 network.admin_address,
                 contract_address,
                 TestContract::getValueCall {},
+                U256::ZERO,
             )
             .unwrap();
 
@@ -330,6 +333,7 @@ mod tests {
                 network.admin_address,
                 contract_address,
                 TestContract::setValueCall { x: Signed::ONE },
+                U256::ZERO,
             )
             .unwrap();
 
@@ -338,6 +342,7 @@ mod tests {
                 network.admin_address,
                 contract_address,
                 TestContract::getValueCall {},
+                U256::ZERO,
             )
             .unwrap();
 
@@ -378,6 +383,7 @@ mod tests {
                 network.admin_address,
                 contract_address,
                 TestContract::getValueCall {},
+                U256::ZERO,
             )
             .unwrap();
 

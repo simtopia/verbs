@@ -62,14 +62,19 @@ pub fn init_create_transaction(caller: Address, data: Vec<u8>) -> TxEnv {
     }
 }
 
-pub fn init_create_call_transaction(caller: Address, contract: Address, data: Vec<u8>) -> TxEnv {
+pub fn init_call_transaction(
+    caller: Address,
+    contract: Address,
+    data: Vec<u8>,
+    value: U256,
+) -> TxEnv {
     TxEnv {
         caller,
         gas_limit: u64::MAX,
         gas_price: U256::ZERO,
         gas_priority_fee: None,
         transact_to: TransactTo::Call(contract),
-        value: U256::ZERO,
+        value,
         data: Bytes::from(data),
         chain_id: None,
         nonce: None,

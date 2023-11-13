@@ -42,6 +42,7 @@ impl Agent for SimpleAgent {
                 ecr20::ABI::balanceOfCall {
                     tokenOwner: self.address,
                 },
+                U256::ZERO,
             )
             .unwrap()
             .0

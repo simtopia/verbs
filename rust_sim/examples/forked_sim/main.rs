@@ -3,7 +3,7 @@ mod dai_abi;
 use dai_abi::ABI as DAI_ABI;
 use std::sync::Arc;
 
-use alloy_primitives::Address;
+use alloy_primitives::{Address, U256};
 use fork_evm::{fork::SharedBackend, provider::ProviderBuilder};
 use rust_sim::network::Network;
 use rust_sim::utils::address_from_hex;
@@ -20,11 +20,21 @@ pub async fn main() {
     let dai_address = address_from_hex("0x6B175474E89094C44Da98b954EedeAC495271d0F");
 
     let decimals = net
-        .direct_call(Address::ZERO, dai_address, DAI_ABI::decimalsCall {})
+        .direct_call(
+            Address::ZERO,
+            dai_address,
+            DAI_ABI::decimalsCall {},
+            U256::ZERO,
+        )
         .unwrap();
 
     let total_supply = net
-        .direct_call(Address::ZERO, dai_address, DAI_ABI::totalSupplyCall {})
+        .direct_call(
+            Address::ZERO,
+            dai_address,
+            DAI_ABI::totalSupplyCall {},
+            U256::ZERO,
+        )
         .unwrap();
 
     println!("DAI decimals: {}", decimals.0._0);
