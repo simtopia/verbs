@@ -4,7 +4,8 @@ use crate::utils::{address_from_hex, Eth};
 use alloy_primitives::{Address, Uint, B256, U256};
 use alloy_sol_types::SolCall;
 use anyhow::{anyhow, Result};
-use ethers::{providers::Middleware, types::BlockNumber};
+use ethers::providers::Middleware;
+pub use ethers::types::BlockNumber;
 use fork_evm::fork::{BlockchainDb, BlockchainDbMeta, SharedBackend};
 use log::debug;
 use revm::db::{CacheDB, DatabaseRef, EmptyDB};
@@ -48,9 +49,12 @@ impl<D: DatabaseRef> CallEVM for EVM<CacheDB<D>> {
 }
 
 impl Network<SharedBackend> {
-    pub async fn init<M: Middleware + 'static>(provider: Arc<M>) -> Result<Self> {
+    pub async fn init<M: Middleware + 'static>(
+        provider: Arc<M>,
+        block_number: BlockNumber,
+    ) -> Result<Self> {
         let block = provider
-            .get_block(BlockNumber::Latest)
+            .get_block(block_number)
             .await?
             .ok_or(anyhow!("failed to retrieve block"))?;
 
