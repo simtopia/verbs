@@ -4,6 +4,7 @@ use crate::utils::{address_from_hex, Eth};
 use alloy_primitives::{Address, Uint, B256, U256};
 use alloy_sol_types::SolCall;
 use anyhow::{anyhow, Result};
+pub use ethereum_types::U64;
 use ethers::providers::Middleware;
 pub use ethers::types::BlockNumber;
 use fork_evm::fork::{BlockchainDb, BlockchainDbMeta, SharedBackend};

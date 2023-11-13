@@ -3138,6 +3138,7 @@ dependencies = [
  "alloy-sol-types",
  "anyhow",
  "assert_approx_eq",
+ "ethereum-types",
  "ethers",
  "fastrand",
  "fork-evm",

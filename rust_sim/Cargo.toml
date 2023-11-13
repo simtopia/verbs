@@ -8,6 +8,7 @@ revm = { workspace = true, features = ["ethersdb"] }
 
 alloy-primitives.workspace = true
 alloy-sol-types.workspace = true
+ethereum-types.workspace = true
 
 hex.workspace = true
 tokio.workspace = true
