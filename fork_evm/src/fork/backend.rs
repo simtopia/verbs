@@ -1,18 +1,16 @@
 //! Smart caching and deduplication of requests when using a forking provider
+use crate::constants::NON_ARCHIVE_NODE_WARNING;
+use crate::types::{ToAlloy, ToEthers};
 use crate::{
     backend::{DatabaseError, DatabaseResult},
     fork::{cache::FlushJsonBlockCacheDB, BlockchainDb},
 };
 use alloy_primitives::{keccak256, Address, Bytes, B256, U256};
-use ethers::{
-    core::abi::ethereum_types::BigEndianHash,
-    providers::Middleware,
+use ethers_core::{
+    abi::ethereum_types::BigEndianHash,
     types::{Block, BlockId, NameOrAddress, Transaction},
 };
-
-// use foundry_utils::types::{ToAlloy, ToEthers};
-use crate::constants::NON_ARCHIVE_NODE_WARNING;
-use crate::types::{ToAlloy, ToEthers};
+use ethers_providers::Middleware;
 use futures::{
     channel::mpsc::{channel, Receiver, Sender},
     stream::Stream,

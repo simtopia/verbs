@@ -1,16 +1,11 @@
 use super::fork::environment;
-use crate::provider::RpcUrl;
-use alloy_primitives::{Address, B256, U256};
-use ethers::{
-    providers::Provider,
-    types::{Block, Chain, TxHash},
-};
-use ethers_providers::Middleware;
-use eyre::WrapErr;
-// use foundry_common::{ProviderBuilder, RpcUrl};
-// use foundry_config::Config;
 use crate::provider::ProviderBuilder;
+use crate::provider::RpcUrl;
 use crate::utils::RuntimeOrHandle;
+use alloy_primitives::{Address, B256, U256};
+use ethers_core::types::{Block, Chain, TxHash};
+use ethers_providers::{Middleware, Provider};
+use eyre::WrapErr;
 use revm::primitives::{BlockEnv, CfgEnv, SpecId, TxEnv};
 use serde::{Deserialize, Deserializer, Serialize};
 use tracing::trace;

@@ -15,8 +15,11 @@ edition = "2021"
 revm = { version="3.5.0", default-features = false, features = ["memory_limit", "optional_eip3607", "optional_block_gas_limit", "optional_no_base_fee", "arbitrary"]}
 alloy-primitives = "0.4.2"
 alloy-sol-types = { version="0.4.2", features=["json"]}
+
 ethereum-types = "0.14.1"
+ethers-core = { version = "2.0.10", default-features = false }
+ethers-providers = "2.0.10"
+ethers-middleware = "2.0.10"
 
 hex = "0.4.3"
 tokio = "1.33.0"
-ethers = "2.0.10"

@@ -10,10 +10,9 @@ alloy-primitives.workspace = true
 alloy-sol-types.workspace = true
 alloy-json-abi = "0.4.2"
 
-ethers.workspace = true
-ethers-core = "2.0.10"
-ethers-providers = "2.0.10"
-ethers-middleware = "2.0.10"
+ethers-core.workspace = true
+ethers-providers.workspace = true
+ethers-middleware.workspace = true
 
 # Encoding/decoding
 serde_json = "1"

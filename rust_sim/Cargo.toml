@@ -10,9 +10,12 @@ alloy-primitives.workspace = true
 alloy-sol-types.workspace = true
 ethereum-types.workspace = true
 
+# TODO: These should be changed out for alloy
+ethers-core.workspace = true
+ethers-providers.workspace = true
+
 hex.workspace = true
 tokio.workspace = true
-ethers.workspace = true
 
 kdam = "0.3.0"
 fastrand = "2.0.0"

@@ -2,10 +2,8 @@ use crate::constants::NON_ARCHIVE_NODE_WARNING;
 use crate::types::ToAlloy;
 use crate::utils::apply_chain_and_block_specific_env_changes;
 use alloy_primitives::{Address, U256};
-use ethers::{
-    providers::Middleware,
-    types::{Block, TxHash},
-};
+use ethers_core::types::{Block, TxHash};
+use ethers_providers::Middleware;
 use eyre::WrapErr;
 use futures::TryFutureExt;
 use revm::primitives::{BlockEnv, CfgEnv, Env, TxEnv};
@@ -39,7 +37,7 @@ where
         provider
             .get_chainid()
             .map_err(|err| { eyre::Error::new(err).wrap_err("Failed to get chain id") }),
-        provider.get_block(block_number).map_err(|err| {
+        provider.get_block::<u64>(block_number).map_err(|err| {
             eyre::Error::new(err).wrap_err(format!("Failed to get block {block_number}"))
         })
     )?;
@@ -94,7 +92,7 @@ where
         },
     };
 
-    apply_chain_and_block_specific_env_changes(&mut env, &block);
+    apply_chain_and_block_specific_env_changes::<TxHash>(&mut env, &block);
 
     Ok((env, block))
 }
