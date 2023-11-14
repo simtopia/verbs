@@ -2,6 +2,7 @@ use crate::agent::traits::{Agent, AgentSet, RecordedAgent, RecordedAgentSet};
 use crate::contract::Call;
 use crate::network::Network;
 use alloy_primitives::Address;
+use revm::db::DatabaseRef;
 use std::mem;
 
 /// Implementation of agent set for a single agent.
@@ -45,7 +46,11 @@ impl<R: 'static, A: Agent + RecordedAgent<R> + 'static> AgentSet for SingletonAg
     /// * `rng` - Fastrand rng state
     /// * `network` - Protocol deployment(s)
     ///
-    fn call(&mut self, rng: &mut fastrand::Rng, network: &mut Network) -> Vec<Call> {
+    fn call<D: DatabaseRef>(
+        &mut self,
+        rng: &mut fastrand::Rng,
+        network: &mut Network<D>,
+    ) -> Vec<Call> {
         self.agent.update(rng, network)
     }
     /// Record the current state of the agent.

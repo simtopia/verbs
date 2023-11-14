@@ -3,15 +3,22 @@ use crate::contract::{Call, Event};
 use crate::utils::{address_from_hex, Eth};
 use alloy_primitives::{Address, Uint, B256, U256};
 use alloy_sol_types::SolCall;
+use anyhow::{anyhow, Result};
+pub use ethereum_types::U64;
+pub use ethers_core::types::BlockNumber;
+use ethers_providers::Middleware;
+use fork_evm::fork::{BlockchainDb, BlockchainDbMeta, SharedBackend};
 use log::debug;
-use revm::db::{CacheDB, EmptyDB};
+use revm::db::{CacheDB, DatabaseRef, EmptyDB};
 use revm::primitives::{AccountInfo, Bytecode, ExecutionResult, Log, ResultAndState, TxEnv};
 use revm::EVM;
+use std::collections::BTreeSet;
 use std::ops::Range;
+use std::sync::Arc;
 pub use utils::{create_call, decode_event, process_events, RevertError};
 
-pub struct Network {
-    pub evm: EVM<CacheDB<EmptyDB>>,
+pub struct Network<D: DatabaseRef> {
+    pub evm: EVM<CacheDB<D>>,
     pub admin_address: Address,
     pub last_events: Vec<Event>,
     pub event_history: Vec<Event>,
@@ -22,7 +29,7 @@ trait CallEVM {
     fn call(&mut self, tx: TxEnv) -> ResultAndState;
 }
 
-impl CallEVM for EVM<CacheDB<EmptyDB>> {
+impl<D: DatabaseRef> CallEVM for EVM<CacheDB<D>> {
     fn execute(&mut self, tx: TxEnv) -> ExecutionResult {
         self.env.tx = tx;
 
@@ -42,14 +49,47 @@ impl CallEVM for EVM<CacheDB<EmptyDB>> {
     }
 }
 
-impl Network {
-    pub fn insert_account(&mut self, address: Address, start_balance: U256) {
-        self.evm.db().unwrap().insert_account_info(
-            address,
-            AccountInfo::new(start_balance, 0, B256::default(), Bytecode::default()),
-        );
-    }
+impl Network<SharedBackend> {
+    pub async fn init<M: Middleware + 'static>(
+        provider: Arc<M>,
+        block_number: BlockNumber,
+    ) -> Result<Self> {
+        let block = provider
+            .get_block(block_number)
+            .await?
+            .ok_or(anyhow!("failed to retrieve block"))?;
 
+        let shared_backend = SharedBackend::spawn_backend_thread(
+            provider.clone(),
+            BlockchainDb::new(
+                BlockchainDbMeta {
+                    cfg_env: Default::default(),
+                    block_env: Default::default(),
+                    hosts: BTreeSet::from(["".to_string()]),
+                },
+                None,
+            ),
+            Some(block.number.unwrap().into()),
+        );
+
+        let db = CacheDB::new(shared_backend);
+        let mut evm = EVM::new();
+        evm.database(db);
+        evm.env.cfg.limit_contract_code_size = Some(0x1000000);
+        evm.env.cfg.disable_eip3607 = true;
+        evm.env.block.gas_limit = U256::MAX;
+        evm.env.block.timestamp = U256::try_from(block.timestamp.as_u128()).unwrap();
+
+        Ok(Self {
+            evm,
+            admin_address: Address::ZERO,
+            last_events: Vec::new(),
+            event_history: Vec::new(),
+        })
+    }
+}
+
+impl Network<EmptyDB> {
     pub fn init(admin_address: &str) -> Self {
         let admin_address = address_from_hex(admin_address);
         let mut evm = EVM::new();
@@ -76,7 +116,7 @@ impl Network {
     }
 
     pub fn from_range(start_balance: u128, r: Range<u64>, admin_address: &str) -> Self {
-        let mut network = Network::init(admin_address);
+        let mut network = Network::<EmptyDB>::init(admin_address);
         let start_balance = U256::from(start_balance);
 
         for n in r {
@@ -91,9 +131,18 @@ impl Network {
         agent_addresses: Vec<Address>,
         admin_address: &str,
     ) -> Self {
-        let mut network = Network::init(admin_address);
+        let mut network = Network::<EmptyDB>::init(admin_address);
         network.insert_agents(start_balance, agent_addresses);
         network
+    }
+}
+
+impl<D: DatabaseRef> Network<D> {
+    pub fn insert_account(&mut self, address: Address, start_balance: U256) {
+        self.evm.db().unwrap().insert_account_info(
+            address,
+            AccountInfo::new(start_balance, 0, B256::default(), Bytecode::default()),
+        );
     }
 
     pub fn insert_agents(&mut self, start_balance: u128, addresses: Vec<Address>) {
@@ -120,10 +169,11 @@ impl Network {
         callee: Address,
         contract: Address,
         call_args: T,
+        value: U256,
     ) -> Result<(<T as SolCall>::Return, Vec<Log>), utils::RevertError> {
         let function_name = T::SIGNATURE;
         let call_args = call_args.abi_encode();
-        let tx = utils::init_create_call_transaction(callee, contract, call_args);
+        let tx = utils::init_call_transaction(callee, contract, call_args, value);
         let execution_result = self.evm.execute(tx);
         let (output, events) = utils::result_to_output(function_name, execution_result)?;
         let output_data = output.into_data();
@@ -140,10 +190,11 @@ impl Network {
         callee: Address,
         contract: Address,
         call_args: T,
+        value: U256,
     ) -> Result<(<T as SolCall>::Return, Vec<Log>), utils::RevertError> {
         let function_name = T::SIGNATURE;
         let call_args = call_args.abi_encode();
-        let tx = utils::init_create_call_transaction(callee, contract, call_args);
+        let tx = utils::init_call_transaction(callee, contract, call_args, value);
         let execution_result = self.evm.call(tx);
         let (output, events) = utils::result_to_output(function_name, execution_result.result)?;
         let output_data = output.into_data();
@@ -158,7 +209,7 @@ impl Network {
     fn call_from_call(&mut self, call: Call, step: usize, sequence: usize) {
         let function_name = call.function_name;
         let check_call = call.checked;
-        let tx = utils::init_create_call_transaction(call.callee, call.transact_to, call.args);
+        let tx = utils::init_call_transaction(call.callee, call.transact_to, call.args, U256::ZERO);
         let execution_result = self.evm.execute(tx);
         let result = utils::result_to_output_with_events(
             step,
@@ -236,8 +287,9 @@ mod tests {
     );
 
     #[fixture]
-    fn deployment() -> (Network, Address) {
-        let mut network = Network::init(Address::from(Uint::from(999)).to_string().as_str());
+    fn deployment() -> (Network<EmptyDB>, Address) {
+        let mut network =
+            Network::<EmptyDB>::init(Address::from(Uint::from(999)).to_string().as_str());
 
         let constructor_args = <i128>::abi_encode(&101);
         let bytecode_hex = "608060405234801561001057600080fd5b50\
@@ -267,7 +319,7 @@ mod tests {
     }
 
     #[rstest]
-    fn direct_execute_and_call(deployment: (Network, Address)) {
+    fn direct_execute_and_call(deployment: (Network<EmptyDB>, Address)) {
         let (mut network, contract_address) = deployment;
 
         let (v, _) = network
@@ -275,6 +327,7 @@ mod tests {
                 network.admin_address,
                 contract_address,
                 TestContract::getValueCall {},
+                U256::ZERO,
             )
             .unwrap();
 
@@ -285,6 +338,7 @@ mod tests {
                 network.admin_address,
                 contract_address,
                 TestContract::setValueCall { x: Signed::ONE },
+                U256::ZERO,
             )
             .unwrap();
 
@@ -293,6 +347,7 @@ mod tests {
                 network.admin_address,
                 contract_address,
                 TestContract::getValueCall {},
+                U256::ZERO,
             )
             .unwrap();
 
@@ -300,7 +355,7 @@ mod tests {
     }
 
     #[rstest]
-    fn processing_calls(deployment: (Network, Address)) {
+    fn processing_calls(deployment: (Network<EmptyDB>, Address)) {
         let (mut network, contract_address) = deployment;
 
         let calls = vec![
@@ -333,6 +388,7 @@ mod tests {
                 network.admin_address,
                 contract_address,
                 TestContract::getValueCall {},
+                U256::ZERO,
             )
             .unwrap();
 

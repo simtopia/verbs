@@ -4,11 +4,19 @@ Built around [Rust Ethereum Virtual Machine](https://github.com/bluealloy/revm)
 
 ## Examples
 
-Examples can be run using cargo. For example:
+Examples can be run using cargo.
 
-```
-cargo run --example basic_sim 200
-```
+- Basic sim demonstrating agents moving around an ERC20 token
+
+  ```
+  cargo run --example basic_sim <N-steps> <N-agents>
+  ```
+
+- Initialising EVM state from mainet
+
+  ```
+  cargo run --release --example forked_sim <ALCHEMY-API-KEY>
+  ```
 
 ## Loading Contracts
 

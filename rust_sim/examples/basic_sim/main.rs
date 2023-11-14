@@ -39,6 +39,7 @@ pub fn main() {
                 spender: agent.address,
                 tokens: start_balance,
             },
+            U256::ZERO,
         )
         .unwrap();
     }

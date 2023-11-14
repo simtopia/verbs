@@ -1,9 +1,14 @@
 use crate::agent::{AdminAgent, SimState};
 use crate::network::Network;
+use alloy_primitives::U256;
 use kdam::tqdm;
+use revm::db::DatabaseRef;
 
-pub fn run<A: AdminAgent, S: SimState>(
-    network: &mut Network,
+// Represents blocks updating every 15s
+const BLOCK_INTERVAL: u32 = 15;
+
+pub fn run<A: AdminAgent, S: SimState, D: DatabaseRef>(
+    network: &mut Network<D>,
     admin_agent: &mut A,
     agents: &mut S,
     seed: u64,
@@ -26,5 +31,8 @@ pub fn run<A: AdminAgent, S: SimState>(
         admin_agent.post_update(network);
         // Move the events from this block into historical storage
         network.clear_events();
+        // Update the block-time and number
+        network.evm.env.block.timestamp += U256::from(BLOCK_INTERVAL);
+        network.evm.env.block.number += U256::from(1);
     }
 }
