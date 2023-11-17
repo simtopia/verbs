@@ -15,9 +15,6 @@ pub use cache::{BlockchainDb, BlockchainDbMeta, JsonBlockCacheDB, MemDb};
 
 pub mod database;
 
-mod multi;
-pub use multi::{ForkId, MultiFork, MultiForkHandler};
-
 /// Represents a _fork_ of a remote chain whose data is available only via the `url` endpoint.
 #[derive(Debug, Clone)]
 pub struct CreateFork {
