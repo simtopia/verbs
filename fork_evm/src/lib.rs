@@ -1,6 +1,5 @@
 extern crate tracing;
 
-pub mod backend;
 pub mod constants;
 pub mod fork;
 pub mod opts;

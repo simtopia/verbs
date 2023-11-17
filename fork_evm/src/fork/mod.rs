@@ -1,4 +1,6 @@
 mod backend;
+mod error;
+mod snapshot;
 
 use super::opts::EvmOpts;
 pub use backend::{BackendHandler, SharedBackend};

@@ -1,7 +1,8 @@
 //! A revm database that forks off a remote client
 
+use super::error::DatabaseError;
+use super::snapshot::StateSnapshot;
 use crate::{
-    backend::{DatabaseError, StateSnapshot},
     fork::{BlockchainDb, SharedBackend},
     snapshot::Snapshots,
 };
