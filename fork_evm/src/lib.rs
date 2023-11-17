@@ -5,6 +5,5 @@ pub mod fork;
 pub mod opts;
 pub mod provider;
 pub mod runtime_client;
-pub mod snapshot;
 pub mod types;
 pub mod utils;

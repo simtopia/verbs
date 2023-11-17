@@ -2,19 +2,14 @@
 
 use super::error::DatabaseError;
 use super::snapshot::StateSnapshot;
-use crate::{
-    fork::{BlockchainDb, SharedBackend},
-    snapshot::Snapshots,
-};
+use crate::fork::{BlockchainDb, SharedBackend};
 use alloy_primitives::{Address, B256, U256};
 use ethers_core::types::BlockId;
-use parking_lot::Mutex;
 use revm::{
     db::{CacheDB, DatabaseRef},
     primitives::{Account, AccountInfo, Bytecode, HashMap as Map},
     Database, DatabaseCommit,
 };
-use std::sync::Arc;
 
 /// a [revm::Database] that's forked off another client
 ///
@@ -38,8 +33,8 @@ pub struct ForkedDatabase {
     ///
     /// This exclusively stores the _unchanged_ remote client state
     db: BlockchainDb,
-    /// holds the snapshot state of a blockchain
-    snapshots: Arc<Mutex<Snapshots<ForkDbSnapshot>>>,
+    // /// holds the snapshot state of a blockchain
+    // snapshots: Arc<Mutex<Snapshots<ForkDbSnapshot>>>,
 }
 
 impl ForkedDatabase {
@@ -49,7 +44,7 @@ impl ForkedDatabase {
             cache_db: CacheDB::new(backend.clone()),
             backend,
             db,
-            snapshots: Arc::new(Mutex::new(Default::default())),
+            // snapshots: Arc::new(Mutex::new(Default::default())),
         }
     }
 
@@ -59,10 +54,6 @@ impl ForkedDatabase {
 
     pub fn database_mut(&mut self) -> &mut CacheDB<SharedBackend> {
         &mut self.cache_db
-    }
-
-    pub fn snapshots(&self) -> &Arc<Mutex<Snapshots<ForkDbSnapshot>>> {
-        &self.snapshots
     }
 
     /// Reset the fork to a fresh forked state, and optionally update the fork config
@@ -105,54 +96,6 @@ impl ForkedDatabase {
         ForkDbSnapshot {
             local: self.cache_db.clone(),
             snapshot,
-        }
-    }
-
-    pub fn insert_snapshot(&self) -> U256 {
-        let snapshot = self.create_snapshot();
-        let mut snapshots = self.snapshots().lock();
-        let id = snapshots.insert(snapshot);
-        tracing::trace!(target: "backend::forkdb", "Created new snapshot {}", id);
-        id
-    }
-
-    pub fn revert_snapshot(&mut self, id: U256) -> bool {
-        let snapshot = { self.snapshots().lock().remove_at(id) };
-        if let Some(snapshot) = snapshot {
-            self.snapshots().lock().insert_at(snapshot.clone(), id);
-            let ForkDbSnapshot {
-                local,
-                snapshot:
-                    StateSnapshot {
-                        accounts,
-                        storage,
-                        block_hashes,
-                    },
-            } = snapshot;
-            let db = self.inner().db();
-            {
-                let mut accounts_lock = db.accounts.write();
-                accounts_lock.clear();
-                accounts_lock.extend(accounts);
-            }
-            {
-                let mut storage_lock = db.storage.write();
-                storage_lock.clear();
-                storage_lock.extend(storage);
-            }
-            {
-                let mut block_hashes_lock = db.block_hashes.write();
-                block_hashes_lock.clear();
-                block_hashes_lock.extend(block_hashes);
-            }
-
-            self.cache_db = local;
-
-            tracing::trace!(target: "backend::forkdb", "Reverted snapshot {}", id);
-            true
-        } else {
-            tracing::warn!(target: "backend::forkdb", "No snapshot to revert for {}", id);
-            false
         }
     }
 }
@@ -274,42 +217,3 @@ impl DatabaseRef for ForkDbSnapshot {
         }
     }
 }
-
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-//     use crate::fork::BlockchainDbMeta;
-//     use foundry_common::get_http_provider;
-//     use std::collections::BTreeSet;
-
-//     /// Demonstrates that `Database::basic` for `ForkedDatabase` will always return the
-//     /// `AccountInfo`
-//     #[tokio::test(flavor = "multi_thread")]
-//     async fn fork_db_insert_basic_default() {
-//         let rpc = foundry_utils::rpc::next_http_rpc_endpoint();
-//         let provider = get_http_provider(rpc.clone());
-//         let meta = BlockchainDbMeta {
-//             cfg_env: Default::default(),
-//             block_env: Default::default(),
-//             hosts: BTreeSet::from([rpc]),
-//         };
-//         let db = BlockchainDb::new(meta, None);
-
-//         let backend = SharedBackend::spawn_backend(Arc::new(provider), db.clone(), None).await;
-
-//         let mut db = ForkedDatabase::new(backend, db);
-//         let address = Address::random();
-
-//         let info = Database::basic(&mut db, address).unwrap();
-//         assert!(info.is_some());
-//         let mut info = info.unwrap();
-//         info.balance = U256::from(500u64);
-
-//         // insert the modified account info
-//         db.database_mut().insert_account_info(address, info.clone());
-
-//         let loaded = Database::basic(&mut db, address).unwrap();
-//         assert!(loaded.is_some());
-//         assert_eq!(loaded.unwrap(), info);
-//     }
-// }
