@@ -7,7 +7,8 @@ use anyhow::{anyhow, Result};
 pub use ethereum_types::U64;
 pub use ethers_core::types::BlockNumber;
 use ethers_providers::Middleware;
-use fork_evm::fork::{BlockchainDb, BlockchainDbMeta, SharedBackend};
+use fork_evm::fork::{BlockchainDb, BlockchainDbMeta, SharedBackend, SimpleBackend};
+use futures::executor::block_on;
 use log::debug;
 use revm::db::{CacheDB, DatabaseRef, EmptyDB};
 use revm::primitives::{AccountInfo, Bytecode, ExecutionResult, Log, ResultAndState, TxEnv};
@@ -86,6 +87,43 @@ impl Network<SharedBackend> {
             last_events: Vec::new(),
             event_history: Vec::new(),
         })
+    }
+}
+
+impl<M: Middleware> Network<SimpleBackend<M>> {
+    pub fn init(provider: M, block_number: BlockNumber) -> Self {
+        let block = block_on(provider.get_block(block_number))
+            .unwrap()
+            .ok_or(anyhow!("failed to retrieve block"))
+            .unwrap();
+
+        let backend = SimpleBackend {
+            provider,
+            db: BlockchainDb::new(
+                BlockchainDbMeta {
+                    cfg_env: Default::default(),
+                    block_env: Default::default(),
+                    hosts: BTreeSet::from(["".to_string()]),
+                },
+                None,
+            ),
+            block_id: Some(block.number.unwrap().into()),
+        };
+
+        let db = CacheDB::new(backend);
+        let mut evm = EVM::new();
+        evm.database(db);
+        evm.env.cfg.limit_contract_code_size = Some(0x1000000);
+        evm.env.cfg.disable_eip3607 = true;
+        evm.env.block.gas_limit = U256::MAX;
+        evm.env.block.timestamp = U256::try_from(block.timestamp.as_u128()).unwrap();
+
+        Self {
+            evm,
+            admin_address: Address::ZERO,
+            last_events: Vec::new(),
+            event_history: Vec::new(),
+        }
     }
 }
 
