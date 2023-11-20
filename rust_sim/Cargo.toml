@@ -16,6 +16,7 @@ ethers-providers.workspace = true
 
 hex.workspace = true
 tokio.workspace = true
+futures.workspace = true
 
 kdam = "0.3.0"
 fastrand = "2.0.0"

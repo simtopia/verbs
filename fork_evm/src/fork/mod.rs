@@ -1,7 +1,11 @@
 mod backend;
+mod error;
+mod simple_backend;
+mod snapshot;
 
-use super::opts::EvmOpts;
+use super::options::EvmOpts;
 pub use backend::{BackendHandler, SharedBackend};
+pub use simple_backend::SimpleBackend;
 
 use revm::primitives::Env;
 
@@ -10,11 +14,6 @@ pub use init::environment;
 
 mod cache;
 pub use cache::{BlockchainDb, BlockchainDbMeta, JsonBlockCacheDB, MemDb};
-
-pub mod database;
-
-mod multi;
-pub use multi::{ForkId, MultiFork, MultiForkHandler};
 
 /// Represents a _fork_ of a remote chain whose data is available only via the `url` endpoint.
 #[derive(Debug, Clone)]

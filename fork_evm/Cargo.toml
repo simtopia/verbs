@@ -29,7 +29,7 @@ tracing = "0.1"
 # Threading/futures
 tokio.workspace = true
 parking_lot = "0.12"
-futures = "0.3"
+futures.workspace = true
 
 # Misc
 url = "2"

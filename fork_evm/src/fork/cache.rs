@@ -1,5 +1,4 @@
-//! Cache related abstraction
-use crate::backend::StateSnapshot;
+use super::snapshot::StateSnapshot;
 use alloy_primitives::{Address, B256, U256};
 use parking_lot::RwLock;
 use revm::{

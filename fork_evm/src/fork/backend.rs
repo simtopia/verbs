@@ -1,10 +1,9 @@
 //! Smart caching and deduplication of requests when using a forking provider
+use super::error::DatabaseError;
+use super::error::DatabaseResult;
 use crate::constants::NON_ARCHIVE_NODE_WARNING;
+use crate::fork::{cache::FlushJsonBlockCacheDB, BlockchainDb};
 use crate::types::{ToAlloy, ToEthers};
-use crate::{
-    backend::{DatabaseError, DatabaseResult},
-    fork::{cache::FlushJsonBlockCacheDB, BlockchainDb},
-};
 use alloy_primitives::{keccak256, Address, Bytes, B256, U256};
 use ethers_core::{
     abi::ethereum_types::BigEndianHash,
@@ -538,7 +537,7 @@ pub struct SharedBackend {
     ///
     /// There is only one instance of the type, so as soon as the last `SharedBackend` is deleted,
     /// `FlushJsonBlockCacheDB` is also deleted and the cache is flushed.
-    cache: Arc<FlushJsonBlockCacheDB>,
+    _cache: Arc<FlushJsonBlockCacheDB>,
 }
 
 impl SharedBackend {
@@ -602,7 +601,13 @@ impl SharedBackend {
         let (backend, backend_rx) = channel(1);
         let cache = Arc::new(FlushJsonBlockCacheDB(Arc::clone(db.cache())));
         let handler = BackendHandler::new(provider, db, backend_rx, pin_block);
-        (Self { backend, cache }, handler)
+        (
+            Self {
+                backend,
+                _cache: cache,
+            },
+            handler,
+        )
     }
 
     /// Updates the pinned block to fetch data from
@@ -662,8 +667,8 @@ impl SharedBackend {
     }
 
     /// Flushes the DB to disk if caching is enabled
-    pub(crate) fn flush_cache(&self) {
-        self.cache.0.flush();
+    pub(crate) fn _flush_cache(&self) {
+        self._cache.0.flush();
     }
 }
 
