@@ -123,6 +123,11 @@ impl<M: Middleware> Network<SimpleBackend<M>> {
         evm.env.block.gas_limit = U256::MAX;
         evm.env.block.timestamp = U256::try_from(block.timestamp.as_u128()).unwrap();
 
+        evm.env.block.number = match block.number {
+            Some(n) => U256::try_from(n.as_u64()).unwrap(),
+            None => U256::ZERO,
+        };
+
         Self {
             evm,
             admin_address: Address::ZERO,
