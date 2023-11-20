@@ -34,10 +34,16 @@ impl<M: Middleware> DatabaseRef for SimpleBackend<M> {
             .unwrap();
             let code = block_on(self.provider.get_code(add, self.block_id)).unwrap();
 
+            let (code, code_hash) = if !code.is_empty() {
+                (code.clone(), keccak256(&code))
+            } else {
+                (ethers_core::types::Bytes::default(), KECCAK_EMPTY)
+            };
+
             let account_info = AccountInfo {
                 balance: balance.to_alloy(),
                 nonce: nonce.as_u64(),
-                code_hash: keccak256(code.0.clone()),
+                code_hash,
                 code: Some(Bytecode::new_raw(Bytes(code.0)).to_checked()),
             };
 
