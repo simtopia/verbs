@@ -2,7 +2,7 @@ use super::error::DatabaseError;
 use crate::fork::BlockchainDb;
 use crate::types::{ToAlloy, ToEthers};
 use alloy_primitives::{keccak256, Address, Bytes, B256, U256};
-use ethers_core::types::{BlockId, NameOrAddress};
+use ethers_core::types::{BigEndianHash, BlockId, NameOrAddress};
 use ethers_providers::Middleware;
 use futures::executor::block_on;
 use revm::{
@@ -33,18 +33,19 @@ impl<M: Middleware> DatabaseRef for SimpleBackend<M> {
             )
             .unwrap();
             let code = block_on(self.provider.get_code(add, self.block_id)).unwrap();
+            let code = Bytes::from(code.0);
 
             let (code, code_hash) = if !code.is_empty() {
                 (code.clone(), keccak256(&code))
             } else {
-                (ethers_core::types::Bytes::default(), KECCAK_EMPTY)
+                (Bytes::default(), KECCAK_EMPTY)
             };
 
             let account_info = AccountInfo {
                 balance: balance.to_alloy(),
                 nonce: nonce.as_u64(),
                 code_hash,
-                code: Some(Bytecode::new_raw(Bytes(code.0)).to_checked()),
+                code: Some(Bytecode::new_raw(code).to_checked()),
             };
 
             self.db
@@ -77,7 +78,7 @@ impl<M: Middleware> DatabaseRef for SimpleBackend<M> {
                 block_id,
             ))
             .unwrap();
-            let storage = U256::try_from(storage.to_alloy()).unwrap();
+            let storage = storage.into_uint().to_alloy();
             self.db
                 .storage()
                 .write()
