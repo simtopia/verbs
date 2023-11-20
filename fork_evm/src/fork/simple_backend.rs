@@ -77,7 +77,7 @@ impl<M: Middleware> DatabaseRef for SimpleBackend<M> {
                 block_id,
             ))
             .unwrap();
-            let storage = U256::from_be_bytes(storage.to_alloy().0);
+            let storage = U256::try_from(storage.to_alloy()).unwrap();
             self.db
                 .storage()
                 .write()
