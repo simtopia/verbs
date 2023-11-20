@@ -8,7 +8,6 @@ pub use ethereum_types::U64;
 pub use ethers_core::types::BlockNumber;
 use ethers_providers::Middleware;
 use fork_evm::fork::{BlockchainDb, BlockchainDbMeta, SharedBackend, SimpleBackend};
-use futures::executor::block_on;
 use log::debug;
 use revm::db::{CacheDB, DatabaseRef, EmptyDB};
 use revm::primitives::{AccountInfo, Bytecode, ExecutionResult, Log, ResultAndState, TxEnv};
@@ -92,7 +91,13 @@ impl Network<SharedBackend> {
 
 impl<M: Middleware> Network<SimpleBackend<M>> {
     pub fn init(provider: M, block_number: BlockNumber) -> Self {
-        let block = block_on(provider.get_block(block_number))
+        let rt = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+
+        let block = rt
+            .block_on(provider.get_block(block_number))
             .unwrap()
             .ok_or(anyhow!("failed to retrieve block"))
             .unwrap();

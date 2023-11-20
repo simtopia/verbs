@@ -8,8 +8,7 @@ use fork_evm::provider::{ProviderBuilder, RetryProvider};
 use rust_sim::network::{BlockNumber, Network};
 use rust_sim::utils::address_from_hex;
 
-#[tokio::main]
-pub async fn main() {
+pub fn main() {
     let args: Vec<String> = std::env::args().collect();
 
     let url_str = format!("https://eth-mainnet.g.alchemy.com/v2/{}", args[1]);

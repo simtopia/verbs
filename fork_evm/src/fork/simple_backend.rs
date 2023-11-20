@@ -4,7 +4,6 @@ use crate::types::{ToAlloy, ToEthers};
 use alloy_primitives::{keccak256, Address, Bytes, B256, U256};
 use ethers_core::types::{BigEndianHash, BlockId, NameOrAddress};
 use ethers_providers::Middleware;
-use futures::executor::block_on;
 use revm::{
     db::DatabaseRef,
     primitives::{AccountInfo, Bytecode, KECCAK_EMPTY},
@@ -26,13 +25,23 @@ impl<M: Middleware> DatabaseRef for SimpleBackend<M> {
         } else {
             let add = NameOrAddress::Address(address.to_ethers());
 
-            let balance = block_on(self.provider.get_balance(add.clone(), self.block_id)).unwrap();
-            let nonce = block_on(
-                self.provider
-                    .get_transaction_count(add.clone(), self.block_id),
-            )
-            .unwrap();
-            let code = block_on(self.provider.get_code(add, self.block_id)).unwrap();
+            let rt = tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+                .unwrap();
+
+            let balance = rt
+                .block_on(self.provider.get_balance(add.clone(), self.block_id))
+                .unwrap();
+            let nonce = rt
+                .block_on(
+                    self.provider
+                        .get_transaction_count(add.clone(), self.block_id),
+                )
+                .unwrap();
+            let code = rt
+                .block_on(self.provider.get_code(add, self.block_id))
+                .unwrap();
             let code = Bytes::from(code.0);
 
             let (code, code_hash) = if !code.is_empty() {
@@ -72,12 +81,18 @@ impl<M: Middleware> DatabaseRef for SimpleBackend<M> {
         } else {
             let block_id = self.block_id;
             let idx_req = B256::from(index);
-            let storage = block_on(self.provider.get_storage_at(
-                NameOrAddress::Address(address.to_ethers()),
-                idx_req.to_ethers(),
-                block_id,
-            ))
-            .unwrap();
+
+            let rt = tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+                .unwrap();
+            let storage = rt
+                .block_on(self.provider.get_storage_at(
+                    NameOrAddress::Address(address.to_ethers()),
+                    idx_req.to_ethers(),
+                    block_id,
+                ))
+                .unwrap();
             let storage = storage.into_uint().to_alloy();
             self.db
                 .storage()
@@ -101,7 +116,13 @@ impl<M: Middleware> DatabaseRef for SimpleBackend<M> {
         } else {
             let n: u64 = number.try_into().unwrap();
             let block_id = BlockId::from(n);
-            let block = block_on(self.provider.get_block(block_id));
+
+            let rt = tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+                .unwrap();
+            let block = rt.block_on(self.provider.get_block(block_id));
+
             match block {
                 Ok(Some(block)) => Ok(block
                     .hash
