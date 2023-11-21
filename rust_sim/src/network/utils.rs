@@ -8,6 +8,7 @@ use std::fmt;
 #[derive(Debug, Clone)]
 pub struct RevertError {
     pub function_name: &'static str,
+    sender: Address,
     output: Option<String>,
 }
 
@@ -20,8 +21,8 @@ impl fmt::Display for RevertError {
 
         write!(
             f,
-            "Failed to call {} due to revert: {}",
-            self.function_name, out_str,
+            "Failed to call {} from {} due to revert: {}",
+            self.function_name, self.sender, out_str,
         )
     }
 }
@@ -88,6 +89,7 @@ pub fn result_to_output_with_events(
     step: usize,
     sequence: usize,
     function_name: &'static str,
+    sender: Address,
     execution_result: ExecutionResult,
     checked: bool,
 ) -> CallResult {
@@ -110,14 +112,16 @@ pub fn result_to_output_with_events(
         ExecutionResult::Revert { output, .. } => {
             if checked {
                 panic!(
-                    "Failed to call {} due to revert: {:?}",
+                    "Failed to call {} from {} due to revert: {:?}",
                     function_name,
+                    sender,
                     decode_revert_reason(&output.0)
                 )
             } else {
                 warn!(
-                    "Failed to call {} due to revert: {:?}",
+                    "Failed to call {} from {} due to revert: {:?}",
                     function_name,
+                    sender,
                     decode_revert_reason(&output.0)
                 );
                 CallResult {
@@ -128,23 +132,31 @@ pub fn result_to_output_with_events(
             }
         }
         ExecutionResult::Halt { reason, .. } => {
-            panic!("Failed to call {} due to halt: {:?}", function_name, reason)
+            panic!(
+                "Failed to call {} from {} due to halt: {:?}",
+                function_name, sender, reason
+            )
         }
     }
 }
 
 pub fn result_to_output(
     function_name: &'static str,
+    sender: Address,
     execution_result: ExecutionResult,
 ) -> Result<(Output, Vec<Log>), RevertError> {
     match execution_result {
         ExecutionResult::Success { output, logs, .. } => Ok((output, logs)),
         ExecutionResult::Revert { output, .. } => Err(RevertError {
             function_name,
+            sender,
             output: decode_revert_reason(&output),
         }),
         ExecutionResult::Halt { reason, .. } => {
-            panic!("Failed to call {} due to halt: {:?}", function_name, reason)
+            panic!(
+                "Failed to call {} from {} due to halt: {:?}",
+                function_name, sender, reason
+            )
         }
     }
 }

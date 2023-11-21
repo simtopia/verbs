@@ -223,7 +223,7 @@ impl<D: DatabaseRef> Network<D> {
         let call_args = call_args.abi_encode();
         let tx = utils::init_call_transaction(callee, contract, call_args, value);
         let execution_result = self.evm.execute(tx);
-        let (output, events) = utils::result_to_output(function_name, execution_result)?;
+        let (output, events) = utils::result_to_output(function_name, callee, execution_result)?;
         let output_data = output.into_data();
         let decoded = T::abi_decode_returns(&output_data, true);
         let decoded = match decoded {
@@ -244,7 +244,8 @@ impl<D: DatabaseRef> Network<D> {
         let call_args = call_args.abi_encode();
         let tx = utils::init_call_transaction(callee, contract, call_args, value);
         let execution_result = self.evm.call(tx);
-        let (output, events) = utils::result_to_output(function_name, execution_result.result)?;
+        let (output, events) =
+            utils::result_to_output(function_name, callee, execution_result.result)?;
         let output_data = output.into_data();
         let decoded = T::abi_decode_returns(&output_data, true);
         let decoded = match decoded {
@@ -263,6 +264,7 @@ impl<D: DatabaseRef> Network<D> {
             step,
             sequence,
             function_name,
+            call.callee,
             execution_result,
             check_call,
         );
