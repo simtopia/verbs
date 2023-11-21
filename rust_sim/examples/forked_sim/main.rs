@@ -3,8 +3,8 @@ mod dai_abi;
 use dai_abi::ABI as DAI_ABI;
 
 use alloy_primitives::{Address, U256};
+use fork_evm::fork::SimpleBackend;
 use fork_evm::provider::{ProviderBuilder, RetryProvider};
-use fork_evm::sync_fork::SimpleBackend;
 use rust_sim::network::{BlockNumber, Network};
 use rust_sim::utils::address_from_hex;
 

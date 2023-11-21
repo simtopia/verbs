@@ -1,8 +1,11 @@
 mod backend;
+mod error;
+mod simple_backend;
 mod snapshot;
 
 use super::options::EvmOpts;
 pub use backend::{BackendHandler, SharedBackend};
+pub use simple_backend::SimpleBackend;
 
 use revm::primitives::Env;
 

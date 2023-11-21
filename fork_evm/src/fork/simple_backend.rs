@@ -1,5 +1,5 @@
-use super::db::MemDb;
-use crate::error::DatabaseError;
+use super::error::DatabaseError;
+use crate::fork::BlockchainDb;
 use crate::types::{ToAlloy, ToEthers};
 use alloy_primitives::{keccak256, Address, Bytes, B256, U256};
 use ethers_core::types::{BigEndianHash, BlockId, NameOrAddress};
@@ -11,7 +11,7 @@ use revm::{
 
 pub struct SimpleBackend<M: Middleware> {
     pub provider: M,
-    pub db: MemDb,
+    pub db: BlockchainDb,
     pub block_id: Option<BlockId>,
 }
 
@@ -19,7 +19,7 @@ impl<M: Middleware> DatabaseRef for SimpleBackend<M> {
     type Error = DatabaseError;
 
     fn basic(&self, address: Address) -> Result<Option<AccountInfo>, Self::Error> {
-        let acc = self.db.accounts().get(&address).cloned();
+        let acc = self.db.accounts().read().get(&address).cloned();
         if let Some(basic) = acc {
             Ok(Some(basic))
         } else {
@@ -57,7 +57,10 @@ impl<M: Middleware> DatabaseRef for SimpleBackend<M> {
                 code: Some(Bytecode::new_raw(code).to_checked()),
             };
 
-            self.db.accounts().insert(address, account_info.clone());
+            self.db
+                .accounts()
+                .write()
+                .insert(address, account_info.clone());
             Ok(Some(account_info))
         }
     }
@@ -70,6 +73,7 @@ impl<M: Middleware> DatabaseRef for SimpleBackend<M> {
         let value = self
             .db
             .storage()
+            .read()
             .get(&address)
             .and_then(|acc| acc.get(&index).copied());
         if let Some(value) = value {
@@ -92,6 +96,7 @@ impl<M: Middleware> DatabaseRef for SimpleBackend<M> {
             let storage = storage.into_uint().to_alloy();
             self.db
                 .storage()
+                .write()
                 .entry(address)
                 .or_default()
                 .insert(index, storage);
@@ -100,7 +105,12 @@ impl<M: Middleware> DatabaseRef for SimpleBackend<M> {
     }
 
     fn block_hash(&self, number: U256) -> Result<B256, Self::Error> {
-        let hash = self.db.block_hashes().get(&U256::from(number)).cloned();
+        let hash = self
+            .db
+            .block_hashes()
+            .read()
+            .get(&U256::from(number))
+            .cloned();
         if let Some(hash) = hash {
             Ok(hash)
         } else {
@@ -113,7 +123,7 @@ impl<M: Middleware> DatabaseRef for SimpleBackend<M> {
                 .unwrap();
             let block = rt.block_on(self.provider.get_block(block_id));
 
-            let hash = match block {
+            match block {
                 Ok(Some(block)) => Ok(block
                     .hash
                     .expect("empty block hash on mined block, this should never happen")
@@ -124,13 +134,7 @@ impl<M: Middleware> DatabaseRef for SimpleBackend<M> {
                     Ok(KECCAK_EMPTY)
                 }
                 Err(_) => Err(DatabaseError::BlockNotFound(block_id)),
-            };
-
-            if let Ok(h) = hash {
-                self.db.block_hashes().insert(number, h);
-            };
-
-            hash
+            }
         }
     }
 }
