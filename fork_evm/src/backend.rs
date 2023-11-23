@@ -1,5 +1,5 @@
-use super::error::DatabaseError;
-use crate::fork::BlockchainDb;
+use crate::cache::BlockchainDb;
+use crate::error::DatabaseError;
 use crate::types::{ToAlloy, ToEthers};
 use alloy_primitives::{keccak256, Address, Bytes, B256, U256};
 use ethers_core::types::{BigEndianHash, BlockId, NameOrAddress};
@@ -9,13 +9,13 @@ use revm::{
     primitives::{AccountInfo, Bytecode, KECCAK_EMPTY},
 };
 
-pub struct SimpleBackend<M: Middleware> {
+pub struct Backend<M: Middleware> {
     pub provider: M,
     pub db: BlockchainDb,
     pub block_id: Option<BlockId>,
 }
 
-impl<M: Middleware> DatabaseRef for SimpleBackend<M> {
+impl<M: Middleware> DatabaseRef for Backend<M> {
     type Error = DatabaseError;
 
     fn basic(&self, address: Address) -> Result<Option<AccountInfo>, Self::Error> {

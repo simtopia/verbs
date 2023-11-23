@@ -6,9 +6,6 @@ use std::{
     sync::{mpsc::RecvError, Arc},
 };
 
-/// Result alias with `DatabaseError` as error
-pub type DatabaseResult<T> = Result<T, DatabaseError>;
-
 /// Errors that can happen when working with [`revm::Database`]
 #[derive(Debug, thiserror::Error)]
 #[allow(missing_docs)]
