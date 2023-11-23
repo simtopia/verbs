@@ -1,24 +1,43 @@
-[tool.poetry]
-name = "rust-sim-python"
-version = "0.1.0"
-description = ""
-authors = []
-readme = "README.md"
-packages = []
-
-[tool.poetry.dependencies]
-python = "^3.10"
-py-solc-x = "^1.1.1"
-
-[tool.poetry.group.dev.dependencies]
-pytest = "^7.3.1"
-pre-commit = "^3.3.2"
-taskipy = "^1.11.0"
+[tool.maturin]
+module-name = "verbs._verbs"
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["maturin>=1.2,<2.0"]
+build-backend = "maturin"
 
-[tool.taskipy.tasks]
-test = { cmd = "pytest", help="Run tests"}
-lint = { cmd = "pre-commit run --all-files", help="Code format checks"}
+[project]
+name = "verbs"
+version = "0.1.0"
+description = ''
+readme = "README.md"
+requires-python = ">=3.8"
+keywords = []
+authors = [
+  { name = "Jordan", email = "jordan@simtopia.ai" },
+]
+classifiers = [
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Rust",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
+]
+dependencies = []
+
+[tool.hatch.envs.dev]
+dependencies = [
+  "maturin >= 1.2.3",
+  "pytest >= 7.4.2",
+  "pre-commit >= 3.3.3",
+]
+
+[tool.hatch.envs.dev.scripts]
+develop = "maturin develop --release"
+lint = "pre-commit install && pre-commit run --all-files"
+
+
+[project.urls]
+Source = "https://github.com/simtopia/rusty_venture"

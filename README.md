@@ -45,3 +45,17 @@ Contracts deployment requires the ABI and deployment bytecode:
   ```bash
   python scripts/process_contract.py <PATH_TO_CONTRACT> <SOL_VERSION> <OUTPUT_FOLDER>
   ```
+
+## Python API
+
+The Python API can be built using [hatch](https://hatch.pypa.io/latest/) by running
+
+```
+hatch run dev:develop
+```
+
+and Python linting can be run using
+
+```
+hatch run dev:lint
+```
