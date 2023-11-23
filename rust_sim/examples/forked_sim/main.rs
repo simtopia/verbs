@@ -3,8 +3,7 @@ mod dai_abi;
 use dai_abi::ABI as DAI_ABI;
 
 use alloy_primitives::{Address, U256};
-use fork_evm::fork::SimpleBackend;
-use fork_evm::provider::{ProviderBuilder, RetryProvider};
+use fork_evm::Backend;
 use rust_sim::network::{BlockNumber, Network};
 use rust_sim::utils::address_from_hex;
 
@@ -13,9 +12,7 @@ pub fn main() {
 
     let url_str = format!("https://eth-mainnet.g.alchemy.com/v2/{}", args[1]);
 
-    let provider = ProviderBuilder::new(url_str.as_str()).build().unwrap();
-
-    let mut net = Network::<SimpleBackend<RetryProvider>>::init(provider, BlockNumber::Latest);
+    let mut net = Network::<Backend>::init(&url_str, BlockNumber::Latest);
 
     let dai_address = address_from_hex("0x6B175474E89094C44Da98b954EedeAC495271d0F");
 

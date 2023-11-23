@@ -7,14 +7,13 @@ use anyhow::{anyhow, Result};
 pub use ethereum_types::U64;
 pub use ethers_core::types::BlockNumber;
 use ethers_providers::Middleware;
-use fork_evm::fork::{BlockchainDb, BlockchainDbMeta, SharedBackend, SimpleBackend};
+use fork_evm::{Backend, BlockchainDb, BlockchainDbMeta, ProviderBuilder};
 use log::debug;
 use revm::db::{CacheDB, DatabaseRef, EmptyDB};
 use revm::primitives::{AccountInfo, Bytecode, ExecutionResult, Log, ResultAndState, TxEnv};
 use revm::EVM;
 use std::collections::BTreeSet;
 use std::ops::Range;
-use std::sync::Arc;
 pub use utils::{create_call, decode_event, process_events, RevertError};
 
 pub struct Network<D: DatabaseRef> {
@@ -49,48 +48,10 @@ impl<D: DatabaseRef> CallEVM for EVM<CacheDB<D>> {
     }
 }
 
-impl Network<SharedBackend> {
-    pub async fn init<M: Middleware + 'static>(
-        provider: Arc<M>,
-        block_number: BlockNumber,
-    ) -> Result<Self> {
-        let block = provider
-            .get_block(block_number)
-            .await?
-            .ok_or(anyhow!("failed to retrieve block"))?;
+impl Network<Backend> {
+    pub fn init(node_url: &str, block_number: BlockNumber) -> Self {
+        let provider = ProviderBuilder::new(node_url).build().unwrap();
 
-        let shared_backend = SharedBackend::spawn_backend_thread(
-            provider.clone(),
-            BlockchainDb::new(
-                BlockchainDbMeta {
-                    cfg_env: Default::default(),
-                    block_env: Default::default(),
-                    hosts: BTreeSet::from(["".to_string()]),
-                },
-                None,
-            ),
-            Some(block.number.unwrap().into()),
-        );
-
-        let db = CacheDB::new(shared_backend);
-        let mut evm = EVM::new();
-        evm.database(db);
-        evm.env.cfg.limit_contract_code_size = Some(0x1000000);
-        evm.env.cfg.disable_eip3607 = true;
-        evm.env.block.gas_limit = U256::MAX;
-        evm.env.block.timestamp = U256::try_from(block.timestamp.as_u128()).unwrap();
-
-        Ok(Self {
-            evm,
-            admin_address: Address::ZERO,
-            last_events: Vec::new(),
-            event_history: Vec::new(),
-        })
-    }
-}
-
-impl<M: Middleware> Network<SimpleBackend<M>> {
-    pub fn init(provider: M, block_number: BlockNumber) -> Self {
         let rt = tokio::runtime::Builder::new_current_thread()
             .enable_all()
             .build()
@@ -102,7 +63,7 @@ impl<M: Middleware> Network<SimpleBackend<M>> {
             .ok_or(anyhow!("failed to retrieve block"))
             .unwrap();
 
-        let backend = SimpleBackend {
+        let backend = Backend {
             provider,
             db: BlockchainDb::new(
                 BlockchainDbMeta {
