@@ -8,6 +8,7 @@ jobs:
     container: rust:slim
     steps:
       - uses: actions/checkout@v2
+      - uses: webfactory/ssh-agent@v0.5.4
       - run: cargo test
   rust_examples:
     if: github.event.pull_request.draft == false
@@ -15,4 +16,5 @@ jobs:
     container: rust:slim
     steps:
       - uses: actions/checkout@v2
+      - uses: webfactory/ssh-agent@v0.5.4
       - run: cargo run --example basic_sim 200 100
