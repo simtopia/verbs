@@ -1,10 +1,12 @@
-use super::types::{convert_event, PyAddress, PyEvent};
+use super::types::{
+    convert_event, result_to_py, PyAddress, PyEvent, PyExecutionResult, PyRevertError,
+};
 use alloy_primitives::{Address, U256};
 use fork_evm::Backend;
 use pyo3::prelude::*;
 use revm::db::{DatabaseRef, EmptyDB};
 use rust_sim::contract::Call;
-use rust_sim::network::{BlockNumber, Network};
+use rust_sim::network::{BlockNumber, Network, RevertError};
 use std::mem;
 
 // Represents blocks updating every 15s
@@ -96,6 +98,40 @@ impl<DB: DatabaseRef> BaseEnv<DB> {
         self.network
             .insert_account(Address::from_slice(&address), U256::from(start_balance))
     }
+
+    pub fn call(
+        &mut self,
+        sender: PyAddress,
+        contract_address: PyAddress,
+        encoded_args: Vec<u8>,
+        value: u128,
+    ) -> Result<PyExecutionResult, RevertError> {
+        let value = U256::try_from(value).unwrap();
+        let result = self.network.direct_call_raw(
+            Address::from_slice(&sender),
+            Address::from_slice(&contract_address),
+            encoded_args,
+            value,
+        );
+        result_to_py(result)
+    }
+
+    pub fn execute(
+        &mut self,
+        sender: PyAddress,
+        contract_address: PyAddress,
+        encoded_args: Vec<u8>,
+        value: u128,
+    ) -> Result<PyExecutionResult, RevertError> {
+        let value = U256::try_from(value).unwrap();
+        let result = self.network.direct_execute_raw(
+            Address::from_slice(&sender),
+            Address::from_slice(&contract_address),
+            encoded_args,
+            value,
+        );
+        result_to_py(result)
+    }
 }
 
 #[pyclass(unsendable)]
@@ -106,6 +142,16 @@ impl EmptyEnv {
     #[new]
     pub fn new(seed: u64, admin_address: &str) -> PyResult<Self> {
         Ok(Self(BaseEnv::<EmptyDB>::new(seed, admin_address)))
+    }
+
+    #[getter]
+    fn get_step(&self) -> PyResult<usize> {
+        Ok(self.0.step)
+    }
+
+    #[getter]
+    fn get_admin_address(&self) -> PyResult<PyAddress> {
+        Ok(self.0.network.admin_address.0 .0)
     }
 
     pub fn process_block(&mut self) -> PyResult<()> {
@@ -140,6 +186,36 @@ impl EmptyEnv {
 
     pub fn create_account(&mut self, address: PyAddress, start_balance: u128) {
         self.0.create_account(address, start_balance)
+    }
+
+    pub fn call(
+        &mut self,
+        sender: PyAddress,
+        contract_address: PyAddress,
+        encoded_args: Vec<u8>,
+        value: u128,
+    ) -> Result<PyExecutionResult, PyRevertError> {
+        let result = self.0.call(sender, contract_address, encoded_args, value);
+        match result {
+            Ok(x) => Ok(x),
+            Err(x) => Err(x.into()),
+        }
+    }
+
+    pub fn execute(
+        &mut self,
+        sender: PyAddress,
+        contract_address: PyAddress,
+        encoded_args: Vec<u8>,
+        value: u128,
+    ) -> Result<PyExecutionResult, PyRevertError> {
+        let result = self
+            .0
+            .execute(sender, contract_address, encoded_args, value);
+        match result {
+            Ok(x) => Ok(x),
+            Err(x) => Err(x.into()),
+        }
     }
 }
 
@@ -153,6 +229,16 @@ impl ForkEnv {
         Ok(Self(BaseEnv::<Backend>::new(node_url, seed, block_number)))
     }
 
+    #[getter]
+    fn get_step(&self) -> PyResult<usize> {
+        Ok(self.0.step)
+    }
+
+    #[getter]
+    fn get_admin_address(&self) -> PyResult<PyAddress> {
+        Ok(self.0.network.admin_address.0 .0)
+    }
+
     pub fn process_block(&mut self) -> PyResult<()> {
         self.0.process_block();
         Ok(())
@@ -185,5 +271,35 @@ impl ForkEnv {
 
     pub fn create_account(&mut self, address: PyAddress, start_balance: u128) {
         self.0.create_account(address, start_balance)
+    }
+
+    pub fn call(
+        &mut self,
+        sender: PyAddress,
+        contract_address: PyAddress,
+        encoded_args: Vec<u8>,
+        value: u128,
+    ) -> Result<PyExecutionResult, PyRevertError> {
+        let result = self.0.call(sender, contract_address, encoded_args, value);
+        match result {
+            Ok(x) => Ok(x),
+            Err(x) => Err(x.into()),
+        }
+    }
+
+    pub fn execute(
+        &mut self,
+        sender: PyAddress,
+        contract_address: PyAddress,
+        encoded_args: Vec<u8>,
+        value: u128,
+    ) -> Result<PyExecutionResult, PyRevertError> {
+        let result = self
+            .0
+            .execute(sender, contract_address, encoded_args, value);
+        match result {
+            Ok(x) => Ok(x),
+            Err(x) => Err(x.into()),
+        }
     }
 }

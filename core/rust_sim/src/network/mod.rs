@@ -173,6 +173,18 @@ impl<D: DatabaseRef> Network<D> {
         deploy_address
     }
 
+    pub fn direct_execute_raw(
+        &mut self,
+        callee: Address,
+        contract: Address,
+        encoded_args: Vec<u8>,
+        value: U256,
+    ) -> Result<ExecutionResult, RevertError> {
+        let tx = utils::init_call_transaction(callee, contract, encoded_args, value);
+        let execution_result = self.evm.execute(tx);
+        utils::result_to_raw_output(callee, execution_result)
+    }
+
     pub fn direct_execute<T: SolCall>(
         &mut self,
         callee: Address,
@@ -192,6 +204,18 @@ impl<D: DatabaseRef> Network<D> {
             Err(_) => panic!("Decoding error from {}", function_name),
         };
         Ok((decoded, events))
+    }
+
+    pub fn direct_call_raw(
+        &mut self,
+        callee: Address,
+        contract: Address,
+        encoded_args: Vec<u8>,
+        value: U256,
+    ) -> Result<ExecutionResult, RevertError> {
+        let tx = utils::init_call_transaction(callee, contract, encoded_args, value);
+        let result = self.evm.call(tx);
+        utils::result_to_raw_output(callee, result.result)
     }
 
     pub fn direct_call<T: SolCall>(

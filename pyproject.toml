@@ -25,19 +25,23 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
-dependencies = []
+dependencies = [
+  "eth-utils >= 2.3.1",
+  "eth-abi >= 4.2.1",
+]
 
 [tool.hatch.envs.dev]
 dependencies = [
   "maturin >= 1.2.3",
   "pytest >= 7.4.2",
   "pre-commit >= 3.3.3",
+  "patchelf >= 0.17.2.1",
 ]
 
 [tool.hatch.envs.dev.scripts]
 develop = "maturin develop --release"
 lint = "pre-commit install && pre-commit run --all-files"
-test = "maturin develop --release && pytest src/tests"
+test = "maturin develop --release && pytest -v src/tests"
 
 
 [project.urls]
