@@ -29,13 +29,12 @@ def bytecode():
         "6f6c634300080a0033"
     )
 
-    return list(bytes.fromhex(hex[2:]))
+    return utils.hex_to_byte_list(hex)
 
 
 @pytest.fixture
 def constructor_args():
-    b = eth_abi.encode(["int256"], [INITIAL_VALUE])
-    return list(b)
+    return utils.encode_args(["int256"], [INITIAL_VALUE])
 
 
 @pytest.fixture
