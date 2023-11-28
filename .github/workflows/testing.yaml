@@ -5,20 +5,14 @@ jobs:
   rust_tests:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
-    container: rust:slim
+    container: rust:latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: webfactory/ssh-agent@v0.7.0
-        with:
-          ssh-private-key: ${{ secrets.ACTIONS }}
+      - uses: actions/checkout@v3
       - run: cargo test
   rust_examples:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     container: rust:latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: webfactory/ssh-agent@v0.7.0
-        with:
-          ssh-private-key: ${{ secrets.ACTIONS }}
+      - uses: actions/checkout@v3
       - run: cargo run --example basic_sim 200 100
