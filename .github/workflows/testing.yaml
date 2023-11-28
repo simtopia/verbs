@@ -8,17 +8,17 @@ jobs:
     container: rust:slim
     steps:
       - uses: actions/checkout@v2
-      - uses: webfactory/ssh-agent@v0.5.4
+      - uses: webfactory/ssh-agent@v0.8.0
         with:
           ssh-private-key: ${{ secrets.ACTIONS }}
       - run: cargo test
   rust_examples:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
-    container: rust:slim
+    container: rust:latest
     steps:
       - uses: actions/checkout@v2
-      - uses: webfactory/ssh-agent@v0.5.4
+      - uses: webfactory/ssh-agent@v0.8.0
         with:
           ssh-private-key: ${{ secrets.ACTIONS }}
       - run: cargo run --example basic_sim 200 100
