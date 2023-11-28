@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: webfactory/ssh-agent@v0.8.0
+      - uses: webfactory/ssh-agent@v0.7.0
         with:
           ssh-private-key: ${{ secrets.ACTIONS }}
       - uses: actions/setup-python@v4
@@ -31,7 +31,7 @@ jobs:
     container: rust:latest
     steps:
       - uses: actions/checkout@v2
-      - uses: webfactory/ssh-agent@v0.8.0
+      - uses: webfactory/ssh-agent@v0.7.0
         with:
           ssh-private-key: ${{ secrets.ACTIONS }}
       - uses: dtolnay/rust-toolchain@stable
