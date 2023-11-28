@@ -1,0 +1,57 @@
+import typing
+
+import eth_abi
+import eth_utils
+
+
+class Function:
+    def __init__(self, abi: typing.Dict):
+        self.inputs = [x["type"] for x in abi["inputs"]]
+        self.outputs = [x["type"] for x in abi["outputs"]]
+        self.selector = list(eth_utils.abi.function_abi_to_4byte_selector(abi))
+
+    def encode(self, args: typing.List) -> typing.List[int]:
+        return self.selector + list(eth_abi.encode(self.inputs, args))
+
+    def decode(self, output: typing.List[int]):
+        return eth_abi.decode(self.outputs, bytes(output))
+
+
+class Event:
+    def __init__(self, abi: typing.Dict):
+        self.inputs = [x["type"] for x in abi["inputs"] if not x["indexed"]]
+
+    def decode(self, output: typing.List[int]):
+        return eth_abi.decode(self.inputs, bytes(output))
+
+
+def get_abi(name: str, abi: typing.List[typing.Dict]) -> type:
+
+    grouped = dict()
+
+    for a in abi:
+        if a["type"] not in ("function", "event"):
+            continue
+
+        nm = a["name"]
+
+        if nm not in grouped:
+            grouped[nm] = list()
+
+        grouped[nm].append(a)
+
+    for v in grouped.values():
+        if len(v) > 1:
+            for i in range(len(v)):
+                v[i]["name"] = v[i]["name"] + str(i)
+
+    methods = dict()
+
+    for v in grouped.values():
+        for a in v:
+            if a["type"] == "function":
+                methods[a["name"]] = Function(a)
+            elif a["type"] == "event":
+                methods[a["name"]] = Event(a)
+
+    return type(name, (), methods)
