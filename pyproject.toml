@@ -42,7 +42,7 @@ dependencies = [
 develop = "maturin develop --release"
 lint = "pre-commit install && pre-commit run --all-files"
 test = "maturin develop --release && pytest -v src/tests"
-
+build = "maturin build --release"
 
 [project.urls]
 Source = "https://github.com/simtopia/rusty_venture"
