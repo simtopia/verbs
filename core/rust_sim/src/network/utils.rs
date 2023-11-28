@@ -9,7 +9,7 @@ use std::fmt;
 pub struct RevertError {
     pub function_name: &'static str,
     sender: Address,
-    output: Option<String>,
+    pub output: Option<String>,
 }
 
 impl fmt::Display for RevertError {
@@ -82,6 +82,21 @@ pub fn init_call_transaction(
         access_list: Vec::new(),
         blob_hashes: Vec::default(),
         max_fee_per_blob_gas: None,
+    }
+}
+
+pub fn result_to_raw_output(
+    sender: Address,
+    execution_result: ExecutionResult,
+) -> Result<ExecutionResult, RevertError> {
+    match execution_result {
+        ExecutionResult::Success { .. } => Ok(execution_result),
+        ExecutionResult::Revert { output, .. } => Err(RevertError {
+            function_name: "Direct execute raw",
+            sender,
+            output: decode_revert_reason(&output),
+        }),
+        ExecutionResult::Halt { reason, .. } => panic!("Failed due to halt: {:?}", reason),
     }
 }
 

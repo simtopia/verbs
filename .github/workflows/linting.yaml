@@ -10,20 +10,14 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-      - uses: snok/install-poetry@v1
-        with:
-          version: 1.2.2
-          virtualenvs-create: false
-          installer-parallel: true
-      - run: poetry install
-      - run: pre-commit install
-      - run: task lint
+      - run: pip install hatch
+      - run: hatch run dev:lint
   rust_linting:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     container: rust:slim
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt
@@ -31,9 +25,9 @@ jobs:
   rust_clippy:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
-    container: rust:slim
+    container: rust:latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy

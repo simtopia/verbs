@@ -1,9 +1,10 @@
 [workspace]
 
 members = [
-    "rust_sim",
-    "macros",
-    "fork_evm",
+    "core/rust_sim",
+    "core/macros",
+    "core/fork_evm",
+    "rust"
 ]
 resolver = "2"
 
@@ -21,6 +22,14 @@ ethers-core = { version = "2.0.10", default-features = false }
 ethers-providers = "2.0.10"
 ethers-middleware = "2.0.10"
 
+fastrand = "2.0.0"
 hex = "0.4.3"
 tokio = "1.33.0"
 futures = "0.3"
+
+# TODO: Patch to use the current main branch due to this bug
+#  https://github.com/alloy-rs/core/issues/204 with decoding
+#  variable length results from the EVM
+# [patch.crates-io]
+# alloy-primitives = { git = "ssh://github.com/alloy-rs/core.git" , rev = "89f07abf7837f63d22e30d2076e860dac6acef57" }
+# alloy-sol-types = { git = "ssh://github.com/alloy-rs/core.git" , rev = "89f07abf7837f63d22e30d2076e860dac6acef57" }

@@ -2,7 +2,12 @@
 
 Built around [Rust Ethereum Virtual Machine](https://github.com/bluealloy/revm)
 
-## Examples
+> :warning: There is a [bug in alloy](https://github.com/alloy-rs/core/issues/204) that
+> means vector return values are not processed correctly. You should uncomment
+> the lines in [Cargo.toml](./Cargo.toml#L34) that patch a version that correctly
+> parses vector arguments.
+
+## Rust Examples
 
 Examples can be run using cargo.
 
@@ -45,3 +50,23 @@ Contracts deployment requires the ABI and deployment bytecode:
   ```bash
   python scripts/process_contract.py <PATH_TO_CONTRACT> <SOL_VERSION> <OUTPUT_FOLDER>
   ```
+
+## Python API
+
+The Python API can be built locally using [hatch](https://hatch.pypa.io/latest/) by running
+
+```
+hatch run dev:develop
+```
+
+or a installable package can be built using
+
+```
+hatch run dev:build
+```
+
+and Python linting can be run using
+
+```
+hatch run dev:lint
+```
