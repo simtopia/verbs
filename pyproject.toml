@@ -41,7 +41,7 @@ dependencies = [
 [tool.hatch.envs.dev.scripts]
 develop = "maturin develop --release"
 lint = "pre-commit install && pre-commit run --all-files"
-test = "maturin develop --release && pytest -v src/tests"
+test = "maturin develop --release && pytest -v tests"
 build = "maturin build --release"
 
 [project.urls]
