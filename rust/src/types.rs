@@ -30,10 +30,10 @@ pub fn result_to_py(
 ) -> Result<PyExecutionResult, RevertError> {
     match result {
         Ok(x) => Ok((
-            x.output().map(|b| b.0.to_vec()),
+            x.output().map(|b| b.to_vec()),
             x.logs()
                 .into_iter()
-                .map(|a| (a.address.0 .0, a.data.0.to_vec()))
+                .map(|a| (a.address.0 .0, a.data.to_vec()))
                 .collect(),
             x.gas_used(),
         )),
