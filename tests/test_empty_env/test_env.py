@@ -45,64 +45,19 @@ def env():
     return EmptyEnv(1234, "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266")
 
 
-@pytest.fixture
-def contract():
-
-    return [
-        {
-            "inputs": [{"internalType": "int256", "name": "x", "type": "int256"}],
-            "stateMutability": "nonpayable",
-            "type": "constructor",
-        },
-        {
-            "anonymous": False,
-            "inputs": [
-                {
-                    "indexed": False,
-                    "internalType": "int256",
-                    "name": "old_value",
-                    "type": "int256",
-                },
-                {
-                    "indexed": False,
-                    "internalType": "int256",
-                    "name": "new_value",
-                    "type": "int256",
-                },
-            ],
-            "name": "ValueUpdated",
-            "type": "event",
-        },
-        {
-            "inputs": [],
-            "name": "getValue",
-            "outputs": [{"internalType": "int256", "name": "", "type": "int256"}],
-            "stateMutability": "view",
-            "type": "function",
-        },
-        {
-            "inputs": [{"internalType": "int256", "name": "x", "type": "int256"}],
-            "name": "setValue",
-            "outputs": [],
-            "stateMutability": "nonpayable",
-            "type": "function",
-        },
-    ]
-
-
-def test_deploy_and_call_contract(env, bytecode, constructor_args, contract):
+def test_deploy_and_call_contract(env, bytecode, constructor_args, test_abi):
 
     # Deploy contract and get address
     address = env.deploy_contract("test_contract", bytecode + constructor_args)
 
     # Get current contract value
-    call_0 = utils.encode_function_args(contract[2], [], [])
+    call_0 = utils.encode_function_args(test_abi[2], [], [])
     result_0 = env.call(env.admin_address, address, call_0, 0)
     result_0 = eth_abi.decode(["int256"], bytes(result_0[0]))
     assert result_0[0] == INITIAL_VALUE
 
     # Update contract value
-    call_1 = utils.encode_function_args(contract[3], ["int256"], [202])
+    call_1 = utils.encode_function_args(test_abi[3], ["int256"], [202])
     _, logs, _ = env.execute(env.admin_address, address, call_1, 0)
 
     assert len(logs) == 1
@@ -112,25 +67,25 @@ def test_deploy_and_call_contract(env, bytecode, constructor_args, contract):
     assert log_value == (101, 202)
 
     # Get new contract value
-    call_2 = utils.encode_function_args(contract[2], [], [])
+    call_2 = utils.encode_function_args(test_abi[2], [], [])
     result_2 = env.call(env.admin_address, address, call_2, 0)
     result_2 = eth_abi.decode(["int256"], bytes(result_2[0]))
     assert result_2[0] == 202
 
 
-def test_sim_update(env, bytecode, constructor_args, contract):
+def test_sim_update(env, bytecode, constructor_args, test_abi):
 
     # Deploy contract and get address
     address = env.deploy_contract("test_contract", bytecode + constructor_args)
 
     # Get current contract value
-    call_0 = utils.encode_function_args(contract[2], [], [])
+    call_0 = utils.encode_function_args(test_abi[2], [], [])
     result_0 = env.call(env.admin_address, address, call_0, 0)
     result_0 = eth_abi.decode(["int256"], bytes(result_0[0]))
     assert result_0[0] == INITIAL_VALUE
 
     # Submit contract update call
-    call_1 = utils.encode_function_args(contract[3], ["int256"], [202])
+    call_1 = utils.encode_function_args(test_abi[3], ["int256"], [202])
     env.submit_call(env.admin_address, address, call_1, True)
 
     env.process_block()
@@ -138,7 +93,7 @@ def test_sim_update(env, bytecode, constructor_args, contract):
     assert env.step == 1
 
     # Get new value after block update
-    call_2 = utils.encode_function_args(contract[2], [], [])
+    call_2 = utils.encode_function_args(test_abi[2], [], [])
     result_2 = env.call(env.admin_address, address, call_2, 0)
     result_2 = eth_abi.decode(["int256"], bytes(result_2[0]))
     assert result_2[0] == 202
