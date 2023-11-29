@@ -29,3 +29,7 @@ def hex_to_byte_list(hex: str) -> typing.List[int]:
         hex = hex[2:]
 
     return list(bytes.fromhex(hex))
+
+
+def int_to_address(i: int):
+    return list(i.to_bytes(20, "big"))

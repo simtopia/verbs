@@ -2,7 +2,7 @@ import typing
 from dataclasses import dataclass
 
 import numpy as np
-from tqdm.autonotebook import tqdm
+from tqdm.autonotebook import trange
 
 from verbs import EmptyEnv, ForkEnv
 
@@ -54,7 +54,7 @@ class Sim:
 
     def run(self, n_steps: int):
 
-        for _ in tqdm.trange(n_steps):
+        for _ in trange(n_steps):
 
             calls = list()
 
