@@ -2,7 +2,7 @@ import typing
 from dataclasses import dataclass
 
 import numpy as np
-from tqdm.autonotebook import trange
+from tqdm import trange
 
 from verbs import EmptyEnv, ForkEnv
 
