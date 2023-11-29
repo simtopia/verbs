@@ -37,13 +37,13 @@ impl BaseEnv<EmptyDB> {
 }
 
 impl BaseEnv<Backend> {
-    pub fn new(node_url: &str, seed: u64, block_number: u64) -> Self {
+    pub fn new(node_url: &str, seed: u64, block_number: u64, admin_address: &str) -> Self {
         let block_number = match block_number {
             0 => BlockNumber::Latest,
             n => BlockNumber::Number(n.into()),
         };
 
-        let network = Network::<Backend>::init(node_url, block_number);
+        let network = Network::<Backend>::init(node_url, block_number, admin_address);
         BaseEnv {
             network,
             call_queue: Vec::new(),
@@ -225,8 +225,18 @@ pub struct ForkEnv(BaseEnv<Backend>);
 #[pymethods]
 impl ForkEnv {
     #[new]
-    pub fn new(node_url: &str, seed: u64, block_number: u64) -> PyResult<Self> {
-        Ok(Self(BaseEnv::<Backend>::new(node_url, seed, block_number)))
+    pub fn new(
+        node_url: &str,
+        seed: u64,
+        block_number: u64,
+        admin_address: &str,
+    ) -> PyResult<Self> {
+        Ok(Self(BaseEnv::<Backend>::new(
+            node_url,
+            seed,
+            block_number,
+            admin_address,
+        )))
     }
 
     #[getter]

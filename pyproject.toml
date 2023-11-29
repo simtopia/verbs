@@ -28,6 +28,8 @@ classifiers = [
 dependencies = [
   "eth-utils >= 2.3.1",
   "eth-abi >= 4.2.1",
+  "tqdm >= 4.66.1",
+  "numpy >= 1.26.2",
 ]
 
 [tool.hatch.envs.dev]

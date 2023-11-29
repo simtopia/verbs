@@ -12,7 +12,11 @@ pub fn main() {
 
     let url_str = format!("https://eth-mainnet.g.alchemy.com/v2/{}", args[1]);
 
-    let mut net = Network::<Backend>::init(&url_str, BlockNumber::Latest);
+    let mut net = Network::<Backend>::init(
+        &url_str,
+        BlockNumber::Latest,
+        "0x1000000000000000000000000000000000000000",
+    );
 
     let dai_address = address_from_hex("0x6B175474E89094C44Da98b954EedeAC495271d0F");
 
