@@ -10,6 +10,8 @@ repos:
     -   id: trailing-whitespace
     -   id: check-json
     -   id: pretty-format-json
+        types: [text]
+        files: \.(json|abi)$
         args:
           - "--autofix"
           - "--no-sort-keys"

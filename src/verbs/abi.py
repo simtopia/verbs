@@ -1,3 +1,4 @@
+import json
 import typing
 
 import eth_abi
@@ -13,7 +14,7 @@ class Function:
     def encode(self, args: typing.List) -> typing.List[int]:
         return self.selector + list(eth_abi.encode(self.inputs, args))
 
-    def decode(self, output: typing.List[int]):
+    def decode(self, output: typing.List[int]) -> typing.Tuple[typing.Any, ...]:
         return eth_abi.decode(self.outputs, bytes(output))
 
 
@@ -21,7 +22,7 @@ class Event:
     def __init__(self, abi: typing.Dict):
         self.inputs = [x["type"] for x in abi["inputs"] if not x["indexed"]]
 
-    def decode(self, output: typing.List[int]):
+    def decode(self, output: typing.List[int]) -> typing.Tuple[typing.Any, ...]:
         return eth_abi.decode(self.inputs, bytes(output))
 
 
@@ -55,3 +56,18 @@ def get_abi(name: str, abi: typing.List[typing.Dict]) -> type:
                 methods[a["name"]] = Event(a)
 
     return type(name, (), methods)
+
+
+def abi_from_str(name: str, json_str: str) -> type:
+    abi_json = json.loads(json_str)
+    return get_abi(name, abi_json)
+
+
+def load_abi(abi_path: str) -> type:
+
+    name = abi_path.split("/")[-1].split(".")[0]
+
+    with open(abi_path, "r") as f:
+        abi_json = json.load(f)
+
+    return get_abi(name, abi_json)
