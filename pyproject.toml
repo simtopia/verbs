@@ -46,6 +46,7 @@ develop = "maturin develop --release"
 lint = "pre-commit install && pre-commit run --all-files"
 test = "maturin develop --release && pytest -v tests"
 build = "maturin build --release"
+examples = "maturin build --release && python py_examples/basic_sim.py"
 
 [tool.hatch.envs.notebook]
 dependencies = [

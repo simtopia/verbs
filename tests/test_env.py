@@ -62,3 +62,9 @@ def test_sim_update(env, bytecode, constructor_args, test_abi):
     result_2 = env.call(env.admin_address, address, call_2, 0)
     result_2 = a.getValue.decode(result_2[0])
     assert result_2[0] == 202
+
+
+def test_get_admin_address(env):
+    moo = env.admin_address
+    assert isinstance(moo, bytes)
+    assert len(moo) == 20

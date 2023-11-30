@@ -9,12 +9,12 @@ class Function:
     def __init__(self, abi: typing.Dict):
         self.inputs = [x["type"] for x in abi["inputs"]]
         self.outputs = [x["type"] for x in abi["outputs"]]
-        self.selector = list(eth_utils.abi.function_abi_to_4byte_selector(abi))
+        self.selector = eth_utils.abi.function_abi_to_4byte_selector(abi)
 
-    def encode(self, args: typing.List) -> typing.List[int]:
-        return self.selector + list(eth_abi.encode(self.inputs, args))
+    def encode(self, args: typing.List[typing.Any]) -> typing.List[int]:
+        return self.selector + eth_abi.encode(self.inputs, args)
 
-    def decode(self, output: typing.List[int]) -> typing.Tuple[typing.Any, ...]:
+    def decode(self, output: bytes) -> typing.Tuple[typing.Any, ...]:
         return eth_abi.decode(self.outputs, bytes(output))
 
 
@@ -22,8 +22,8 @@ class Event:
     def __init__(self, abi: typing.Dict):
         self.inputs = [x["type"] for x in abi["inputs"] if not x["indexed"]]
 
-    def decode(self, output: typing.List[int]) -> typing.Tuple[typing.Any, ...]:
-        return eth_abi.decode(self.inputs, bytes(output))
+    def decode(self, output: bytes) -> typing.Tuple[typing.Any, ...]:
+        return eth_abi.decode(self.inputs, output)
 
 
 def get_abi(name: str, abi: typing.List[typing.Dict]) -> type:

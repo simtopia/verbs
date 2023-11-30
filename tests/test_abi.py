@@ -6,7 +6,7 @@ def test_abi_init(test_abi):
 
     encoded = a.setValue.encode([10])
 
-    assert isinstance(encoded, list)
+    assert isinstance(encoded, bytes)
     assert len(encoded) == 36
 
     decoded = a.getValue.decode(encoded[4:])
@@ -25,7 +25,7 @@ def test_abi_from_file():
 
     encoded = a.setValue.encode([10])
 
-    assert isinstance(encoded, list)
+    assert isinstance(encoded, bytes)
     assert len(encoded) == 36
 
     decoded = a.getValue.decode(encoded[4:])

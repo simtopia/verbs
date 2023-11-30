@@ -1,9 +1,10 @@
 use super::types::{
-    convert_event, result_to_py, PyAddress, PyEvent, PyExecutionResult, PyRevertError,
+    address_to_py, event_to_py, result_to_py, PyAddress, PyEvent, PyExecutionResult, PyRevertError,
 };
 use alloy_primitives::{Address, U256};
 use fork_evm::Backend;
 use pyo3::prelude::*;
+use pyo3::types::PyBytes;
 use revm::db::{DatabaseRef, EmptyDB};
 use rust_sim::contract::Call;
 use rust_sim::network::{BlockNumber, Network, RevertError};
@@ -68,8 +69,12 @@ impl<DB: DatabaseRef> BaseEnv<DB> {
         self.step += 1;
     }
 
-    pub fn get_last_events(&self) -> Vec<PyEvent> {
-        self.network.last_events.iter().map(convert_event).collect()
+    pub fn get_last_events<'a>(&'a self, py: Python<'a>) -> Vec<PyEvent> {
+        self.network
+            .last_events
+            .iter()
+            .map(|e| event_to_py(py, e))
+            .collect()
     }
 
     pub fn submit_call(
@@ -89,9 +94,8 @@ impl<DB: DatabaseRef> BaseEnv<DB> {
         })
     }
 
-    pub fn deploy_contract(&mut self, contract_name: &str, bytecode: Vec<u8>) -> PyAddress {
-        let deploy_address = self.network.deploy_contract(contract_name, bytecode);
-        deploy_address.0 .0
+    pub fn deploy_contract(&mut self, contract_name: &str, bytecode: Vec<u8>) -> Address {
+        self.network.deploy_contract(contract_name, bytecode)
     }
 
     pub fn create_account(&mut self, address: PyAddress, start_balance: u128) {
@@ -99,8 +103,9 @@ impl<DB: DatabaseRef> BaseEnv<DB> {
             .insert_account(Address::from_slice(&address), U256::from(start_balance))
     }
 
-    pub fn call(
-        &mut self,
+    pub fn call<'a>(
+        &'a mut self,
+        py: Python<'a>,
         sender: PyAddress,
         contract_address: PyAddress,
         encoded_args: Vec<u8>,
@@ -113,11 +118,12 @@ impl<DB: DatabaseRef> BaseEnv<DB> {
             encoded_args,
             value,
         );
-        result_to_py(result)
+        result_to_py(py, result)
     }
 
-    pub fn execute(
-        &mut self,
+    pub fn execute<'a>(
+        &'a mut self,
+        py: Python<'a>,
         sender: PyAddress,
         contract_address: PyAddress,
         encoded_args: Vec<u8>,
@@ -130,7 +136,7 @@ impl<DB: DatabaseRef> BaseEnv<DB> {
             encoded_args,
             value,
         );
-        result_to_py(result)
+        result_to_py(py, result)
     }
 }
 
@@ -150,8 +156,8 @@ impl EmptyEnv {
     }
 
     #[getter]
-    fn get_admin_address(&self) -> PyResult<PyAddress> {
-        Ok(self.0.network.admin_address.0 .0)
+    fn get_admin_address<'a>(&self, py: Python<'a>) -> &'a PyBytes {
+        address_to_py(py, self.0.network.admin_address)
     }
 
     pub fn process_block(&mut self) -> PyResult<()> {
@@ -159,8 +165,8 @@ impl EmptyEnv {
         Ok(())
     }
 
-    pub fn get_last_events(&self) -> PyResult<Vec<PyEvent>> {
-        Ok(self.0.get_last_events())
+    pub fn get_last_events<'a>(&'a mut self, py: Python<'a>) -> PyResult<Vec<PyEvent>> {
+        Ok(self.0.get_last_events(py))
     }
 
     pub fn submit_call(
@@ -176,34 +182,25 @@ impl EmptyEnv {
         Ok(())
     }
 
-    pub fn deploy_contract(
+    pub fn deploy_contract<'a>(
         &mut self,
+        py: Python<'a>,
         contract_name: &str,
         bytecode: Vec<u8>,
-    ) -> PyResult<PyAddress> {
-        Ok(self.0.deploy_contract(contract_name, bytecode))
+    ) -> PyResult<&'a PyBytes> {
+        Ok(PyBytes::new(
+            py,
+            self.0.deploy_contract(contract_name, bytecode).as_slice(),
+        ))
     }
 
     pub fn create_account(&mut self, address: PyAddress, start_balance: u128) {
         self.0.create_account(address, start_balance)
     }
 
-    pub fn call(
-        &mut self,
-        sender: PyAddress,
-        contract_address: PyAddress,
-        encoded_args: Vec<u8>,
-        value: u128,
-    ) -> Result<PyExecutionResult, PyRevertError> {
-        let result = self.0.call(sender, contract_address, encoded_args, value);
-        match result {
-            Ok(x) => Ok(x),
-            Err(x) => Err(x.into()),
-        }
-    }
-
-    pub fn execute(
-        &mut self,
+    pub fn call<'a>(
+        &'a mut self,
+        py: Python<'a>,
         sender: PyAddress,
         contract_address: PyAddress,
         encoded_args: Vec<u8>,
@@ -211,7 +208,24 @@ impl EmptyEnv {
     ) -> Result<PyExecutionResult, PyRevertError> {
         let result = self
             .0
-            .execute(sender, contract_address, encoded_args, value);
+            .call(py, sender, contract_address, encoded_args, value);
+        match result {
+            Ok(x) => Ok(x),
+            Err(x) => Err(x.into()),
+        }
+    }
+
+    pub fn execute<'a>(
+        &'a mut self,
+        py: Python<'a>,
+        sender: PyAddress,
+        contract_address: PyAddress,
+        encoded_args: Vec<u8>,
+        value: u128,
+    ) -> Result<PyExecutionResult, PyRevertError> {
+        let result = self
+            .0
+            .execute(py, sender, contract_address, encoded_args, value);
         match result {
             Ok(x) => Ok(x),
             Err(x) => Err(x.into()),
@@ -245,8 +259,8 @@ impl ForkEnv {
     }
 
     #[getter]
-    fn get_admin_address(&self) -> PyResult<PyAddress> {
-        Ok(self.0.network.admin_address.0 .0)
+    fn get_admin_address<'a>(&self, py: Python<'a>) -> PyResult<&'a PyBytes> {
+        Ok(address_to_py(py, self.0.network.admin_address))
     }
 
     pub fn process_block(&mut self) -> PyResult<()> {
@@ -254,8 +268,8 @@ impl ForkEnv {
         Ok(())
     }
 
-    pub fn get_last_events(&self) -> PyResult<Vec<PyEvent>> {
-        Ok(self.0.get_last_events())
+    pub fn get_last_events<'a>(&'a mut self, py: Python<'a>) -> PyResult<Vec<PyEvent>> {
+        Ok(self.0.get_last_events(py))
     }
 
     pub fn submit_call(
@@ -271,34 +285,25 @@ impl ForkEnv {
         Ok(())
     }
 
-    pub fn deploy_contract(
+    pub fn deploy_contract<'a>(
         &mut self,
+        py: Python<'a>,
         contract_name: &str,
         bytecode: Vec<u8>,
-    ) -> PyResult<PyAddress> {
-        Ok(self.0.deploy_contract(contract_name, bytecode))
+    ) -> PyResult<&'a PyBytes> {
+        Ok(PyBytes::new(
+            py,
+            self.0.deploy_contract(contract_name, bytecode).as_slice(),
+        ))
     }
 
     pub fn create_account(&mut self, address: PyAddress, start_balance: u128) {
         self.0.create_account(address, start_balance)
     }
 
-    pub fn call(
-        &mut self,
-        sender: PyAddress,
-        contract_address: PyAddress,
-        encoded_args: Vec<u8>,
-        value: u128,
-    ) -> Result<PyExecutionResult, PyRevertError> {
-        let result = self.0.call(sender, contract_address, encoded_args, value);
-        match result {
-            Ok(x) => Ok(x),
-            Err(x) => Err(x.into()),
-        }
-    }
-
-    pub fn execute(
-        &mut self,
+    pub fn call<'a>(
+        &'a mut self,
+        py: Python<'a>,
         sender: PyAddress,
         contract_address: PyAddress,
         encoded_args: Vec<u8>,
@@ -306,7 +311,24 @@ impl ForkEnv {
     ) -> Result<PyExecutionResult, PyRevertError> {
         let result = self
             .0
-            .execute(sender, contract_address, encoded_args, value);
+            .call(py, sender, contract_address, encoded_args, value);
+        match result {
+            Ok(x) => Ok(x),
+            Err(x) => Err(x.into()),
+        }
+    }
+
+    pub fn execute<'a>(
+        &'a mut self,
+        py: Python<'a>,
+        sender: PyAddress,
+        contract_address: PyAddress,
+        encoded_args: Vec<u8>,
+        value: u128,
+    ) -> Result<PyExecutionResult, PyRevertError> {
+        let result = self
+            .0
+            .execute(py, sender, contract_address, encoded_args, value);
         match result {
             Ok(x) => Ok(x),
             Err(x) => Err(x.into()),
