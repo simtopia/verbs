@@ -263,6 +263,7 @@ class Agent:
         self.token_contract = token_contract
         self.abi = abi
         self.n_agents = n_agents
+        self.balance = 0
 
     def update(
         self,
@@ -276,12 +277,12 @@ class Agent:
             balance_call,
             0,
         )
-        balance = self.abi.balanceOf.decode(balance[0])[0]
+        self.balance = self.abi.balanceOf.decode(balance[0])[0]
 
-        if balance > 0:
+        if self.balance > 0:
             receiver = rng.choice(self.n_agents) + 100
             receiver = bytes(verbs.utils.int_to_address(receiver))
-            amount = min(balance, 100_000)
+            amount = min(self.balance, 100_000)
             send_args = self.abi.transfer.encode([receiver, amount])
             return [
                 verbs.sim.Call(
@@ -294,8 +295,11 @@ class Agent:
         else:
             return []
 
+    def record(self):
+        return self.balance
 
-def run():
+
+def run(n_steps):
 
     net = verbs.EmptyEnv(1234, "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266")
 
@@ -314,4 +318,6 @@ def run():
     net.execute(net.admin_address, erc20_address, transfer_args, 0)
 
     runner = verbs.sim.Sim(101, net, agents)
-    runner.run(100)
+
+    results = runner.run(n_steps)
+    return np.array(results)

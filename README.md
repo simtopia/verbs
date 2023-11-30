@@ -70,3 +70,9 @@ and Python linting can be run using
 ```
 hatch run dev:lint
 ```
+
+You can build the package, and then run a jupyter notebook using
+
+```
+hatch run notebook:jupyter
+```

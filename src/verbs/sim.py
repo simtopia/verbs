@@ -52,7 +52,9 @@ class Sim:
         net = ForkEnv(node_url, seed, block_number, admin_address)
         return Sim(seed, net, agents)
 
-    def run(self, n_steps: int):
+    def run(self, n_steps: int) -> typing.List[typing.Any]:
+
+        records = list()
 
         for _ in trange(n_steps):
 
@@ -70,3 +72,8 @@ class Sim:
                 )
 
             self.network.process_block()
+
+            agent_records = [agent.record() for agent in self.agents]
+            records.append(agent_records)
+
+        return records
