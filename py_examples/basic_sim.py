@@ -1,5 +1,3 @@
-import typing
-
 import numpy as np
 
 import verbs
@@ -255,7 +253,7 @@ class Agent:
     def __init__(
         self,
         i: int,
-        token_contract: typing.List[int],
+        token_contract: bytes,
         abi,
         n_agents: int,
     ):
@@ -270,7 +268,7 @@ class Agent:
         rng: np.random.Generator,
         network,
     ):
-        balance_call = self.abi.balanceOf.encode([bytes(self.address)])
+        balance_call = self.abi.balanceOf.encode([self.address])
         balance = network.call(
             self.address,
             self.token_contract,
@@ -281,7 +279,7 @@ class Agent:
 
         if self.balance > 0:
             receiver = rng.choice(self.n_agents) + 100
-            receiver = bytes(verbs.utils.int_to_address(receiver))
+            receiver = verbs.utils.int_to_address(receiver)
             amount = min(self.balance, 100_000)
             send_args = self.abi.transfer.encode([receiver, amount])
             return [
@@ -307,17 +305,21 @@ def run(n_steps):
 
     erc20_args = verbs.utils.encode_args(["uint256"], [int(1e19)])
     erc20_address = net.deploy_contract(
-        "erc20", verbs.utils.hex_to_byte_list(ERC20_BYTECODE) + erc20_args
+        "erc20", verbs.utils.hex_to_bytes(ERC20_BYTECODE) + erc20_args
     )
 
     agents = [
         Agent(i + 100, erc20_address, erc20_abi, N_AGENTS) for i in range(N_AGENTS)
     ]
 
-    transfer_args = erc20_abi.transfer.encode([bytes(agents[0].address), int(1e19)])
+    transfer_args = erc20_abi.transfer.encode([agents[0].address, int(1e19)])
     net.execute(net.admin_address, erc20_address, transfer_args, 0)
 
     runner = verbs.sim.Sim(101, net, agents)
 
     results = runner.run(n_steps)
     return np.array(results)
+
+
+if __name__ == "__main__":
+    run(50)

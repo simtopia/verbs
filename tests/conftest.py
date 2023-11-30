@@ -31,7 +31,7 @@ def bytecode():
         "f186e8ebb9c89260d547e2a8f864736f6c634300080a0033"
     )
 
-    return utils.hex_to_byte_list(hex)
+    return utils.hex_to_bytes(hex)
 
 
 @pytest.fixture

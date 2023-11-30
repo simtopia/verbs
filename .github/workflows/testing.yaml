@@ -27,3 +27,14 @@ jobs:
           python-version: '3.10'
       - run: pip install hatch
       - run: hatch run dev:test
+  python_examples:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - run: pip install hatch
+      - run: hatch run dev:examples
