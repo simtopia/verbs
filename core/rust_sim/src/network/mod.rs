@@ -49,7 +49,7 @@ impl<D: DatabaseRef> CallEVM for EVM<CacheDB<D>> {
 }
 
 impl Network<Backend> {
-    pub fn init(node_url: &str, block_number: BlockNumber) -> Self {
+    pub fn init(node_url: &str, block_number: BlockNumber, admin_address: &str) -> Self {
         let provider = ProviderBuilder::new(node_url).build().unwrap();
 
         let rt = tokio::runtime::Builder::new_current_thread()
@@ -89,9 +89,11 @@ impl Network<Backend> {
             None => U256::ZERO,
         };
 
+        let admin_address = address_from_hex(admin_address);
+
         Self {
             evm,
-            admin_address: Address::ZERO,
+            admin_address,
             last_events: Vec::new(),
             event_history: Vec::new(),
         }

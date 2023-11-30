@@ -28,6 +28,8 @@ classifiers = [
 dependencies = [
   "eth-utils >= 2.3.1",
   "eth-abi >= 4.2.1",
+  "tqdm >= 4.66.1",
+  "numpy >= 1.26.2",
 ]
 
 [tool.hatch.envs.dev]
@@ -43,6 +45,16 @@ develop = "maturin develop --release"
 lint = "pre-commit install && pre-commit run --all-files"
 test = "maturin develop --release && pytest -v tests"
 build = "maturin build --release"
+
+[tool.hatch.envs.notebook]
+dependencies = [
+  "maturin >= 1.2.3",
+  "patchelf >= 0.17.2.1",
+  "jupyter >= 1.0.0",
+]
+
+[tool.hatch.envs.notebook.scripts]
+jupyter = "maturin develop --release && jupyter notebook --notebook-dir=./py_examples"
 
 [project.urls]
 Source = "https://github.com/simtopia/rusty_venture"
