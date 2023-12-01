@@ -268,28 +268,19 @@ class Agent:
         rng: np.random.Generator,
         network,
     ):
-        balance_call = self.abi.balanceOf.encode([self.address])
-        balance = network.call(
-            self.address,
-            self.token_contract,
-            balance_call,
-            0,
-        )
-        self.balance = self.abi.balanceOf.decode(balance[0])[0]
+        self.balance = self.abi.balanceOf.call(
+            network, self.address, self.token_contract, [self.address]
+        )[0][0]
 
         if self.balance > 0:
             receiver = rng.choice(self.n_agents) + 100
             receiver = verbs.utils.int_to_address(receiver)
             amount = min(self.balance, 100_000)
-            send_args = self.abi.transfer.encode([receiver, amount])
-            return [
-                verbs.sim.Call(
-                    self.address,
-                    self.token_contract,
-                    send_args,
-                    True,
-                )
-            ]
+            send_call = self.abi.transfer.get_call(
+                self.address, self.token_contract, [receiver, amount]
+            )
+
+            return [send_call]
         else:
             return []
 

@@ -4,6 +4,8 @@ import typing
 import eth_abi
 import eth_utils
 
+from . import types
+
 
 class Function:
     def __init__(self, abi: typing.Dict):
@@ -16,6 +18,42 @@ class Function:
 
     def decode(self, output: bytes) -> typing.Tuple[typing.Any, ...]:
         return eth_abi.decode(self.outputs, bytes(output))
+
+    def get_call(
+        self,
+        sender: bytes,
+        address: bytes,
+        args: typing.List[typing.Any],
+        checked: bool = True,
+    ) -> types.Call:
+        encoded_args = self.encode(args)
+        return types.Call(sender, address, encoded_args, checked)
+
+    def call(
+        self,
+        env,
+        sender: bytes,
+        address: bytes,
+        args: typing.List[typing.Any],
+        value: int = 0,
+    ) -> (typing.Tuple[typing.Any, ...], typing.List, int):
+        encoded_args = self.encode(args)
+        result, logs, gas = env.call(sender, address, encoded_args, value)
+        result = self.decode(result)
+        return result, logs, gas
+
+    def execute(
+        self,
+        env,
+        sender: bytes,
+        address: bytes,
+        args: typing.List[typing.Any],
+        value: int = 0,
+    ) -> (typing.Tuple[typing.Any, ...], typing.List, int):
+        encoded_args = self.encode(args)
+        result, logs, gas = env.execute(sender, address, encoded_args, value)
+        result = self.decode(result)
+        return result, logs, gas
 
 
 class Event:

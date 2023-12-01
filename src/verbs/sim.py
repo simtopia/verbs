@@ -1,18 +1,9 @@
 import typing
-from dataclasses import dataclass
 
 import numpy as np
 from tqdm import trange
 
 from verbs import EmptyEnv, ForkEnv
-
-
-@dataclass
-class Call:
-    sender: typing.List[int]
-    contract_address: typing.List[int]
-    encoded_args: typing.List[int]
-    checked: bool
 
 
 class Sim:

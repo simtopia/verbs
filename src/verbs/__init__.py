@@ -1,3 +1,3 @@
 from verbs._verbs import EmptyEnv, ForkEnv
 
-from . import abi, sim, utils
+from . import abi, sim, types, utils

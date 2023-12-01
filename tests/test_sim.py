@@ -1,5 +1,3 @@
-import typing
-
 import numpy as np
 
 from verbs import abi, sim, utils
@@ -10,7 +8,7 @@ def test_sim_run(env, bytecode, constructor_args, test_abi):
     test_abi = abi.get_abi("TEST", test_abi)
 
     class Agent:
-        def __init__(self, i: int, contract: typing.List[int]):
+        def __init__(self, i: int, contract: bytes):
             self.address = utils.int_to_address(i)
             self.contract = contract
             self.current = 0
@@ -20,18 +18,15 @@ def test_sim_run(env, bytecode, constructor_args, test_abi):
             rng: np.random.Generator,
             network,
         ):
-            get_call = test_abi.getValue.encode([])
-            current = network.call(
-                self.address,
-                self.contract,
-                get_call,
-                0,
+            self.current = test_abi.getValue.call(
+                network, self.address, self.contract, []
+            )[0][0]
+
+            set_call = test_abi.setValue.get_call(
+                self.address, self.contract, [self.current + 1]
             )
-            self.current = test_abi.getValue.decode(current[0])[0]
 
-            set_call = test_abi.setValue.encode([self.current + 1])
-
-            return [sim.Call(self.address, self.contract, set_call, True)]
+            return [set_call]
 
         def record(self):
             return self.current
