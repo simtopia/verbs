@@ -59,5 +59,14 @@ dependencies = [
 [tool.hatch.envs.notebook.scripts]
 jupyter = "maturin develop --release && jupyter notebook --notebook-dir=./py_examples"
 
+[tool.hatch.envs.sphinx]
+dependencies = [
+  "sphinx >= 7.2.6",
+  "sphinx-material >= 0.0.36",
+]
+
+[tool.hatch.envs.sphinx.scripts]
+build = "sphinx-build -M html docs/python/source docs/python/build"
+
 [project.urls]
 Source = "https://github.com/simtopia/rusty_venture"

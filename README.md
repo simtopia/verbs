@@ -76,3 +76,12 @@ You can build the package, and then run a jupyter notebook using
 ```
 hatch run notebook:jupyter
 ```
+
+## Documentation
+
+Python documentation can be built using [sphinx](https://www.sphinx-doc.org/en/master/)
+by running
+
+```
+hatch run sphinx:build
+```
