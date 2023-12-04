@@ -1,4 +1,4 @@
-Getting Started
+Model Structure
 ===============
 
 TODO

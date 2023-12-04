@@ -14,12 +14,6 @@ simulations of the Ethereum blockchain.
    :caption: Contents:
 
    pages/getting_started
+   pages/model
    pages/examples
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   pages/api
