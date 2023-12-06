@@ -134,9 +134,10 @@ pub fn load_snapshot(db: &mut CacheDB<EmptyDB>, snapshot: PyDbState) {
                     balance: U256::from_le_slice(v.0 .0.as_bytes()),
                     nonce: v.0 .1,
                     code_hash: B256::from_slice(v.0 .2.as_bytes()),
-                    code: v.0 .3.map(|x| {
-                        Bytecode::new_raw(Bytes::copy_from_slice(x.as_bytes())).to_checked()
-                    }),
+                    code: v
+                        .0
+                         .3
+                        .map(|x| Bytecode::new_raw(Bytes::copy_from_slice(x.as_bytes()))),
                 },
                 account_state: int_to_account_state(v.1),
                 storage: v
@@ -156,7 +157,7 @@ pub fn load_snapshot(db: &mut CacheDB<EmptyDB>, snapshot: PyDbState) {
     for (k, v) in snapshot.2.into_iter() {
         db.contracts.insert(
             B256::from_slice(k.as_bytes()),
-            Bytecode::new_raw(Bytes::copy_from_slice(v.as_bytes())).to_checked(),
+            Bytecode::new_raw(Bytes::copy_from_slice(v.as_bytes())),
         );
     }
 
