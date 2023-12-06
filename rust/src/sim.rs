@@ -40,7 +40,11 @@ impl BaseEnv<EmptyDB> {
     }
 
     pub fn from_snapshot(seed: u64, snapshot: snapshot::PyDbState) -> Self {
+        let block_env = snapshot::load_block_env(&snapshot);
+
         let mut network = Network::<EmptyDB>::init(snapshot.0.as_str());
+        network.evm.env.block = block_env;
+
         snapshot::load_snapshot(network.evm.db().unwrap(), snapshot);
         BaseEnv {
             network,
