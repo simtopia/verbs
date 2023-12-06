@@ -1,3 +1,6 @@
+use crate::snapshot::PyDbState;
+
+use super::snapshot;
 use super::types::{
     address_to_py, event_to_py, result_to_py, PyAddress, PyEvent, PyExecutionResult, PyRevertError,
 };
@@ -28,6 +31,21 @@ impl BaseEnv<EmptyDB> {
     pub fn new(seed: u64, admin_address: &str) -> Self {
         let network = Network::<EmptyDB>::init(admin_address);
 
+        BaseEnv {
+            network,
+            call_queue: Vec::new(),
+            rng: fastrand::Rng::with_seed(seed),
+            step: 0,
+        }
+    }
+
+    pub fn from_snapshot(seed: u64, snapshot: snapshot::PyDbState) -> Self {
+        let block_env = snapshot::load_block_env(&snapshot);
+
+        let mut network = Network::<EmptyDB>::init(snapshot.0.as_str());
+        network.evm.env.block = block_env;
+
+        snapshot::load_snapshot(network.evm.db().unwrap(), snapshot);
         BaseEnv {
             network,
             call_queue: Vec::new(),
@@ -75,6 +93,10 @@ impl<DB: DatabaseRef> BaseEnv<DB> {
             .iter()
             .map(|e| event_to_py(py, e))
             .collect()
+    }
+
+    pub fn export_state<'a>(&mut self, py: Python<'a>) -> snapshot::PyDbState<'a> {
+        snapshot::create_py_snapshot(py, &mut self.network)
     }
 
     pub fn submit_call(
@@ -146,8 +168,15 @@ pub struct EmptyEnv(BaseEnv<EmptyDB>);
 #[pymethods]
 impl EmptyEnv {
     #[new]
-    pub fn new(seed: u64, admin_address: &str) -> PyResult<Self> {
-        Ok(Self(BaseEnv::<EmptyDB>::new(seed, admin_address)))
+    pub fn new(seed: u64, admin_address: &str, snapshot: Option<PyDbState>) -> PyResult<Self> {
+        Ok(match snapshot {
+            Some(s) => Self(BaseEnv::<EmptyDB>::from_snapshot(seed, s)),
+            None => Self(BaseEnv::<EmptyDB>::new(seed, admin_address)),
+        })
+    }
+
+    pub fn export_snapshot<'a>(&mut self, py: Python<'a>) -> PyResult<snapshot::PyDbState<'a>> {
+        Ok(self.0.export_state(py))
     }
 
     #[getter]
@@ -251,6 +280,10 @@ impl ForkEnv {
             block_number,
             admin_address,
         )))
+    }
+
+    pub fn export_snapshot<'a>(&mut self, py: Python<'a>) -> PyResult<snapshot::PyDbState<'a>> {
+        Ok(self.0.export_state(py))
     }
 
     #[getter]
