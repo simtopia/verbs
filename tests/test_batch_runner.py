@@ -33,7 +33,7 @@ def test_batch_runner(bytecode, constructor_args, test_abi):
 
     def init_func(_bytecode, _constructor_args):
         env = EmptyEnv(1234, "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266")
-        address = env.deploy_contract("test_contract", bytecode + constructor_args)
+        address = env.deploy_contract("test_contract", _bytecode + _constructor_args)
         return env.export_snapshot(), address
 
     def exec_func(snapshot, n_steps, seed, contract_address):

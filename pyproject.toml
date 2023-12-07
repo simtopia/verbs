@@ -63,7 +63,7 @@ jupyter = "maturin develop --release && jupyter notebook --notebook-dir=./py_exa
 [tool.hatch.envs.sphinx]
 dependencies = [
   "sphinx >= 7.2.6",
-  "sphinx-material >= 0.0.36",
+  "sphinx_press_theme >= 0.8.0",
 ]
 
 [tool.hatch.envs.sphinx.scripts]
