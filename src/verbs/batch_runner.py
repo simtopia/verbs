@@ -26,13 +26,13 @@ class BatchRunner:
         init_args = () if init_args is None else init_args
         init_kwargs = dict() if init_kwargs is None else init_kwargs
 
-        snapshot = self.init_func(*init_args, **init_kwargs)
+        snapshot, env_data = self.init_func(*init_args, **init_kwargs)
 
         n_param_samples = len(param_samples)
         arg_set = itertools.product(param_samples, range(n_samples))
 
         results = joblib.Parallel(n_jobs=n_jobs, verbose=verbose)(
-            joblib.delayed(self.exec_func)(snapshot, n_steps, seed, **params)
+            joblib.delayed(self.exec_func)(snapshot, n_steps, seed, env_data, **params)
             for params, seed in arg_set
         )
 
