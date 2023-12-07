@@ -23,7 +23,13 @@ extensions = [
     "sphinx.ext.coverage",
     "sphinx.ext.napoleon",
     "sphinx.ext.autosummary",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.viewcode",
 ]
+
+napoleon_numpy_docstring = True
+napoleon_include_init_with_doc = False
+add_module_names = False
 
 templates_path = ["_templates"]
 exclude_patterns = []
