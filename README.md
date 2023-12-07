@@ -53,7 +53,7 @@ Contracts deployment requires the ABI and deployment bytecode:
 
 ## Python API
 
-### Pre-requisite on MacOS 
+### Pre-requisite on MacOS
 
 Install `patchelf` with [homebrew](https://brew.sh)
 ```
