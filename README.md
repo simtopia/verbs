@@ -53,6 +53,15 @@ Contracts deployment requires the ABI and deployment bytecode:
 
 ## Python API
 
+### Pre-requisite on MacOS 
+
+Install `patchelf` with [homebrew](https://brew.sh)
+```
+brew install patchelf
+```
+
+### On Windows, Linux, MacOS
+
 The Python API can be built locally using [hatch](https://hatch.pypa.io/latest/) by running
 
 ```

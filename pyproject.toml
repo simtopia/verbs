@@ -37,7 +37,7 @@ dependencies = [
   "maturin >= 1.2.3",
   "pytest >= 7.4.2",
   "pre-commit >= 3.3.3",
-  "patchelf >= 0.17.2.1",
+  "patchelf >= 0.17.2.1; platform_system != Darwin",
   "eth-hash[pycryptodome] >= 0.5.2",
 ]
 
@@ -49,6 +49,7 @@ build = "maturin build --release"
 examples = "maturin build --release && python py_examples/basic_sim.py"
 
 [tool.hatch.envs.notebook]
+platforms = ["linux", "windows"]
 dependencies = [
   "maturin >= 1.2.3",
   "patchelf >= 0.17.2.1",
