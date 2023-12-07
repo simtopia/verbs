@@ -30,6 +30,7 @@ dependencies = [
   "eth-abi >= 4.2.1",
   "tqdm >= 4.66.1",
   "numpy >= 1.26.2",
+  "eth-hash[pycryptodome] >= 0.5.2",
 ]
 
 [tool.hatch.envs.dev]
@@ -37,7 +38,7 @@ dependencies = [
   "maturin >= 1.2.3",
   "pytest >= 7.4.2",
   "pre-commit >= 3.3.3",
-  "patchelf >= 0.17.2.1",
+  "patchelf >= 0.17.2.1; platform_system != 'Darwin'",
   "eth-hash[pycryptodome] >= 0.5.2",
 ]
 
