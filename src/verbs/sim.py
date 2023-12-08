@@ -9,7 +9,7 @@ import typing
 import numpy as np
 from tqdm import trange
 
-from verbs._verbs import EmptyEnv, ForkEnv
+from verbs.envs import EmptyEnv, ForkEnv
 from verbs.types import Call
 
 

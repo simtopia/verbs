@@ -1,6 +1,6 @@
 import numpy as np
 
-from verbs import EmptyEnv, abi, sim, utils
+from verbs import abi, envs, sim, utils
 
 
 def test_snapshot_is_consistent(env, bytecode, constructor_args, test_abi):
@@ -41,7 +41,7 @@ def test_snapshot_is_consistent(env, bytecode, constructor_args, test_abi):
 
     snapshot = env.export_snapshot()
 
-    env_from_snapshot = EmptyEnv(101, "", snapshot)
+    env_from_snapshot = envs.EmptyEnv(101, "", snapshot)
     new_snapshot = env_from_snapshot.export_snapshot()
 
     assert snapshot[0] == new_snapshot[0]
