@@ -7,7 +7,7 @@ from dataclasses import dataclass
 @dataclass
 class Call:
     """
-    Struct of call arguments
+    Struct of transaction arguments
 
     This class wraps field that are submitted
     to be processed by the EVM during a simulation.
