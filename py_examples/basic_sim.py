@@ -290,7 +290,7 @@ class Agent:
 
 def run(n_steps):
 
-    net = verbs.EmptyEnv(1234, "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266")
+    net = verbs.envs.EmptyEnv(1234, "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266")
 
     erc20_abi = verbs.abi.get_abi("ERC20", ERC20_ABI)
 

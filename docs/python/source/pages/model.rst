@@ -1,4 +1,5 @@
-Model Structure
-===============
+********************
+Model Implementation
+********************
 
 TODO

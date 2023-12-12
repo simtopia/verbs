@@ -8,7 +8,7 @@
 import os
 import sys
 
-project = "verbs"
+project = "VERBS"
 copyright = "2023, Simtopia"
 author = "Simtopia"
 release = "0.1.0"
@@ -23,31 +23,31 @@ extensions = [
     "sphinx.ext.coverage",
     "sphinx.ext.napoleon",
     "sphinx.ext.autosummary",
+    "sphinx.ext.viewcode",
+    "sphinx_copybutton",
+    "sphinx.ext.intersphinx",
 ]
+
+napoleon_numpy_docstring = True
+napoleon_include_init_with_doc = False
+add_module_names = False
+napoleon_use_admonition_for_notes = True
+napoleon_use_param = True
+napoleon_use_ivar = True
+autodoc_class_signature = "separated"
 
 templates_path = ["_templates"]
 exclude_patterns = []
 
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3", None),
+    "numpy": ("https://numpy.org/doc/stable", None),
+}
+intersphinx_disabled_reftypes = ["*"]
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = "sphinx_material"
+html_theme = "furo"
 html_static_path = ["_static"]
-html_title = "VERBS"
-html_theme_options = {
-    # Set the name of the project to appear in the navigation.
-    "nav_title": "VERBS",
-    # Set the color and the accent color
-    "color_primary": "blue",
-    "color_accent": "light-blue",
-    # Set the repo location to get a badge with stats
-    # 'repo_url': 'https://github.com/project/project/',
-    # 'repo_name': 'Project',
-    # Visible levels of the global TOC; -1 means unlimited
-    "globaltoc_depth": 3,
-    # If False, expand all TOC entries
-    "globaltoc_collapse": False,
-    # If True, show hidden TOC entries
-    "globaltoc_includehidden": False,
-}
+html_show_sourcelink = False

@@ -1,12 +1,10 @@
-API
-===
+*************
+API Reference
+*************
 
 .. autosummary::
    :toctree:
+   :template: custom-module-template.rst
    :recursive:
 
-   verbs.abi
-   verbs.rst
-   verbs.sim
-   verbs.types
-   verbs.utils
+   verbs
