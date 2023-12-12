@@ -23,23 +23,31 @@ extensions = [
     "sphinx.ext.coverage",
     "sphinx.ext.napoleon",
     "sphinx.ext.autosummary",
-    "sphinx.ext.intersphinx",
     "sphinx.ext.viewcode",
+    "sphinx_copybutton",
+    "sphinx.ext.intersphinx",
 ]
 
 napoleon_numpy_docstring = True
 napoleon_include_init_with_doc = False
 add_module_names = False
+napoleon_use_admonition_for_notes = True
+napoleon_use_param = True
+napoleon_use_ivar = True
+autodoc_class_signature = "separated"
 
 templates_path = ["_templates"]
 exclude_patterns = []
 
-intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3", None),
+    "numpy": ("https://numpy.org/doc/stable", None),
+}
 intersphinx_disabled_reftypes = ["*"]
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = "pydata_sphinx_theme"
+html_theme = "furo"
 html_static_path = ["_static"]
 html_show_sourcelink = False

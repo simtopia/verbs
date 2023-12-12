@@ -38,7 +38,7 @@ class BaseAgent:
 
         Parameters
         ----------
-        rng: np.random.Generator
+        rng: numpy.random.Generator
             Numpy random generator, should be used for any random
             sampling to ensure determinism of the simulation.
         network
@@ -73,26 +73,11 @@ class Sim:
     """
     Simulation state and execution class
 
-    Parameters
-    ----------
-    seed: int
-        Random seed to initialise the simulation
-        and key for use during execution
-    network:
-        Initialised simulation environment/network
-    agents: typing.List[BaseAgent], optional
-        List of agents to include in the simulation. Default
-        value if an empty list, allowing agents to be pushed
-        after the simulation is initialised.
-
-    Attributes
-    ----------
-    network
-        Simulation environment/network.
-    agents: typing.List[BaseAgent]
-        List of simulation agents.
-    rng: numpy.random.Generator
-        Random number generator.
+    This class wraps the network, agents and seeded
+    random number generation. A sim can be initialised
+    from either an empty network (i.e one with no deployed
+    contracts/accounts) of from a backend that fetches
+    data from a remote fork.
     """
 
     def __init__(
@@ -101,6 +86,19 @@ class Sim:
         network,
         agents: typing.Optional[BaseAgent] = None,
     ):
+        """
+        Parameters
+        ----------
+        seed: int
+            Random seed to initialise the simulation
+            and key for use during execution
+        network:
+            Initialised simulation environment/network
+        agents: typing.List[BaseAgent], optional
+            List of agents to include in the simulation. Default
+            value is an empty list, allowing agents to be pushed
+            after the simulation is initialised.
+        """
 
         self.network = network
 
@@ -134,7 +132,7 @@ class Sim:
             this address with a large supply of ETH.
         agents: typing.List[BaseAgent], optional
             List of agents to include in the simulation. Default
-            value if an empty list, allowing agents to be pushed
+            value is an empty list, allowing agents to be pushed
             after the simulation is initialised.
 
         Returns
@@ -172,7 +170,7 @@ class Sim:
         ----------
         node_url: str
             Url used to fetch data from, for example an alchemy API endpoint.
-        block_number:
+        block_number: int
             Number of the block to fetch data from, a value of ``0`` will
             mean the latest block will be retrieved.
         seed: int
@@ -184,7 +182,7 @@ class Sim:
             this address with a large supply of ETH.
         agents: typing.List[BaseAgent], optional
             List of agents to include in the simulation. Default
-            value if an empty list, allowing agents to be pushed
+            value is an empty list, allowing agents to be pushed
             after the simulation is initialised.
 
         Returns

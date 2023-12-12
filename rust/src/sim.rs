@@ -162,6 +162,11 @@ impl<DB: DatabaseRef> BaseEnv<DB> {
     }
 }
 
+/// Simulation environment initialised with an empty in-memory database
+///
+/// Wraps and evm and in-memory db along with additional functionality
+/// for simulation updates and event tracking.
+///
 #[pyclass(unsendable)]
 pub struct EmptyEnv(BaseEnv<EmptyDB>);
 
@@ -282,6 +287,7 @@ impl ForkEnv {
         )))
     }
 
+    /// Export a snapshot of the state of the EVM and block parameters
     pub fn export_snapshot<'a>(&mut self, py: Python<'a>) -> PyResult<snapshot::PyDbState<'a>> {
         Ok(self.0.export_state(py))
     }
