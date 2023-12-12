@@ -1,9 +1,5 @@
-***************
-Model Structure
-***************
+********************
+Model Implementation
+********************
 
-Model Execution
-===============
-
-Agents
-======
+TODO
