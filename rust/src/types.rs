@@ -18,13 +18,13 @@ pub fn bytes_to_py(py: Python, bytes: Bytes) -> &PyBytes {
 
 pub type PyLog<'a> = (&'a PyBytes, &'a PyBytes);
 
-pub type PyEvent<'a> = (String, Vec<PyLog<'a>>, usize, usize);
+pub type PyEvent<'a> = (&'a PyBytes, Vec<PyLog<'a>>, usize, usize);
 
 pub type PyExecutionResult<'a> = (Option<&'a PyBytes>, Vec<PyLog<'a>>, u64);
 
 pub fn event_to_py<'a>(py: Python<'a>, event: &Event) -> PyEvent<'a> {
     (
-        event.function_name.to_string(),
+        PyBytes::new(py, &event.function_selector),
         event
             .logs
             .iter()

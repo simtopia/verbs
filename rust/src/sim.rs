@@ -101,14 +101,13 @@ impl<DB: DatabaseRef> BaseEnv<DB> {
 
     pub fn submit_call(
         &mut self,
-        function_signature: &'static str,
         sender: PyAddress,
         transact_to: PyAddress,
         encoded_args: Vec<u8>,
         checked: bool,
     ) {
         self.call_queue.push(Call {
-            function_name: function_signature,
+            function_selector: encoded_args[..4].try_into().unwrap(),
             callee: Address::from_slice(&sender),
             transact_to: Address::from_slice(&transact_to),
             args: encoded_args,
@@ -256,14 +255,13 @@ impl EmptyEnv {
     ///
     pub fn submit_call(
         &mut self,
-        // function_signature: &'static str,
         sender: PyAddress,
         transact_to: PyAddress,
         encoded_args: Vec<u8>,
         checked: bool,
     ) -> PyResult<()> {
         self.0
-            .submit_call("fname", sender, transact_to, encoded_args, checked);
+            .submit_call(sender, transact_to, encoded_args, checked);
         Ok(())
     }
 
@@ -502,14 +500,13 @@ impl ForkEnv {
     ///
     pub fn submit_call(
         &mut self,
-        // function_signature: &'static str,
         sender: PyAddress,
         transact_to: PyAddress,
         encoded_args: Vec<u8>,
         checked: bool,
     ) -> PyResult<()> {
         self.0
-            .submit_call("fname", sender, transact_to, encoded_args, checked);
+            .submit_call(sender, transact_to, encoded_args, checked);
         Ok(())
     }
 

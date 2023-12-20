@@ -5,7 +5,7 @@ use revm::primitives::{Log, Output};
 #[derive(Clone)]
 pub struct Call {
     /// Name of the function being called.
-    pub function_name: &'static str,
+    pub function_selector: [u8; 4],
     /// Address of the contract caller
     pub callee: Address,
     /// Address to transact to
@@ -30,7 +30,7 @@ pub struct CallResult {
 /// Wraps event logs with additional event information
 pub struct Event {
     /// Name of the function being called.
-    pub function_name: &'static str,
+    pub function_selector: [u8; 4],
     /// Event data
     pub logs: Vec<Log>,
     /// Step event was created

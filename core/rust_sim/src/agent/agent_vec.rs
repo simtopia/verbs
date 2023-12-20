@@ -115,14 +115,14 @@ mod tests {
             self.value += 1;
             vec![
                 Call {
-                    function_name: "foo",
+                    function_selector: [0, 0, 0, 0],
                     callee: Address::ZERO,
                     transact_to: Address::ZERO,
                     args: Vec::default(),
                     checked: false,
                 },
                 Call {
-                    function_name: "foo",
+                    function_selector: [0, 0, 0, 0],
                     callee: Address::ZERO,
                     transact_to: Address::ZERO,
                     args: Vec::default(),

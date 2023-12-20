@@ -103,7 +103,7 @@ pub fn result_to_raw_output(
 pub fn result_to_output_with_events(
     step: usize,
     sequence: usize,
-    function_name: &'static str,
+    function_selector: [u8; 4],
     sender: Address,
     execution_result: ExecutionResult,
     checked: bool,
@@ -114,7 +114,7 @@ pub fn result_to_output_with_events(
                 success: true,
                 output,
                 events: Some(Event {
-                    function_name,
+                    function_selector,
                     logs,
                     step,
                     sequence,
@@ -127,15 +127,15 @@ pub fn result_to_output_with_events(
         ExecutionResult::Revert { output, .. } => {
             if checked {
                 panic!(
-                    "Failed to call {} from {} due to revert: {:?}",
-                    function_name,
+                    "Failed to call {:?} from {} due to revert: {:?}",
+                    function_selector,
                     sender,
                     decode_revert_reason(&output.0)
                 )
             } else {
                 warn!(
-                    "Failed to call {} from {} due to revert: {:?}",
-                    function_name,
+                    "Failed to call {:?} from {} due to revert: {:?}",
+                    function_selector,
                     sender,
                     decode_revert_reason(&output.0)
                 );
@@ -148,8 +148,8 @@ pub fn result_to_output_with_events(
         }
         ExecutionResult::Halt { reason, .. } => {
             panic!(
-                "Failed to call {} from {} due to halt: {:?}",
-                function_name, sender, reason
+                "Failed to call {:?} from {} due to halt: {:?}",
+                function_selector, sender, reason
             )
         }
     }
@@ -178,7 +178,7 @@ pub fn result_to_output(
 
 pub fn create_call<T: SolCall>(callee: Address, contract: Address, args: T, checked: bool) -> Call {
     Call {
-        function_name: T::SIGNATURE,
+        function_selector: T::SELECTOR,
         callee,
         transact_to: contract,
         args: args.abi_encode(),
@@ -192,17 +192,17 @@ pub fn decode_event<T: SolEvent>(event: &Event) -> (usize, usize, T) {
 
     let decoded_event = match decoded_event {
         Ok(e) => e,
-        Err(_) => panic!("Failed to decode event from {}", event.function_name),
+        Err(_) => panic!("Failed to decode event from {:?}", event.function_selector),
     };
 
     (event.step, event.sequence, decoded_event)
 }
 
 pub fn process_events<S: SolCall, T: SolEvent>(events: &[Event]) -> Vec<(usize, usize, T)> {
-    let function_name = S::SIGNATURE;
+    let function_selector = S::SELECTOR;
     events
         .iter()
-        .filter(|x| x.function_name == function_name)
+        .filter(|x| x.function_selector == function_selector)
         .map(decode_event)
         .collect()
 }
