@@ -86,7 +86,7 @@ mod tests {
     impl AgentSet for DummyAgentSet {
         fn call<D: DatabaseRef>(&mut self, _rng: &mut Rng, _network: &mut Network<D>) -> Vec<Call> {
             vec![Call {
-                function_name: "foo",
+                function_selector: [0, 0, 0, 0],
                 callee: Address::ZERO,
                 transact_to: Address::ZERO,
                 args: Vec::default(),

@@ -243,14 +243,14 @@ impl<D: DatabaseRef> Network<D> {
     }
 
     fn call_from_call(&mut self, call: Call, step: usize, sequence: usize) {
-        let function_name = call.function_name;
+        let function_selector = call.function_selector;
         let check_call = call.checked;
         let tx = utils::init_call_transaction(call.callee, call.transact_to, call.args, U256::ZERO);
         let execution_result = self.evm.execute(tx);
         let result = utils::result_to_output_with_events(
             step,
             sequence,
-            function_name,
+            function_selector,
             call.callee,
             execution_result,
             check_call,
@@ -397,7 +397,7 @@ mod tests {
 
         let calls = vec![
             Call {
-                function_name: "set_value",
+                function_selector: TestContract::setValueCall::SELECTOR,
                 callee: network.admin_address,
                 transact_to: contract_address,
                 args: TestContract::setValueCall {
@@ -407,7 +407,7 @@ mod tests {
                 checked: true,
             },
             Call {
-                function_name: "set_value",
+                function_selector: TestContract::setValueCall::SELECTOR,
                 callee: network.admin_address,
                 transact_to: contract_address,
                 args: TestContract::setValueCall {
