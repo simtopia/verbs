@@ -16,6 +16,15 @@ Verbs uses `hatch <https://hatch.pypa.io/latest/>`_ for dependency control,
 see the `hatch docs <https://hatch.pypa.io/latest/install/>`_ for installation
 instructions.
 
+.. note::
+
+   OSX users may need to install `patchelf` with `homebrew <https://brew.sh>`_
+   using
+
+   .. code-block:: bash
+
+      brew install patchelf
+
 Building
 --------
 
