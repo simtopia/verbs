@@ -6,7 +6,7 @@ use revm::{
 };
 use rust_sim::network::Network;
 
-use super::types::{address_to_py, bytes_to_py};
+use crate::types::{address_to_py, bytes_to_py};
 
 pub type PyBlockEnv<'a> = (
     &'a PyBytes,
