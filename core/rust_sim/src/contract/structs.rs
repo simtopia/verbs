@@ -1,4 +1,4 @@
-use alloy_primitives::Address;
+use alloy_primitives::{Address, U256};
 use revm::primitives::{Log, Output};
 
 /// EVM call/transaction
@@ -12,6 +12,8 @@ pub struct Call {
     pub transact_to: Address,
     /// Contract arguments represented as bytes
     pub args: Vec<u8>,
+    /// Value attached to the transaction
+    pub value: U256,
     /// Flag if `true` the simulation will halt (panic)
     /// if this transaction fails.
     pub checked: bool,

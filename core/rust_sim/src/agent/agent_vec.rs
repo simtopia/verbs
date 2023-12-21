@@ -97,7 +97,7 @@ impl<R: 'static, A: Agent + RecordedAgent<R> + 'static> AgentSet for AgentVec<R,
 mod tests {
     use super::*;
     use crate::agent::traits;
-    use alloy_primitives::Uint;
+    use alloy_primitives::{Uint, U256};
     use revm::db::EmptyDB;
     use rstest::*;
 
@@ -119,6 +119,7 @@ mod tests {
                     callee: Address::ZERO,
                     transact_to: Address::ZERO,
                     args: Vec::default(),
+                    value: U256::ZERO,
                     checked: false,
                 },
                 Call {
@@ -126,6 +127,7 @@ mod tests {
                     callee: Address::ZERO,
                     transact_to: Address::ZERO,
                     args: Vec::default(),
+                    value: U256::ZERO,
                     checked: false,
                 },
             ]

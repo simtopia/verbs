@@ -122,10 +122,11 @@ impl EmptyEnv {
         sender: PyAddress,
         transact_to: PyAddress,
         encoded_args: Vec<u8>,
+        value: u128,
         checked: bool,
     ) -> PyResult<()> {
         self.0
-            .submit_call(sender, transact_to, encoded_args, checked);
+            .submit_call(sender, transact_to, encoded_args, value, checked);
         Ok(())
     }
 

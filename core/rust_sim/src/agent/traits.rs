@@ -76,7 +76,7 @@ pub trait RecordedAgentSet<R> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use alloy_primitives::Address;
+    use alloy_primitives::{Address, U256};
     use revm::db::EmptyDB;
 
     struct DummyAgentSet {
@@ -90,6 +90,7 @@ mod tests {
                 callee: Address::ZERO,
                 transact_to: Address::ZERO,
                 args: Vec::default(),
+                value: U256::ZERO,
                 checked: self.v,
             }]
         }

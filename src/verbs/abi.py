@@ -139,6 +139,7 @@ class Function:
         sender: bytes,
         address: bytes,
         args: typing.List[typing.Any],
+        value: int = 0,
         checked: bool = True,
     ) -> types.Call:
         """
@@ -152,6 +153,8 @@ class Function:
             Address of the contract to call.
         args: typing.List[typing.Any]
             List of arguments to this function.
+        value: int, optional
+            Value attached to the transaction, default 0.
         checked: bool, optional
             If ``True`` the simulation will panic if the transaction
             from this call is reverted (default ``False``).
@@ -163,7 +166,7 @@ class Function:
             for execution in the next block.
         """
         encoded_args = self.encode(args)
-        return types.Call(sender, address, encoded_args, checked)
+        return types.Call(sender, address, encoded_args, value, checked)
 
     def call(
         self,

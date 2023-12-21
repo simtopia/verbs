@@ -176,12 +176,19 @@ pub fn result_to_output(
     }
 }
 
-pub fn create_call<T: SolCall>(callee: Address, contract: Address, args: T, checked: bool) -> Call {
+pub fn create_call<T: SolCall>(
+    callee: Address,
+    contract: Address,
+    args: T,
+    value: U256,
+    checked: bool,
+) -> Call {
     Call {
         function_selector: T::SELECTOR,
         callee,
         transact_to: contract,
         args: args.abi_encode(),
+        value,
         checked,
     }
 }

@@ -1,7 +1,5 @@
 use super::snapshot;
-use crate::types::{
-    event_to_py, result_to_py, PyAddress, PyEvent, PyExecutionResult,
-};
+use crate::types::{event_to_py, result_to_py, PyAddress, PyEvent, PyExecutionResult};
 use alloy_primitives::{Address, U256};
 use fork_evm::Backend;
 use pyo3::prelude::*;
@@ -80,7 +78,7 @@ impl<DB: DatabaseRef> BaseEnv<DB> {
         self.rng.shuffle(self.call_queue.as_mut_slice());
         self.network
             .process_calls(mem::take(&mut self.call_queue), self.step);
-        // Clear call queue
+        // Tick step
         self.step += 1;
     }
 
@@ -109,6 +107,7 @@ impl<DB: DatabaseRef> BaseEnv<DB> {
         sender: PyAddress,
         transact_to: PyAddress,
         encoded_args: Vec<u8>,
+        value: u128,
         checked: bool,
     ) {
         self.call_queue.push(Call {
@@ -116,6 +115,7 @@ impl<DB: DatabaseRef> BaseEnv<DB> {
             callee: Address::from_slice(&sender),
             transact_to: Address::from_slice(&transact_to),
             args: encoded_args,
+            value: U256::try_from(value).unwrap(),
             checked,
         })
     }
