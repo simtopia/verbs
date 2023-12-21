@@ -1,5 +1,4 @@
 mod sim;
-mod snapshot;
 mod types;
 
 use pyo3::prelude::*;

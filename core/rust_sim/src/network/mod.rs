@@ -245,7 +245,7 @@ impl<D: DatabaseRef> Network<D> {
     fn call_from_call(&mut self, call: Call, step: usize, sequence: usize) {
         let function_selector = call.function_selector;
         let check_call = call.checked;
-        let tx = utils::init_call_transaction(call.callee, call.transact_to, call.args, U256::ZERO);
+        let tx = utils::init_call_transaction(call.callee, call.transact_to, call.args, call.value);
         let execution_result = self.evm.execute(tx);
         let result = utils::result_to_output_with_events(
             step,
@@ -404,6 +404,7 @@ mod tests {
                     x: Signed::try_from_be_slice(&202u128.to_be_bytes()).unwrap(),
                 }
                 .abi_encode(),
+                value: U256::ZERO,
                 checked: true,
             },
             Call {
@@ -414,6 +415,7 @@ mod tests {
                     x: Signed::try_from_be_slice(&303u128.to_be_bytes()).unwrap(),
                 }
                 .abi_encode(),
+                value: U256::ZERO,
                 checked: true,
             },
         ];

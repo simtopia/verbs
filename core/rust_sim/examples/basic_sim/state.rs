@@ -59,6 +59,7 @@ impl Agent for SimpleAgent {
                     to: receiver,
                     tokens: send_amount,
                 },
+                U256::ZERO,
                 true,
             );
             vec![send_call]

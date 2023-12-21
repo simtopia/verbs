@@ -231,7 +231,11 @@ class Sim:
 
             for call in calls:
                 self.network.submit_call(
-                    call.sender, call.contract_address, call.encoded_args, call.checked
+                    call.sender,
+                    call.contract_address,
+                    call.encoded_args,
+                    call.value,
+                    call.checked,
                 )
 
             self.network.process_block()

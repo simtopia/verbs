@@ -23,6 +23,8 @@ class Call:
         Address of the contract to call.
     encoded_args: bytes
         ABI encoded arguments (with function selector).
+    value: int
+        Value attached to the transaction.
     checked: bool
         If ``True`` the simulation will raise an exception
         if the transaction is reverted. This can be used
@@ -34,4 +36,5 @@ class Call:
     sender: bytes
     contract_address: bytes
     encoded_args: bytes
+    value: int
     checked: bool
