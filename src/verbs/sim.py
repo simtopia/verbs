@@ -12,6 +12,8 @@ from tqdm import trange
 from verbs.envs import EmptyEnv, ForkEnv
 from verbs.types import Call
 
+FORMAT = "%(levelname)s %(name)s %(asctime)-15s %(filename)s:%(lineno)d %(message)s"
+
 
 class BaseAgent:
     """
@@ -99,7 +101,6 @@ class Sim:
             value is an empty list, allowing agents to be pushed
             after the simulation is initialised.
         """
-
         self.network = network
 
         if agents is None:
@@ -140,9 +141,7 @@ class Sim:
         Sim
             Initialised empty simulation
         """
-
         net = EmptyEnv(seed, admin_address)
-
         return Sim(seed, net, agents)
 
     @classmethod
@@ -193,7 +192,9 @@ class Sim:
         net = ForkEnv(node_url, seed, block_number, admin_address)
         return Sim(seed, net, agents)
 
-    def run(self, n_steps: int) -> typing.List[typing.List[typing.Any]]:
+    def run(
+        self, n_steps: int, debug_logs: bool = False
+    ) -> typing.List[typing.List[typing.Any]]:
         """
         Run the simulation and return telemetry data
 
@@ -216,6 +217,12 @@ class Sim:
             List of records collected from agents at each step of
             the simulation.
         """
+        import logging
+
+        if debug_logs:
+            logging.basicConfig(format=FORMAT)
+            logging.getLogger().setLevel(logging.DEBUG)
+            logging.debug("Printing DEBUG logs")
 
         records = list()
 

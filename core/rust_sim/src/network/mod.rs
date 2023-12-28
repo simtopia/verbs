@@ -243,6 +243,10 @@ impl<D: DatabaseRef> Network<D> {
     }
 
     fn call_from_call(&mut self, call: Call, step: usize, sequence: usize) {
+        debug!(
+            "Calling {:?} of {}",
+            call.function_selector, call.transact_to
+        );
         let function_selector = call.function_selector;
         let check_call = call.checked;
         let tx = utils::init_call_transaction(call.callee, call.transact_to, call.args, call.value);

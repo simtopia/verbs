@@ -288,7 +288,7 @@ class Agent:
         return self.balance
 
 
-def run(n_steps):
+def run(n_steps, debug_logs=False):
 
     net = verbs.envs.EmptyEnv(1234, "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266")
 
@@ -308,9 +308,9 @@ def run(n_steps):
 
     runner = verbs.sim.Sim(101, net, agents)
 
-    results = runner.run(n_steps)
+    results = runner.run(n_steps, debug_logs=debug_logs)
     return np.array(results)
 
 
 if __name__ == "__main__":
-    run(50)
+    run(50, debug_logs=False)
