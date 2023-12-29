@@ -1,6 +1,6 @@
 mod sim;
 mod types;
-use pyo3_log;
+use pyo3_log::{Caching, Logger};
 
 use pyo3::prelude::*;
 
@@ -12,7 +12,7 @@ use pyo3::prelude::*;
 #[pymodule]
 #[pyo3(name = "envs")]
 fn verbs(py: Python<'_>, m: &PyModule) -> PyResult<()> {
-    let _ = pyo3_log::Logger::new(py, pyo3_log::Caching::LoggersAndLevels)?.install();
+    let _ = Logger::new(py, Caching::LoggersAndLevels)?.install();
 
     m.add_class::<sim::EmptyEnv>()?;
     m.add_class::<sim::ForkEnv>()?;
