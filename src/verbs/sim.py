@@ -99,7 +99,6 @@ class Sim:
             value is an empty list, allowing agents to be pushed
             after the simulation is initialised.
         """
-
         self.network = network
 
         if agents is None:
@@ -140,9 +139,7 @@ class Sim:
         Sim
             Initialised empty simulation
         """
-
         net = EmptyEnv(seed, admin_address)
-
         return Sim(seed, net, agents)
 
     @classmethod
