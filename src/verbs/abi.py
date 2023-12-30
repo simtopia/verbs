@@ -54,7 +54,67 @@ import typing
 import eth_abi
 import eth_utils
 
-from verbs import types
+from verbs import types, utils
+
+
+class Constructor:
+    """
+    ABI constructor class
+
+    Class representing contracts constructor with
+    functionality to encode arguments and to deploy
+    the function.
+
+    Parameters
+    ----------
+    name: str
+        ABI name (used for debugging/logging)
+    abi: typing.Dict
+        Parsed ABI JSON of the constructor.
+    """
+
+    def __init__(self, name: str, abi: typing.Dict):
+        self.name = name
+        self.inputs = [x["type"] for x in abi["inputs"]]
+
+    def encode(self, args: typing.List[typing.Any]) -> bytes:
+        """
+        ABI encode constructor arguments
+
+        Parameters
+        ----------
+        args: List[Any]
+            List of argument values to the constructor.
+
+        Returns
+        -------
+        bytes
+            ABI encoded constructor arguments
+        """
+        return eth_abi.encode(self.inputs, args)
+
+    def deploy(self, net, bytecode: str, args: typing.List = None) -> bytes:
+        """
+        Deploy a contract
+
+        Parameters
+        ----------
+        net
+            Simulation environment
+        bytecode: str
+            Contract bytecode hex string
+        args: List[Any], optional
+            Optional list of constructor argument values
+        """
+        if args is None:
+            args = []
+
+        encoded_args = self.encode(args)
+        deploy_address = net.deploy_contract(
+            self.name, utils.hex_to_bytes(bytecode) + encoded_args
+        )
+
+        return deploy_address
 
 
 class Function:
@@ -306,10 +366,13 @@ def get_abi(name: str, abi: typing.List[typing.Dict]) -> type:
     grouped = dict()
 
     for a in abi:
-        if a["type"] not in ("function", "event"):
+        if a["type"] not in ("function", "event", "constructor"):
             continue
 
-        nm = a["name"]
+        if a["type"] == "constructor":
+            nm = "constructor"
+        else:
+            nm = a["name"]
 
         if nm not in grouped:
             grouped[nm] = list()
@@ -329,6 +392,11 @@ def get_abi(name: str, abi: typing.List[typing.Dict]) -> type:
                 methods[a["name"]] = Function(a)
             elif a["type"] == "event":
                 methods[a["name"]] = Event(a)
+
+    if "constructor" not in grouped:
+        methods["constructor"] = Constructor(name, dict(inputs=[]))
+    else:
+        methods["constructor"] = Constructor(name, grouped["constructor"][0])
 
     return type(name, (), methods)
 

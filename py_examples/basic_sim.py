@@ -294,17 +294,18 @@ def run(n_steps):
 
     erc20_abi = verbs.abi.get_abi("ERC20", ERC20_ABI)
 
-    erc20_args = verbs.utils.encode_args(["uint256"], [int(1e19)])
-    erc20_address = net.deploy_contract(
-        "erc20", verbs.utils.hex_to_bytes(ERC20_BYTECODE) + erc20_args
-    )
+    erc20_address = erc20_abi.constructor.deploy(net, ERC20_BYTECODE, [int(1e19)])
 
     agents = [
         Agent(i + 100, erc20_address, erc20_abi, N_AGENTS) for i in range(N_AGENTS)
     ]
 
-    transfer_args = erc20_abi.transfer.encode([agents[0].address, int(1e19)])
-    net.execute(net.admin_address, erc20_address, transfer_args, 0)
+    erc20_abi.transfer.execute(
+        net,
+        net.admin_address,
+        erc20_address,
+        [agents[0].address, int(1e19)],
+    )
 
     runner = verbs.sim.Sim(101, net, agents)
 
