@@ -198,11 +198,13 @@ From the previous example we might define an initialisation function
 
 .. code-block:: python
 
-   def init_func(bytecode, constructor_args):
+   def init_func(*, bytecode, constructor_args):
         net = verbs.EmptyEnv(1234, "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266")
 
         erc20_abi = verbs.abi.get_abi("ERC20", ERC20_ABI)
-        erc20_address = erc20_abi.constructor.deploy(net, ERC20_BYTECODE, [int(1e19)])
+        erc20_address = erc20_abi.constructor.deploy(
+            net, ERC20_BYTECODE, constructor_args
+        )
 
         return net.export_snapshot(), erc20_address
 
@@ -218,6 +220,7 @@ The execution function could then be defined as
 
     def exec_func(snapshot, n_steps, seed, erc20_address, *, activation_rate):
         env = envs.EmptyEnv(seed, "", snapshot)
+        erc20_abi = verbs.abi.get_abi("ERC20", ERC20_ABI)
 
         agents = [
             Agent(i + 100, erc20_address, erc20_abi, N_AGENTS, activation_rate)
@@ -225,11 +228,11 @@ The execution function could then be defined as
         ]
 
         erc20_abi.transfer.execute(
-        net,
-        net.admin_address,
-        erc20_address,
-        [agents[0].address, int(1e19)],
-    )
+            net,
+            net.admin_address,
+            erc20_address,
+            [agents[0].address, int(1e19)],
+        )
 
         runner = verbs.sim.Sim(101, net, agents)
         results = runner.run(n_steps)
@@ -255,12 +258,12 @@ execute simulation across these combinations in parallel
         100,
         10,
         [dict(activation_rate=0.1), dict(activation_rate=0.2)],
-        init_kwargs=dict(_bytecode=bytecode, _constructor_args=constructor_args),
+        init_kwargs=dict(bytecode=bytecode, constructor_args=[int(1e19)]),
         n_jobs=-1,
     )
 
 The parameter set to sample across is provided as a list of dictionaries.
-The batch-runner will then generate 20 samples (2 paramter sets x 10 random seeds)
+The batch-runner will then generate 20 samples (2 parameter sets x 10 random seeds)
 each for 100 steps.
 
 More Examples
