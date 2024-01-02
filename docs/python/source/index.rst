@@ -14,6 +14,6 @@ simulations of the Ethereum blockchain.
    :caption: Contents:
 
    pages/getting_started
-   pages/model
+   pages/user_guide
    pages/examples
    pages/api
