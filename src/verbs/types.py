@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 
 @dataclass
-class Call:
+class Transaction:
     """
     Struct of transaction arguments
 
@@ -13,7 +13,7 @@ class Call:
     to be processed by the EVM during a simulation.
 
     Simulated agents should return a list of
-    calls, which are then processed in the next block.
+    transactions, which are then processed in the next block.
 
     Attributes
     ----------

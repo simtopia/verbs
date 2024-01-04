@@ -201,7 +201,7 @@ class Function:
         args: typing.List[typing.Any],
         value: int = 0,
         checked: bool = True,
-    ) -> types.Call:
+    ) -> types.Transaction:
         """
         Create a call to submit to the current simulation block
 
@@ -226,7 +226,7 @@ class Function:
             for execution in the next block.
         """
         encoded_args = self.encode(args)
-        return types.Call(sender, address, encoded_args, value, checked)
+        return types.Transaction(sender, address, encoded_args, value, checked)
 
     def call(
         self,

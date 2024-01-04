@@ -10,7 +10,7 @@ import numpy as np
 from tqdm import trange
 
 from verbs.envs import EmptyEnv, ForkEnv
-from verbs.types import Call
+from verbs.types import Transaction
 
 
 class BaseAgent:
@@ -21,12 +21,12 @@ class BaseAgent:
 
     * ``update`` is called each for each agent for each step of
       the model, should update the state of the agent and
-      return a list of calls to process in the next block.
+      return a list of transactions to process in the next block.
     * ``record`` is called at the end of each step, should return
       data to record over the course of the simulation
     """
 
-    def update(self, rng: np.random.Generator, network) -> typing.List[Call]:
+    def update(self, rng: np.random.Generator, network) -> typing.List[Transaction]:
         """
         Update the state of the agent each step
 
@@ -46,8 +46,8 @@ class BaseAgent:
 
         Returns
         -------
-        typing.List[Call]
-            List of calls to be processed in the next block
+        typing.List[Transaction]
+            List of transactions to be processed in the next block
             of the simulation. This can be an empty list if the
             agent is not submitting any transactions.
         """
