@@ -158,7 +158,14 @@ class Function:
     """
 
     def __init__(self, abi: typing.Dict):
-        self.inputs = [x["type"] for x in abi["inputs"]]
+        self.inputs = []
+        for x in abi["inputs"]:
+            if x["type"] == "tuple":
+                inp = ",".join([y["type"] for y in x["components"]])
+                inp = "(" + inp + ")"
+                self.inputs.append(inp)
+            else:
+                self.inputs.append(x["type"])
         self.outputs = [x["type"] for x in abi["outputs"]]
         self.selector = eth_utils.abi.function_abi_to_4byte_selector(abi)
 
@@ -324,7 +331,14 @@ class Event:
     """
 
     def __init__(self, abi: typing.Dict):
-        self.inputs = [x["type"] for x in abi["inputs"] if not x["indexed"]]
+        self.inputs = []
+        for x in abi["inputs"]:
+            if x["type"] == "tuple":
+                inp = ",".join([y["type"] for y in x["components"]])
+                inp = "(" + inp + ")"
+                self.inputs.append(inp)
+            else:
+                self.inputs.append(x["type"])
 
     def decode(self, data: bytes) -> typing.Tuple[typing.Any, ...]:
         """
