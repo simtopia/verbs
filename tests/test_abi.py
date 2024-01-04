@@ -82,3 +82,28 @@ def test_abi_from_str():
 
     encoded_0 = a.foo.encode([100])
     assert len(encoded_0) == 36
+
+
+def test_constructor():
+    abi_data = [
+        {
+            "inputs": [{"name": "x", "type": "uint256"}],
+            "payable": False,
+            "stateMutability": "nonpayable",
+            "type": "constructor",
+        }
+    ]
+
+    a = abi.get_abi("Foo", abi_data)
+
+    assert hasattr(a, "constructor")
+    assert a.constructor.inputs == ["uint256"]
+
+
+def test_default_constructor():
+    abi_data = []
+
+    a = abi.get_abi("Foo", abi_data)
+
+    assert hasattr(a, "constructor")
+    assert a.constructor.inputs == []

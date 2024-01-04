@@ -218,22 +218,17 @@ class Sim:
 
         for _ in trange(n_steps):
 
-            calls = list()
-
             for agent in self.agents:
-                a_calls = agent.update(self.rng, self.network)
-                calls.extend(a_calls)
+                calls = agent.update(self.rng, self.network)
 
-            self.rng.shuffle(calls)
-
-            for call in calls:
-                self.network.submit_call(
-                    call.sender,
-                    call.contract_address,
-                    call.encoded_args,
-                    call.value,
-                    call.checked,
-                )
+                for call in calls:
+                    self.network.submit_call(
+                        call.sender,
+                        call.contract_address,
+                        call.encoded_args,
+                        call.value,
+                        call.checked,
+                    )
 
             self.network.process_block()
 
