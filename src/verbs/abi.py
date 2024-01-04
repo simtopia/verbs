@@ -194,7 +194,7 @@ class Function:
         """
         return eth_abi.decode(self.outputs, bytes(output))
 
-    def get_call(
+    def transaction(
         self,
         sender: bytes,
         address: bytes,
@@ -203,7 +203,7 @@ class Function:
         checked: bool = True,
     ) -> types.Transaction:
         """
-        Create a call to submit to the current simulation block
+        Create a transaction to submit to the current simulation block
 
         Parameters
         ----------

@@ -32,7 +32,7 @@ class Agent:
                 receiver = rng.choice(self.n_agents) + 100
                 receiver = verbs.utils.int_to_address(receiver)
                 amount = min(self.balance, 100_000)
-                send_call = self.abi.transfer.get_call(
+                send_call = self.abi.transfer.transaction(
                     self.address, self.token_contract, [receiver, amount]
                 )
 
