@@ -57,7 +57,7 @@ import eth_utils
 from verbs import types, utils
 
 
-def parse_input_types(abi: typing.Dict) -> typing.List:
+def parse_input_types(abi: typing.Dict) -> typing.List[str]:
     """
     Parses function / event input types necessary for encoding.
 
@@ -68,15 +68,30 @@ def parse_input_types(abi: typing.Dict) -> typing.List:
 
     Returns
     -------
-    inputs: typing.List
+    inputs: typing.List[str]
         list with the input types
     """
+
+    def tuple_parser(x: typing.List[str]):
+        """
+        Recursive tuple parser
+        """
+        inp = []
+        for y in x:
+            if y["type"] == "tuple":
+                inp.append(tuple_parser(y["components"]))
+            else:
+                inp.append(y["type"])
+        input_tuple = ",".join(inp)
+        input_tuple = "(" + input_tuple + ")"
+        return input_tuple
+
     inputs = []
     for x in abi["inputs"]:
         if x["type"] == "tuple":
-            inp = ",".join([y["type"] for y in x["components"]])
-            inp = "(" + inp + ")"
-            inputs.append(inp)
+            # inp = ",".join([y["type"] for y in x["components"]])
+            # inp = "(" + inp + ")"
+            inputs.append(tuple_parser(x["components"]))
         else:
             inputs.append(x["type"])
     return inputs
