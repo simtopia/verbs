@@ -20,7 +20,7 @@ pub struct Transaction {
 }
 
 // Result if a transaction also wrapping any returned events
-pub struct CallResult {
+pub struct TransactionResult {
     /// Flag whether transaction was successful.
     pub success: bool,
     /// Output data.

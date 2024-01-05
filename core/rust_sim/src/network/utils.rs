@@ -1,4 +1,4 @@
-use crate::contract::{CallResult, Event, Transaction};
+use crate::contract::{Event, Transaction, TransactionResult};
 use alloy_primitives::{Address, Bytes, U256};
 use alloy_sol_types::{decode_revert_reason, SolCall, SolEvent};
 use log::warn;
@@ -107,10 +107,10 @@ pub fn result_to_output_with_events(
     sender: Address,
     execution_result: ExecutionResult,
     checked: bool,
-) -> CallResult {
+) -> TransactionResult {
     match execution_result {
         ExecutionResult::Success { output, logs, .. } => match output {
-            Output::Call(_) => CallResult {
+            Output::Call(_) => TransactionResult {
                 success: true,
                 output,
                 events: Some(Event {
@@ -139,7 +139,7 @@ pub fn result_to_output_with_events(
                     sender,
                     decode_revert_reason(&output.0)
                 );
-                CallResult {
+                TransactionResult {
                     success: false,
                     output: Output::Call(Bytes::default()),
                     events: None,
