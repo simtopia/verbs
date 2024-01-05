@@ -107,3 +107,12 @@ def test_default_constructor():
 
     assert hasattr(a, "constructor")
     assert a.constructor.inputs == []
+
+
+def test_abi_recursive_input():
+    a = abi.load_abi("tests/test.abi")
+    assert a.setValue.inputs == ["int256"]
+    assert a.exactInputSingle.inputs == [
+        "(address,address,uint24,address,uint256,uint256,uint256,uint160)"
+    ]
+    assert a.test_recursive_tuple.inputs == ["(address,address,(address,address))"]
