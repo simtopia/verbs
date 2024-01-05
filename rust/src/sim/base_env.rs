@@ -3,6 +3,7 @@ use crate::types::{event_to_py, result_to_py, PyAddress, PyEvent, PyExecutionRes
 use alloy_primitives::{Address, U256};
 use fork_evm::Backend;
 use pyo3::prelude::*;
+
 use revm::db::{DatabaseRef, EmptyDB};
 use rust_sim::contract::Call;
 use rust_sim::network::{BlockNumber, Network, RevertError};
@@ -102,7 +103,7 @@ impl<DB: DatabaseRef> BaseEnv<DB> {
         snapshot::create_py_snapshot(py, &mut self.network)
     }
 
-    pub fn submit_call(
+    pub fn submit_transaction(
         &mut self,
         sender: PyAddress,
         transact_to: PyAddress,
@@ -118,6 +119,21 @@ impl<DB: DatabaseRef> BaseEnv<DB> {
             value: U256::try_from(value).unwrap(),
             checked,
         })
+    }
+
+    pub fn submit_transactions(
+        &mut self,
+        transactions: Vec<(PyAddress, PyAddress, Vec<u8>, u128, bool)>,
+    ) {
+        self.call_queue
+            .extend(transactions.into_iter().map(|x| Call {
+                function_selector: x.2[..4].try_into().unwrap(),
+                callee: Address::from_slice(&x.0),
+                transact_to: Address::from_slice(&x.1),
+                args: x.2,
+                value: U256::try_from(x.3).unwrap(),
+                checked: x.4,
+            }))
     }
 
     pub fn deploy_contract(&mut self, contract_name: &str, bytecode: Vec<u8>) -> Address {

@@ -123,14 +123,16 @@ impl ForkEnv {
     /// Parameters
     /// ----------
     /// sender: bytes
-    ///     Byte encoded address of the transaction sender
+    ///     Byte encoded address of the transaction sender.
     /// transact_to: bytes
-    ///     Byte encoded address of the contract to call
+    ///     Byte encoded address of the contract to call.
     /// encoded_args: bytes
-    ///     ABI encoded function selector and arguments
+    ///     ABI encoded function selector and arguments.
+    /// value: int
+    ///     Value attached to the transaction.
     /// checked: bool
     ///     If ``True`` the simulation will halt if this transaction
-    ///     is reverted
+    ///     is reverted.
     ///
     pub fn submit_call(
         &mut self,
@@ -141,7 +143,27 @@ impl ForkEnv {
         checked: bool,
     ) -> PyResult<()> {
         self.0
-            .submit_call(sender, transact_to, encoded_args, value, checked);
+            .submit_transaction(sender, transact_to, encoded_args, value, checked);
+        Ok(())
+    }
+
+    /// Submit a list of transactions into the next block
+    ///
+    /// Submit a list of transaction into the queue to be processed
+    /// in the next block. Each simulation step agents submit
+    /// calls which are then shuffled and processed to update
+    /// the EVM state.
+    ///
+    /// Parameters
+    /// ----------
+    /// transactions: List[Tuple(bytes, bytes, bytes, int, bool)]
+    ///     List of transactions.
+    ///
+    pub fn submit_transactions(
+        &mut self,
+        transactions: Vec<(PyAddress, PyAddress, Vec<u8>, u128, bool)>,
+    ) -> PyResult<()> {
+        self.0.submit_transactions(transactions);
         Ok(())
     }
 

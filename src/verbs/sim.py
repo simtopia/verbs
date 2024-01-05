@@ -220,15 +220,7 @@ class Sim:
 
             for agent in self.agents:
                 calls = agent.update(self.rng, self.network)
-
-                for call in calls:
-                    self.network.submit_call(
-                        call.sender,
-                        call.contract_address,
-                        call.encoded_args,
-                        call.value,
-                        call.checked,
-                    )
+                self.network.submit_transactions(calls)
 
             self.network.process_block()
 

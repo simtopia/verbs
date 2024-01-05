@@ -226,7 +226,7 @@ class Function:
             for execution in the next block.
         """
         encoded_args = self.encode(args)
-        return types.Transaction(sender, address, encoded_args, value, checked)
+        return (sender, address, encoded_args, value, checked)
 
     def call(
         self,
