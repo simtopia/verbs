@@ -5,7 +5,7 @@ use fork_evm::Backend;
 use pyo3::prelude::*;
 
 use revm::db::{DatabaseRef, EmptyDB};
-use rust_sim::contract::Call;
+use rust_sim::contract::Transaction;
 use rust_sim::network::{BlockNumber, Network, RevertError};
 use std::mem;
 
@@ -16,7 +16,7 @@ pub struct BaseEnv<DB: DatabaseRef> {
     // EVM and deployed protocol
     pub network: Network<DB>,
     // Queue of calls submitted from Python
-    pub call_queue: Vec<Call>,
+    pub call_queue: Vec<Transaction>,
     // RNG source
     pub rng: fastrand::Rng,
     // Current step of the simulation
@@ -111,7 +111,7 @@ impl<DB: DatabaseRef> BaseEnv<DB> {
         value: u128,
         checked: bool,
     ) {
-        self.call_queue.push(Call {
+        self.call_queue.push(Transaction {
             function_selector: encoded_args[..4].try_into().unwrap(),
             callee: Address::from_slice(&sender),
             transact_to: Address::from_slice(&transact_to),
@@ -126,7 +126,7 @@ impl<DB: DatabaseRef> BaseEnv<DB> {
         transactions: Vec<(PyAddress, PyAddress, Vec<u8>, u128, bool)>,
     ) {
         self.call_queue
-            .extend(transactions.into_iter().map(|x| Call {
+            .extend(transactions.into_iter().map(|x| Transaction {
                 function_selector: x.2[..4].try_into().unwrap(),
                 callee: Address::from_slice(&x.0),
                 transact_to: Address::from_slice(&x.1),

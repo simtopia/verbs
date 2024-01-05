@@ -1,5 +1,5 @@
 mod utils;
-use crate::contract::{Call, Event};
+use crate::contract::{Event, Transaction};
 use crate::utils::{address_from_hex, Eth};
 use alloy_primitives::{Address, Uint, B256, U256};
 use alloy_sol_types::SolCall;
@@ -242,7 +242,7 @@ impl<D: DatabaseRef> Network<D> {
         Ok((decoded, events))
     }
 
-    fn call_from_call(&mut self, call: Call, step: usize, sequence: usize) {
+    fn call_from_call(&mut self, call: Transaction, step: usize, sequence: usize) {
         debug!(
             "Calling {:?} of {}",
             call.function_selector, call.transact_to
@@ -264,7 +264,7 @@ impl<D: DatabaseRef> Network<D> {
         }
     }
 
-    pub fn process_calls(&mut self, calls: Vec<Call>, step: usize) {
+    pub fn process_calls(&mut self, calls: Vec<Transaction>, step: usize) {
         for (i, call) in calls.into_iter().enumerate() {
             self.call_from_call(call, step, i);
         }
@@ -400,7 +400,7 @@ mod tests {
         let (mut network, contract_address) = deployment;
 
         let calls = vec![
-            Call {
+            Transaction {
                 function_selector: TestContract::setValueCall::SELECTOR,
                 callee: network.admin_address,
                 transact_to: contract_address,
@@ -411,7 +411,7 @@ mod tests {
                 value: U256::ZERO,
                 checked: true,
             },
-            Call {
+            Transaction {
                 function_selector: TestContract::setValueCall::SELECTOR,
                 callee: network.admin_address,
                 transact_to: contract_address,

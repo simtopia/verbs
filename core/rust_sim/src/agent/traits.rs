@@ -1,4 +1,4 @@
-use crate::contract::Call;
+use crate::contract::Transaction;
 use crate::network::Network;
 use alloy_primitives::Address;
 use fastrand::Rng;
@@ -6,8 +6,11 @@ use revm::db::DatabaseRef;
 pub use sim_macros::SimState;
 
 pub trait SimState {
-    fn call_agents<D: DatabaseRef>(&mut self, rng: &mut Rng, network: &mut Network<D>)
-        -> Vec<Call>;
+    fn call_agents<D: DatabaseRef>(
+        &mut self,
+        rng: &mut Rng,
+        network: &mut Network<D>,
+    ) -> Vec<Transaction>;
     fn record_agents(&mut self);
 }
 
@@ -35,7 +38,11 @@ pub trait Agent {
     /// * `rng` - Fastrand rng state
     /// * `network` - Protocol deployment(s)
     ///
-    fn update<D: DatabaseRef>(&mut self, rng: &mut Rng, network: &mut Network<D>) -> Vec<Call>;
+    fn update<D: DatabaseRef>(
+        &mut self,
+        rng: &mut Rng,
+        network: &mut Network<D>,
+    ) -> Vec<Transaction>;
     /// Get the address of the agent.
     fn get_address(&self) -> Address;
 }
@@ -61,7 +68,7 @@ pub trait AgentSet {
         &mut self,
         rng: &mut fastrand::Rng,
         network: &mut Network<D>,
-    ) -> Vec<Call>;
+    ) -> Vec<Transaction>;
     /// Record the state of all the agents
     fn record(&mut self);
     /// Get a vector of agent addresses contained in this set
@@ -84,8 +91,12 @@ mod tests {
     }
 
     impl AgentSet for DummyAgentSet {
-        fn call<D: DatabaseRef>(&mut self, _rng: &mut Rng, _network: &mut Network<D>) -> Vec<Call> {
-            vec![Call {
+        fn call<D: DatabaseRef>(
+            &mut self,
+            _rng: &mut Rng,
+            _network: &mut Network<D>,
+        ) -> Vec<Transaction> {
+            vec![Transaction {
                 function_selector: [0, 0, 0, 0],
                 callee: Address::ZERO,
                 transact_to: Address::ZERO,

@@ -1,5 +1,5 @@
 use crate::agent::traits::{Agent, AgentSet, RecordedAgent, RecordedAgentSet};
-use crate::contract::Call;
+use crate::contract::Transaction;
 use crate::network::Network;
 use alloy_primitives::Address;
 use revm::db::DatabaseRef;
@@ -50,7 +50,7 @@ impl<R: 'static, A: Agent + RecordedAgent<R> + 'static> AgentSet for SingletonAg
         &mut self,
         rng: &mut fastrand::Rng,
         network: &mut Network<D>,
-    ) -> Vec<Call> {
+    ) -> Vec<Transaction> {
         self.agent.update(rng, network)
     }
     /// Record the current state of the agent.

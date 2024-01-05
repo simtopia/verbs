@@ -3,7 +3,7 @@ use revm::primitives::{Log, Output};
 
 /// EVM call/transaction
 #[derive(Clone)]
-pub struct Call {
+pub struct Transaction {
     /// Name of the function being called.
     pub function_selector: [u8; 4],
     /// Address of the contract caller

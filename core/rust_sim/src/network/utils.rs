@@ -1,4 +1,4 @@
-use crate::contract::{Call, CallResult, Event};
+use crate::contract::{CallResult, Event, Transaction};
 use alloy_primitives::{Address, Bytes, U256};
 use alloy_sol_types::{decode_revert_reason, SolCall, SolEvent};
 use log::warn;
@@ -182,8 +182,8 @@ pub fn create_call<T: SolCall>(
     args: T,
     value: U256,
     checked: bool,
-) -> Call {
-    Call {
+) -> Transaction {
+    Transaction {
         function_selector: T::SELECTOR,
         callee,
         transact_to: contract,
