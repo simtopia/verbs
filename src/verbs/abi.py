@@ -57,6 +57,44 @@ import eth_utils
 from verbs import types, utils
 
 
+def parse_input_types(abi: typing.Dict) -> typing.List[str]:
+    """
+    Parses function / event input types necessary for encoding.
+
+    Parameters
+    ----------
+    abi: typing.Dict
+        Parsed ABI JSON of the function or the event
+
+    Returns
+    -------
+    inputs: typing.List[str]
+        list with the input types
+    """
+
+    def tuple_parser(x: typing.List[str]):
+        """
+        Recursive tuple parser
+        """
+        inp = []
+        for y in x:
+            if y["type"] == "tuple":
+                inp.append(tuple_parser(y["components"]))
+            else:
+                inp.append(y["type"])
+        input_tuple = ",".join(inp)
+        input_tuple = "(" + input_tuple + ")"
+        return input_tuple
+
+    inputs = []
+    for x in abi["inputs"]:
+        if x["type"] == "tuple":
+            inputs.append(tuple_parser(x["components"]))
+        else:
+            inputs.append(x["type"])
+    return inputs
+
+
 class Constructor:
     """
     ABI constructor class
@@ -158,7 +196,7 @@ class Function:
     """
 
     def __init__(self, abi: typing.Dict):
-        self.inputs = [x["type"] for x in abi["inputs"]]
+        self.inputs = parse_input_types(abi)
         self.outputs = [x["type"] for x in abi["outputs"]]
         self.selector = eth_utils.abi.function_abi_to_4byte_selector(abi)
 
@@ -324,7 +362,7 @@ class Event:
     """
 
     def __init__(self, abi: typing.Dict):
-        self.inputs = [x["type"] for x in abi["inputs"] if not x["indexed"]]
+        self.inputs = parse_input_types(abi)
 
     def decode(self, data: bytes) -> typing.Tuple[typing.Any, ...]:
         """
