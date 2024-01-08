@@ -1,5 +1,5 @@
 """
-Data types
+Type aliases
 """
 import typing
 
