@@ -52,7 +52,7 @@ examples = "maturin build --release && python py_examples/basic_sim.py && python
 [tool.hatch.envs.notebook]
 dependencies = [
   "maturin >= 1.2.3",
-  "patchelf >= 0.17.2.1",
+  "patchelf >= 0.17.2.1; platform_system != 'Darwin'",
   "jupyter >= 1.0.0",
   "matplotlib >= 3.8.2",
 ]
@@ -63,7 +63,7 @@ jupyter = "maturin develop --release && jupyter notebook --notebook-dir=./py_exa
 [tool.hatch.envs.sphinx]
 dependencies = [
   "maturin >= 1.2.3",
-  "patchelf >= 0.17.2.1",
+  "patchelf >= 0.17.2.1; platform_system != 'Darwin'",
   "sphinx >= 7.2.6",
   "furo >= 2023.9.10",
   "sphinx-copybutton >= 0.5.2",
