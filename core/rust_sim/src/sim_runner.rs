@@ -24,7 +24,7 @@ pub fn run<A: AdminAgent, S: SimState, D: DatabaseRef>(
         // Shuffle calls
         rng.shuffle(calls.as_mut_slice());
         // Process calls in order
-        network.process_calls(calls, i);
+        network.process_transactions(calls, i);
         // Record data from agents
         agents.record_agents();
         // Post block update admin agent

@@ -78,7 +78,7 @@ impl<DB: DatabaseRef> BaseEnv<DB> {
         // Shuffle and process calls
         self.rng.shuffle(self.call_queue.as_mut_slice());
         self.network
-            .process_calls(mem::take(&mut self.call_queue), self.step);
+            .process_transactions(mem::take(&mut self.call_queue), self.step);
         // Tick step
         self.step += 1;
     }
