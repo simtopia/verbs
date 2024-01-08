@@ -10,7 +10,7 @@ import numpy as np
 from tqdm import trange
 
 from verbs.envs import EmptyEnv, ForkEnv
-from verbs.types import Transaction
+from verbs.types import Env, Transaction
 
 
 class BaseAgent:
@@ -24,7 +24,32 @@ class BaseAgent:
       return a list of transactions to process in the next block.
     * ``record`` is called at the end of each step, should return
       data to record over the course of the simulation
+
+    .. note::
+
+       Creating an agent does not automatically create a corresponding
+       account im the EVM, this should be created using the ``deploy``
+       method, or :py:meth:`verbs.envs.EmptyEnv.create_account`.
     """
+
+    def deploy(self, env: Env, address: bytes, eth: int):
+        """
+        Assign an address and create an account
+
+        Assign this agent an address, and create a corresponding
+        account in the EVM for use by this agent.
+
+        Parameters
+        ----------
+        env: Env
+            Simulation environment.
+        address: bytes
+            Address of the agent/account
+        eth: int
+            initial Eth to assign to this account (in units of wei)
+        """
+        self.address = address
+        env.create_account(address, eth)
 
     def update(self, rng: np.random.Generator, network) -> typing.List[Transaction]:
         """
@@ -32,7 +57,7 @@ class BaseAgent:
 
         This method should **not** directly update the state
         of the EVM, and changes should be performed by returning
-        a list of :class:`verbs.types.Call`. This method can however call the
+        a list of :class:`verbs.types.Transaction`. This method can however call the
         EVM without committing changes to the EVM, for example
         to retrieve data from contracts.
 
