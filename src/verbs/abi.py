@@ -232,16 +232,16 @@ class Function:
         """
         return eth_abi.decode(self.outputs, bytes(output))
 
-    def get_call(
+    def transaction(
         self,
         sender: bytes,
         address: bytes,
         args: typing.List[typing.Any],
         value: int = 0,
         checked: bool = True,
-    ) -> types.Call:
+    ) -> types.Transaction:
         """
-        Create a call to submit to the current simulation block
+        Create a transaction to submit to the current simulation block
 
         Parameters
         ----------
@@ -264,7 +264,7 @@ class Function:
             for execution in the next block.
         """
         encoded_args = self.encode(args)
-        return types.Call(sender, address, encoded_args, value, checked)
+        return (sender, address, encoded_args, value, checked)
 
     def call(
         self,

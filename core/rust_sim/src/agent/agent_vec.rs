@@ -1,5 +1,5 @@
 use crate::agent::traits::{Agent, AgentSet, RecordedAgent, RecordedAgentSet};
-use crate::contract::Call;
+use crate::contract::Transaction;
 use crate::network::Network;
 use alloy_primitives::Address;
 use revm::db::DatabaseRef;
@@ -76,7 +76,7 @@ impl<R: 'static, A: Agent + RecordedAgent<R> + 'static> AgentSet for AgentVec<R,
         &mut self,
         rng: &mut fastrand::Rng,
         network: &mut Network<D>,
-    ) -> Vec<Call> {
+    ) -> Vec<Transaction> {
         self.agents
             .iter_mut()
             .flat_map(|x| x.update(rng, network))
@@ -111,10 +111,10 @@ mod tests {
             &mut self,
             _rng: &mut fastrand::Rng,
             _network: &mut crate::network::Network<D>,
-        ) -> Vec<crate::contract::Call> {
+        ) -> Vec<crate::contract::Transaction> {
             self.value += 1;
             vec![
-                Call {
+                Transaction {
                     function_selector: [0, 0, 0, 0],
                     callee: Address::ZERO,
                     transact_to: Address::ZERO,
@@ -122,7 +122,7 @@ mod tests {
                     value: U256::ZERO,
                     checked: false,
                 },
-                Call {
+                Transaction {
                     function_selector: [0, 0, 0, 0],
                     callee: Address::ZERO,
                     transact_to: Address::ZERO,

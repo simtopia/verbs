@@ -1,5 +1,5 @@
 mod utils;
-use crate::contract::{Call, Event};
+use crate::contract::{Event, Transaction};
 use crate::utils::{address_from_hex, Eth};
 use alloy_primitives::{Address, Uint, B256, U256};
 use alloy_sol_types::SolCall;
@@ -242,20 +242,25 @@ impl<D: DatabaseRef> Network<D> {
         Ok((decoded, events))
     }
 
-    fn call_from_call(&mut self, call: Call, step: usize, sequence: usize) {
+    fn call_from_transaction(&mut self, transaction: Transaction, step: usize, sequence: usize) {
         debug!(
             "Calling {:?} of {}",
-            call.function_selector, call.transact_to
+            transaction.function_selector, transaction.transact_to
         );
-        let function_selector = call.function_selector;
-        let check_call = call.checked;
-        let tx = utils::init_call_transaction(call.callee, call.transact_to, call.args, call.value);
+        let function_selector = transaction.function_selector;
+        let check_call = transaction.checked;
+        let tx = utils::init_call_transaction(
+            transaction.callee,
+            transaction.transact_to,
+            transaction.args,
+            transaction.value,
+        );
         let execution_result = self.evm.execute(tx);
         let result = utils::result_to_output_with_events(
             step,
             sequence,
             function_selector,
-            call.callee,
+            transaction.callee,
             execution_result,
             check_call,
         );
@@ -264,9 +269,9 @@ impl<D: DatabaseRef> Network<D> {
         }
     }
 
-    pub fn process_calls(&mut self, calls: Vec<Call>, step: usize) {
-        for (i, call) in calls.into_iter().enumerate() {
-            self.call_from_call(call, step, i);
+    pub fn process_transactions(&mut self, transactions: Vec<Transaction>, step: usize) {
+        for (i, call) in transactions.into_iter().enumerate() {
+            self.call_from_transaction(call, step, i);
         }
     }
 
@@ -400,7 +405,7 @@ mod tests {
         let (mut network, contract_address) = deployment;
 
         let calls = vec![
-            Call {
+            Transaction {
                 function_selector: TestContract::setValueCall::SELECTOR,
                 callee: network.admin_address,
                 transact_to: contract_address,
@@ -411,7 +416,7 @@ mod tests {
                 value: U256::ZERO,
                 checked: true,
             },
-            Call {
+            Transaction {
                 function_selector: TestContract::setValueCall::SELECTOR,
                 callee: network.admin_address,
                 transact_to: contract_address,
@@ -424,7 +429,7 @@ mod tests {
             },
         ];
 
-        network.process_calls(calls, 1);
+        network.process_transactions(calls, 1);
 
         let (v, _) = network
             .direct_call(

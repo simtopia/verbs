@@ -3,8 +3,9 @@ use crate::types::{event_to_py, result_to_py, PyAddress, PyEvent, PyExecutionRes
 use alloy_primitives::{Address, U256};
 use fork_evm::Backend;
 use pyo3::prelude::*;
+
 use revm::db::{DatabaseRef, EmptyDB};
-use rust_sim::contract::Call;
+use rust_sim::contract::Transaction;
 use rust_sim::network::{BlockNumber, Network, RevertError};
 use std::mem;
 
@@ -15,7 +16,7 @@ pub struct BaseEnv<DB: DatabaseRef> {
     // EVM and deployed protocol
     pub network: Network<DB>,
     // Queue of calls submitted from Python
-    pub call_queue: Vec<Call>,
+    pub call_queue: Vec<Transaction>,
     // RNG source
     pub rng: fastrand::Rng,
     // Current step of the simulation
@@ -77,7 +78,7 @@ impl<DB: DatabaseRef> BaseEnv<DB> {
         // Shuffle and process calls
         self.rng.shuffle(self.call_queue.as_mut_slice());
         self.network
-            .process_calls(mem::take(&mut self.call_queue), self.step);
+            .process_transactions(mem::take(&mut self.call_queue), self.step);
         // Tick step
         self.step += 1;
     }
@@ -102,7 +103,7 @@ impl<DB: DatabaseRef> BaseEnv<DB> {
         snapshot::create_py_snapshot(py, &mut self.network)
     }
 
-    pub fn submit_call(
+    pub fn submit_transaction(
         &mut self,
         sender: PyAddress,
         transact_to: PyAddress,
@@ -110,7 +111,7 @@ impl<DB: DatabaseRef> BaseEnv<DB> {
         value: u128,
         checked: bool,
     ) {
-        self.call_queue.push(Call {
+        self.call_queue.push(Transaction {
             function_selector: encoded_args[..4].try_into().unwrap(),
             callee: Address::from_slice(&sender),
             transact_to: Address::from_slice(&transact_to),
@@ -118,6 +119,21 @@ impl<DB: DatabaseRef> BaseEnv<DB> {
             value: U256::try_from(value).unwrap(),
             checked,
         })
+    }
+
+    pub fn submit_transactions(
+        &mut self,
+        transactions: Vec<(PyAddress, PyAddress, Vec<u8>, u128, bool)>,
+    ) {
+        self.call_queue
+            .extend(transactions.into_iter().map(|x| Transaction {
+                function_selector: x.2[..4].try_into().unwrap(),
+                callee: Address::from_slice(&x.0),
+                transact_to: Address::from_slice(&x.1),
+                args: x.2,
+                value: U256::try_from(x.3).unwrap(),
+                checked: x.4,
+            }))
     }
 
     pub fn deploy_contract(&mut self, contract_name: &str, bytecode: Vec<u8>) -> Address {

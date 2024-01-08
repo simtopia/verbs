@@ -22,7 +22,7 @@ def test_sim_run(env, bytecode, constructor_args, test_abi):
                 network, self.address, self.contract, []
             )[0][0]
 
-            set_call = test_abi.setValue.get_call(
+            set_call = test_abi.setValue.transaction(
                 self.address, self.contract, [self.current + 1]
             )
 
