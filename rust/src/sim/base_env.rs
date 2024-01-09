@@ -24,8 +24,8 @@ pub struct BaseEnv<DB: DatabaseRef> {
 }
 
 impl BaseEnv<EmptyDB> {
-    pub fn new(seed: u64, admin_address: &str) -> Self {
-        let network = Network::<EmptyDB>::init(admin_address);
+    pub fn new(seed: u64) -> Self {
+        let network = Network::<EmptyDB>::init();
 
         BaseEnv {
             network,
@@ -38,7 +38,7 @@ impl BaseEnv<EmptyDB> {
     pub fn from_snapshot(seed: u64, snapshot: snapshot::PyDbState) -> Self {
         let block_env = snapshot::load_block_env(&snapshot);
 
-        let mut network = Network::<EmptyDB>::init(snapshot.0.as_str());
+        let mut network = Network::<EmptyDB>::init();
         network.evm.env.block = block_env;
 
         snapshot::load_snapshot(network.evm.db().unwrap(), snapshot);
@@ -52,13 +52,13 @@ impl BaseEnv<EmptyDB> {
 }
 
 impl BaseEnv<Backend> {
-    pub fn new(node_url: &str, seed: u64, block_number: u64, admin_address: &str) -> Self {
+    pub fn new(node_url: &str, seed: u64, block_number: u64) -> Self {
         let block_number = match block_number {
             0 => BlockNumber::Latest,
             n => BlockNumber::Number(n.into()),
         };
 
-        let network = Network::<Backend>::init(node_url, block_number, admin_address);
+        let network = Network::<Backend>::init(node_url, block_number);
         BaseEnv {
             network,
             call_queue: Vec::new(),
@@ -136,8 +136,14 @@ impl<DB: DatabaseRef> BaseEnv<DB> {
             }))
     }
 
-    pub fn deploy_contract(&mut self, contract_name: &str, bytecode: Vec<u8>) -> Address {
-        self.network.deploy_contract(contract_name, bytecode)
+    pub fn deploy_contract(
+        &mut self,
+        deployer: PyAddress,
+        contract_name: &str,
+        bytecode: Vec<u8>,
+    ) -> Address {
+        self.network
+            .deploy_contract(Address::from_slice(&deployer), contract_name, bytecode)
     }
 
     pub fn create_account(&mut self, address: PyAddress, start_balance: u128) {

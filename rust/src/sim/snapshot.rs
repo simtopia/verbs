@@ -26,8 +26,6 @@ pub type PyDbAccount<'a> = (PyAccountInfo<'a>, u8, Vec<(&'a PyBytes, &'a PyBytes
 pub type PyLog<'a> = (&'a PyBytes, Vec<&'a PyBytes>, &'a PyBytes);
 
 pub type PyDbState<'a> = (
-    // Admin Account Address
-    String,
     // EVM Block Env
     PyBlockEnv<'a>,
     // Accounts
@@ -63,8 +61,6 @@ pub fn create_py_snapshot<'a, D: DatabaseRef>(
     py: Python<'a>,
     network: &mut Network<D>,
 ) -> PyDbState<'a> {
-    let admin_address = network.admin_address.to_string();
-
     let block = network.evm.env.block.clone();
 
     let block_env = (
@@ -150,18 +146,11 @@ pub fn create_py_snapshot<'a, D: DatabaseRef>(
         })
         .collect();
 
-    (
-        admin_address,
-        block_env,
-        accounts,
-        contracts,
-        logs,
-        block_hashes,
-    )
+    (block_env, accounts, contracts, logs, block_hashes)
 }
 
 pub fn load_block_env(snapshot: &PyDbState) -> BlockEnv {
-    let block = snapshot.1;
+    let block = snapshot.0;
 
     BlockEnv {
         number: U256::from_le_slice(block.0.as_bytes()),
@@ -179,7 +168,7 @@ pub fn load_block_env(snapshot: &PyDbState) -> BlockEnv {
 }
 
 pub fn load_snapshot(db: &mut CacheDB<EmptyDB>, snapshot: PyDbState) {
-    for (k, v) in snapshot.2.into_iter() {
+    for (k, v) in snapshot.1.into_iter() {
         db.accounts.insert(
             Address::from_slice(k.as_bytes()),
             DbAccount {
@@ -207,14 +196,14 @@ pub fn load_snapshot(db: &mut CacheDB<EmptyDB>, snapshot: PyDbState) {
         );
     }
 
-    for (k, v) in snapshot.3.into_iter() {
+    for (k, v) in snapshot.2.into_iter() {
         db.contracts.insert(
             B256::from_slice(k.as_bytes()),
             Bytecode::new_raw(Bytes::copy_from_slice(v.as_bytes())),
         );
     }
 
-    for log in snapshot.4.into_iter() {
+    for log in snapshot.3.into_iter() {
         db.logs.push(Log {
             address: Address::from_slice(log.0.as_bytes()),
             topics: log
@@ -226,7 +215,7 @@ pub fn load_snapshot(db: &mut CacheDB<EmptyDB>, snapshot: PyDbState) {
         })
     }
 
-    for (k, v) in snapshot.5.into_iter() {
+    for (k, v) in snapshot.4.into_iter() {
         db.block_hashes.insert(
             U256::from_le_slice(k.as_bytes()),
             B256::from_slice(v.as_bytes()),

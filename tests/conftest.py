@@ -85,4 +85,4 @@ def constructor_args():
 
 @pytest.fixture
 def env():
-    return envs.EmptyEnv(1234, "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266")
+    return envs.EmptyEnv(1234)

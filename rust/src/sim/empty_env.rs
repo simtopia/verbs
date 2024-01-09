@@ -2,7 +2,7 @@ use super::snapshot::PyDbState;
 
 use super::base_env::BaseEnv;
 use super::snapshot;
-use crate::types::{address_to_py, PyAddress, PyEvent, PyExecutionResult, PyRevertError};
+use crate::types::{PyAddress, PyEvent, PyExecutionResult, PyRevertError};
 use pyo3::prelude::*;
 use pyo3::types::PyBytes;
 use revm::db::EmptyDB;
@@ -18,10 +18,10 @@ pub struct EmptyEnv(BaseEnv<EmptyDB>);
 #[pymethods]
 impl EmptyEnv {
     #[new]
-    pub fn new(seed: u64, admin_address: &str, snapshot: Option<PyDbState>) -> PyResult<Self> {
+    pub fn new(seed: u64, snapshot: Option<PyDbState>) -> PyResult<Self> {
         Ok(match snapshot {
             Some(s) => Self(BaseEnv::<EmptyDB>::from_snapshot(seed, s)),
-            None => Self(BaseEnv::<EmptyDB>::new(seed, admin_address)),
+            None => Self(BaseEnv::<EmptyDB>::new(seed)),
         })
     }
 
@@ -38,12 +38,6 @@ impl EmptyEnv {
     #[getter]
     fn get_step(&self) -> PyResult<usize> {
         Ok(self.0.step)
-    }
-
-    /// Admin account address
-    #[getter]
-    fn get_admin_address<'a>(&self, py: Python<'a>) -> &'a PyBytes {
-        address_to_py(py, self.0.network.admin_address)
     }
 
     /// Process the next block in the simulation
@@ -173,12 +167,15 @@ impl EmptyEnv {
     pub fn deploy_contract<'a>(
         &mut self,
         py: Python<'a>,
+        deployer: PyAddress,
         contract_name: &str,
         bytecode: Vec<u8>,
     ) -> PyResult<&'a PyBytes> {
         Ok(PyBytes::new(
             py,
-            self.0.deploy_contract(contract_name, bytecode).as_slice(),
+            self.0
+                .deploy_contract(deployer, contract_name, bytecode)
+                .as_slice(),
         ))
     }
 

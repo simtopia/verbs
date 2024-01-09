@@ -127,7 +127,7 @@ mod tests {
         };
 
         let mut rng = fastrand::Rng::with_seed(101);
-        let mut network = &mut Network::<EmptyDB>::init(Address::ZERO.to_string().as_str());
+        let mut network = &mut Network::<EmptyDB>::init();
 
         let calls = x.call_agents(&mut rng, &mut network);
 

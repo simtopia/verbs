@@ -47,12 +47,15 @@ class Agent:
 
 def run(n_steps):
 
-    net = verbs.envs.EmptyEnv(1234, "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266")
+    env = verbs.envs.EmptyEnv(1234)
+
+    admin = verbs.utils.int_to_address(99999999)
+    env.create_account(admin, int(1e19))
 
     erc20_abi = verbs.abi.get_abi("ERC20", erc20_contract.ERC20_ABI)
 
     erc20_address = erc20_abi.constructor.deploy(
-        net, erc20_contract.ERC20_BYTECODE, [int(1e19)]
+        env, admin, erc20_contract.ERC20_BYTECODE, [int(1e19)]
     )
 
     agents = [
@@ -60,13 +63,13 @@ def run(n_steps):
     ]
 
     erc20_abi.transfer.execute(
-        net,
-        net.admin_address,
+        env,
+        admin,
         erc20_address,
         [agents[0].address, int(1e19)],
     )
 
-    runner = verbs.sim.Sim(101, net, agents)
+    runner = verbs.sim.Sim(101, env, agents)
 
     results = runner.run(n_steps)
     return np.array(results)

@@ -1,6 +1,6 @@
 use super::base_env::BaseEnv;
 use super::snapshot;
-use crate::types::{address_to_py, PyAddress, PyEvent, PyExecutionResult, PyRevertError};
+use crate::types::{PyAddress, PyEvent, PyExecutionResult, PyRevertError};
 use fork_evm::Backend;
 use pyo3::prelude::*;
 use pyo3::types::PyBytes;
@@ -26,18 +26,8 @@ pub struct ForkEnv(BaseEnv<Backend>);
 #[pymethods]
 impl ForkEnv {
     #[new]
-    pub fn new(
-        node_url: &str,
-        seed: u64,
-        block_number: u64,
-        admin_address: &str,
-    ) -> PyResult<Self> {
-        Ok(Self(BaseEnv::<Backend>::new(
-            node_url,
-            seed,
-            block_number,
-            admin_address,
-        )))
+    pub fn new(node_url: &str, seed: u64, block_number: u64) -> PyResult<Self> {
+        Ok(Self(BaseEnv::<Backend>::new(node_url, seed, block_number)))
     }
 
     /// Export a snap shot of the EVM state and block parameters
@@ -53,12 +43,6 @@ impl ForkEnv {
     #[getter]
     fn get_step(&self) -> PyResult<usize> {
         Ok(self.0.step)
-    }
-
-    /// Admin account address
-    #[getter]
-    fn get_admin_address<'a>(&self, py: Python<'a>) -> PyResult<&'a PyBytes> {
-        Ok(address_to_py(py, self.0.network.admin_address))
     }
 
     /// Process the next block in the simulation
@@ -188,12 +172,15 @@ impl ForkEnv {
     pub fn deploy_contract<'a>(
         &mut self,
         py: Python<'a>,
+        deployer: PyAddress,
         contract_name: &str,
         bytecode: Vec<u8>,
     ) -> PyResult<&'a PyBytes> {
         Ok(PyBytes::new(
             py,
-            self.0.deploy_contract(contract_name, bytecode).as_slice(),
+            self.0
+                .deploy_contract(deployer, contract_name, bytecode)
+                .as_slice(),
         ))
     }
 

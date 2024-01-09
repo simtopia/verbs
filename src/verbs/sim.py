@@ -136,7 +136,6 @@ class Sim:
     @classmethod
     def new(
         seed: int,
-        admin_address: str,
         agents: typing.Optional[typing.List[typing.Any]] = None,
     ):
         """
@@ -150,10 +149,6 @@ class Sim:
         seed: int
             Random seed to initialise the simulation
             and key for use during execution.
-        admin_address: str
-            Hex string of the address to use as the admin address
-            of the network. An account will be initialised at
-            this address with a large supply of ETH.
         agents: typing.List[BaseAgent], optional
             List of agents to include in the simulation. Default
             value is an empty list, allowing agents to be pushed
@@ -164,7 +159,7 @@ class Sim:
         Sim
             Initialised empty simulation
         """
-        net = EmptyEnv(seed, admin_address)
+        net = EmptyEnv(seed)
         return Sim(seed, net, agents)
 
     @classmethod
@@ -172,7 +167,6 @@ class Sim:
         node_url: str,
         block_number: int,
         seed: int,
-        admin_address: str,
         agents: typing.Optional[typing.List[typing.Any]] = None,
     ):
         """
@@ -198,10 +192,6 @@ class Sim:
         seed: int
             Random seed to initialise the simulation
             and key for use during execution.
-        admin_address: str
-            Hex string of the address to use as the admin address
-            of the network. An account will be initialised at
-            this address with a large supply of ETH.
         agents: typing.List[BaseAgent], optional
             List of agents to include in the simulation. Default
             value is an empty list, allowing agents to be pushed
@@ -212,7 +202,7 @@ class Sim:
         Sim
             Initialised simulation with fork backend
         """
-        net = ForkEnv(node_url, seed, block_number, admin_address)
+        net = ForkEnv(node_url, seed, block_number)
         return Sim(seed, net, agents)
 
     def run(self, n_steps: int) -> typing.List[typing.List[typing.Any]]:
