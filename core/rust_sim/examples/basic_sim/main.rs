@@ -1,7 +1,7 @@
 mod ecr20;
 mod state;
 
-use alloy_primitives::U256;
+use alloy_primitives::{Address, Uint, U256};
 use rust_sim::agent::AgentVec;
 use rust_sim::network::Network;
 use rust_sim::sim_runner::run;
@@ -15,12 +15,15 @@ pub fn main() {
     let n_steps: usize = args[2].parse::<usize>().unwrap();
 
     let start_balance = 1000000000000u128;
-    let admin_address = "0x1000000000000000000000000000000000000000";
+    let admin_address = Address::from(Uint::from(999));
 
-    let mut sim = Network::from_range(start_balance, 1..n_users.try_into().unwrap(), admin_address);
+    let mut sim = Network::from_range(start_balance, 1..n_users.try_into().unwrap());
 
-    let token_address =
-        sim.deploy_contract("ECR20", utils::constructor_data(ecr20::BYTECODE, None));
+    let token_address = sim.deploy_contract(
+        admin_address,
+        "ECR20",
+        utils::constructor_data(ecr20::BYTECODE, None),
+    );
 
     let mut admin_agent = DummyAdminAgent {};
 

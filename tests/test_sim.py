@@ -31,7 +31,11 @@ def test_sim_run(env, bytecode, constructor_args, test_abi):
         def record(self):
             return self.current
 
-    address = env.deploy_contract("test_contract", bytecode + constructor_args)
+    # Add deployment account
+    admin = utils.int_to_address(99)
+    env.create_account(admin, int(1e19))
+
+    address = env.deploy_contract(admin, "test_contract", bytecode + constructor_args)
 
     agent = Agent(1, address)
 

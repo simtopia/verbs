@@ -131,13 +131,15 @@ class Constructor:
         """
         return eth_abi.encode(self.inputs, args)
 
-    def deploy(self, net, bytecode: str, args: typing.List = None) -> bytes:
+    def deploy(
+        self, env, deployer: bytes, bytecode: str, args: typing.List = None
+    ) -> bytes:
         """
         Deploy a contract
 
         Parameters
         ----------
-        net
+        env
             Simulation environment
         bytecode: str
             Contract bytecode hex string
@@ -148,8 +150,8 @@ class Constructor:
             args = []
 
         encoded_args = self.encode(args)
-        deploy_address = net.deploy_contract(
-            self.name, utils.hex_to_bytes(bytecode) + encoded_args
+        deploy_address = env.deploy_contract(
+            deployer, self.name, utils.hex_to_bytes(bytecode) + encoded_args
         )
 
         return deploy_address

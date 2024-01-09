@@ -32,12 +32,16 @@ def test_batch_runner(bytecode, constructor_args, test_abi):
             return self.current
 
     def init_func(_bytecode, _constructor_args):
-        env = envs.EmptyEnv(1234, "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266")
-        address = env.deploy_contract("test_contract", _bytecode + _constructor_args)
+        env = envs.EmptyEnv(1234)
+        admin = utils.int_to_address(99)
+        env.create_account(admin, int(1e19))
+        address = env.deploy_contract(
+            admin, "test_contract", _bytecode + _constructor_args
+        )
         return env.export_snapshot(), address
 
     def exec_func(snapshot, n_steps, seed, contract_address):
-        env = envs.EmptyEnv(seed, "", snapshot)
+        env = envs.EmptyEnv(seed, snapshot)
         agent = Agent(1, contract_address)
         sim_runner = sim.Sim(seed, env, [agent])
         results = sim_runner.run(n_steps)

@@ -146,7 +146,7 @@ mod tests {
 
     #[fixture]
     fn network() -> Network<EmptyDB> {
-        Network::<EmptyDB>::init(Address::from(Uint::from(999)).to_string().as_str())
+        Network::<EmptyDB>::init()
     }
 
     #[fixture]

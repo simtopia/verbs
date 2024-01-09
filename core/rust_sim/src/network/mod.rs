@@ -1,6 +1,6 @@
 mod utils;
 use crate::contract::{Event, Transaction};
-use crate::utils::{address_from_hex, Eth};
+use crate::utils::Eth;
 use alloy_primitives::{Address, Uint, B256, U256};
 use alloy_sol_types::SolCall;
 use anyhow::{anyhow, Result};
@@ -18,7 +18,6 @@ pub use utils::{create_call, decode_event, process_events, RevertError};
 
 pub struct Network<D: DatabaseRef> {
     pub evm: EVM<CacheDB<D>>,
-    pub admin_address: Address,
     pub last_events: Vec<Event>,
     pub event_history: Vec<Event>,
 }
@@ -49,7 +48,7 @@ impl<D: DatabaseRef> CallEVM for EVM<CacheDB<D>> {
 }
 
 impl Network<Backend> {
-    pub fn init(node_url: &str, block_number: BlockNumber, admin_address: &str) -> Self {
+    pub fn init(node_url: &str, block_number: BlockNumber) -> Self {
         let provider = ProviderBuilder::new(node_url).build().unwrap();
 
         let rt = tokio::runtime::Builder::new_current_thread()
@@ -89,11 +88,8 @@ impl Network<Backend> {
             None => U256::ZERO,
         };
 
-        let admin_address = address_from_hex(admin_address);
-
         Self {
             evm,
-            admin_address,
             last_events: Vec::new(),
             event_history: Vec::new(),
         }
@@ -101,8 +97,7 @@ impl Network<Backend> {
 }
 
 impl Network<EmptyDB> {
-    pub fn init(admin_address: &str) -> Self {
-        let admin_address = address_from_hex(admin_address);
+    pub fn init() -> Self {
         let mut evm = EVM::new();
         let db = CacheDB::new(EmptyDB::default());
 
@@ -115,19 +110,17 @@ impl Network<EmptyDB> {
 
         let mut network = Self {
             evm,
-            admin_address,
             last_events: Vec::new(),
             event_history: Vec::new(),
         };
 
-        network.insert_account(admin_address, start_balance);
         network.insert_account(Address::ZERO, start_balance);
 
         network
     }
 
-    pub fn from_range(start_balance: u128, r: Range<u64>, admin_address: &str) -> Self {
-        let mut network = Network::<EmptyDB>::init(admin_address);
+    pub fn from_range(start_balance: u128, r: Range<u64>) -> Self {
+        let mut network = Network::<EmptyDB>::init();
         let start_balance = U256::from(start_balance);
 
         for n in r {
@@ -137,12 +130,8 @@ impl Network<EmptyDB> {
         network
     }
 
-    pub fn from_agents(
-        start_balance: u128,
-        agent_addresses: Vec<Address>,
-        admin_address: &str,
-    ) -> Self {
-        let mut network = Network::<EmptyDB>::init(admin_address);
+    pub fn from_agents(start_balance: u128, agent_addresses: Vec<Address>) -> Self {
+        let mut network = Network::<EmptyDB>::init();
         network.insert_agents(start_balance, agent_addresses);
         network
     }
@@ -163,8 +152,13 @@ impl<D: DatabaseRef> Network<D> {
         }
     }
 
-    pub fn deploy_contract(&mut self, contract_name: &str, data: Vec<u8>) -> Address {
-        let tx = utils::init_create_transaction(self.admin_address, data);
+    pub fn deploy_contract(
+        &mut self,
+        deployer: Address,
+        contract_name: &str,
+        data: Vec<u8>,
+    ) -> Address {
+        let tx = utils::init_create_transaction(deployer, data);
         let result = self.evm.execute(tx);
         let output = utils::deployment_output(contract_name, result);
         let deploy_address = match output {
@@ -333,9 +327,8 @@ mod tests {
     );
 
     #[fixture]
-    fn deployment() -> (Network<EmptyDB>, Address) {
-        let mut network =
-            Network::<EmptyDB>::init(Address::from(Uint::from(999)).to_string().as_str());
+    fn deployment() -> (Network<EmptyDB>, Address, Address) {
+        let mut network = Network::<EmptyDB>::init();
 
         let constructor_args = <i128>::abi_encode(&101);
         let bytecode_hex = "608060405234801561001057600080fd5b50\
@@ -357,20 +350,23 @@ mod tests {
         9f1c4e30ebbb603943f8e1e44a3b4c0c10c3ea53799a236d64736f6c634300\
         080a0033";
 
+        let user_address = Address::from(Uint::from(999));
+        network.insert_account(user_address, Eth::to_weth(100));
+
         let mut bytecode: Vec<u8> = utils::data_bytes_from_hex(bytecode_hex);
         bytecode.extend(constructor_args);
-        let contract_address = network.deploy_contract("test", bytecode);
+        let contract_address = network.deploy_contract(user_address, "test", bytecode);
 
-        (network, contract_address)
+        (network, contract_address, user_address)
     }
 
     #[rstest]
-    fn direct_execute_and_call(deployment: (Network<EmptyDB>, Address)) {
-        let (mut network, contract_address) = deployment;
+    fn direct_execute_and_call(deployment: (Network<EmptyDB>, Address, Address)) {
+        let (mut network, contract_address, user_address) = deployment;
 
         let (v, _) = network
             .direct_call(
-                network.admin_address,
+                user_address,
                 contract_address,
                 TestContract::getValueCall {},
                 U256::ZERO,
@@ -381,7 +377,7 @@ mod tests {
 
         let _ = network
             .direct_execute(
-                network.admin_address,
+                user_address,
                 contract_address,
                 TestContract::setValueCall { x: Signed::ONE },
                 U256::ZERO,
@@ -390,7 +386,7 @@ mod tests {
 
         let (v, _) = network
             .direct_call(
-                network.admin_address,
+                user_address,
                 contract_address,
                 TestContract::getValueCall {},
                 U256::ZERO,
@@ -401,13 +397,13 @@ mod tests {
     }
 
     #[rstest]
-    fn processing_calls(deployment: (Network<EmptyDB>, Address)) {
-        let (mut network, contract_address) = deployment;
+    fn processing_calls(deployment: (Network<EmptyDB>, Address, Address)) {
+        let (mut network, contract_address, user_address) = deployment;
 
         let calls = vec![
             Transaction {
                 function_selector: TestContract::setValueCall::SELECTOR,
-                callee: network.admin_address,
+                callee: user_address,
                 transact_to: contract_address,
                 args: TestContract::setValueCall {
                     x: Signed::try_from_be_slice(&202u128.to_be_bytes()).unwrap(),
@@ -418,7 +414,7 @@ mod tests {
             },
             Transaction {
                 function_selector: TestContract::setValueCall::SELECTOR,
-                callee: network.admin_address,
+                callee: user_address,
                 transact_to: contract_address,
                 args: TestContract::setValueCall {
                     x: Signed::try_from_be_slice(&303u128.to_be_bytes()).unwrap(),
@@ -433,7 +429,7 @@ mod tests {
 
         let (v, _) = network
             .direct_call(
-                network.admin_address,
+                user_address,
                 contract_address,
                 TestContract::getValueCall {},
                 U256::ZERO,

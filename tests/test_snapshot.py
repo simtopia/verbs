@@ -31,7 +31,10 @@ def test_snapshot_is_consistent(env, bytecode, constructor_args, test_abi):
         def record(self):
             return self.current
 
-    address = env.deploy_contract("test_contract", bytecode + constructor_args)
+    admin = utils.int_to_address(99)
+    env.create_account(admin, int(1e19))
+
+    address = env.deploy_contract(admin, "test_contract", bytecode + constructor_args)
 
     agent = Agent(1, address)
 
@@ -41,19 +44,18 @@ def test_snapshot_is_consistent(env, bytecode, constructor_args, test_abi):
 
     snapshot = env.export_snapshot()
 
-    env_from_snapshot = envs.EmptyEnv(101, "", snapshot)
+    env_from_snapshot = envs.EmptyEnv(101, snapshot)
     new_snapshot = env_from_snapshot.export_snapshot()
 
     assert snapshot[0] == new_snapshot[0]
-    assert snapshot[1] == new_snapshot[1]
 
+    assert sorted(snapshot[1], key=lambda x: x[0]) == sorted(
+        new_snapshot[1], key=lambda x: x[0]
+    )
     assert sorted(snapshot[2], key=lambda x: x[0]) == sorted(
         new_snapshot[2], key=lambda x: x[0]
     )
-    assert sorted(snapshot[3], key=lambda x: x[0]) == sorted(
-        new_snapshot[3], key=lambda x: x[0]
-    )
-    assert snapshot[4] == new_snapshot[4]
-    assert sorted(snapshot[5], key=lambda x: x[0]) == sorted(
-        new_snapshot[5], key=lambda x: x[0]
+    assert snapshot[3] == new_snapshot[3]
+    assert sorted(snapshot[4], key=lambda x: x[0]) == sorted(
+        new_snapshot[4], key=lambda x: x[0]
     )

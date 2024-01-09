@@ -47,18 +47,23 @@ class Agent:
 
 
 def init_func(*, bytecode, constructor_args):
-    net = verbs.envs.EmptyEnv(1234, "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266")
+    env = verbs.envs.EmptyEnv(1234)
+
+    admin = verbs.utils.int_to_address(99999999)
+    env.create_account(admin, int(1e19))
 
     erc20_abi = verbs.abi.get_abi("ERC20", erc20_contract.ERC20_ABI)
     erc20_address = erc20_abi.constructor.deploy(
-        net, erc20_contract.ERC20_BYTECODE, [int(1e19)]
+        env, admin, erc20_contract.ERC20_BYTECODE, [int(1e19)]
     )
 
-    return net.export_snapshot(), erc20_address
+    return env.export_snapshot(), (erc20_address, admin)
 
 
-def exec_func(snapshot, n_steps, seed, erc20_address, *, activation_rate):
-    env = verbs.envs.EmptyEnv(seed, "", snapshot)
+def exec_func(snapshot, n_steps, seed, addresses, *, activation_rate):
+    erc20_address, admin = addresses
+
+    env = verbs.envs.EmptyEnv(seed, snapshot)
     erc20_abi = verbs.abi.get_abi("ERC20", erc20_contract.ERC20_ABI)
 
     agents = [
@@ -68,7 +73,7 @@ def exec_func(snapshot, n_steps, seed, erc20_address, *, activation_rate):
 
     erc20_abi.transfer.execute(
         env,
-        env.admin_address,
+        admin,
         erc20_address,
         [agents[0].address, int(1e19)],
     )
