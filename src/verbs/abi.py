@@ -6,6 +6,10 @@ for encoding/decoding function arguments and events
 and generating calls to submit to the simulation
 EVM.
 
+The generated type has attributes representing the
+functions and events of the abi, along with a constructor
+attribute for use when deploying a contract.
+
 Examples
 --------
 
@@ -37,15 +41,20 @@ Examples
     ]
 
     Abi = get_abi("Foo", abi_json)
+
+    # Encode arguments & selector to bytes
     encoded_args = Abi.foo.encode([10])
-    ...
+    # Decode bytes returned from a contract function call
+    decoded_result = Abi.foo.decode(result_bytes)
+    # Decode data attached to an event/log
     decoded_event = Abi.bar.decode(event_data)
 
 Notes
 -----
+
 Overloaded functions (i.e. those with the same name) are mapped
 to attributes with numbered suffixes according to their order
-in the ABI, e.g. if the ABI contained two functions ``foo``
+in the ABI, e.g. if the ABI contained two functions named ``foo``
 the resulting type will have ``foo0`` and ``foo1`` attributes.
 """
 import json
@@ -59,17 +68,17 @@ from verbs import types, utils
 
 def parse_input_types(abi: typing.Dict) -> typing.List[str]:
     """
-    Parses function / event input types necessary for encoding.
+    Parses function / event input types necessary for encoding
 
     Parameters
     ----------
     abi: typing.Dict
-        Parsed ABI JSON of the function or the event
+        Parsed ABI JSON of the function or the event.
 
     Returns
     -------
     inputs: typing.List[str]
-        list with the input types
+        list with the input types.
     """
 
     def tuple_parser(x: typing.List[str]):
@@ -101,12 +110,12 @@ class Constructor:
 
     Class representing contracts constructor with
     functionality to encode arguments and to deploy
-    the function.
+    the contract.
 
     Parameters
     ----------
     name: str
-        ABI name (used for debugging/logging)
+        ABI name (used for debugging/logging).
     abi: typing.Dict
         Parsed ABI JSON of the constructor.
     """
@@ -139,12 +148,17 @@ class Constructor:
 
         Parameters
         ----------
-        env
-            Simulation environment
+        env: verbs.types.Env
+            Simulation environment.
         bytecode: str
-            Contract bytecode hex string
+            Contract bytecode hex string.
         args: List[Any], optional
             Optional list of constructor argument values
+
+        Returns
+        -------
+        bytes
+            Address the contract was deployed to.
         """
         if args is None:
             args = []
@@ -195,6 +209,9 @@ class Function:
 
        f = Function(f_abi)
        encoded_args = f.encode([10])
+       result = f.call(
+           env, sender_address, contract_address, args
+       )
     """
 
     def __init__(self, abi: typing.Dict):
@@ -261,8 +278,8 @@ class Function:
 
         Returns
         -------
-        types.Call
-            Call that can be submitted to the simulation
+        verbs.types.Transaction
+            Transaction that can be submitted to the simulation
             for execution in the next block.
         """
         encoded_args = self.encode(args)
@@ -270,7 +287,7 @@ class Function:
 
     def call(
         self,
-        env,
+        env: types.Env,
         sender: bytes,
         address: bytes,
         args: typing.List[typing.Any],
@@ -281,7 +298,7 @@ class Function:
 
         Parameters
         ----------
-        env
+        env: verbs.types.Env
             Simulation environment.
         sender: bytes
             Address of the caller.
@@ -319,7 +336,7 @@ class Function:
 
         Parameters
         ----------
-        env
+        env: verbs.types.Env
             Simulation environment.
         sender: bytes
             Address of the caller.
@@ -355,12 +372,12 @@ class Event:
     Parameters
     ----------
     abi: typing.Dict
-        Parsed ABI JSON of the event
+        Parsed ABI JSON of the event.
 
     Attributes
     ----------
     inputs: typing.List[str]
-        List of event input types
+        List of event input types.
     """
 
     def __init__(self, abi: typing.Dict):
@@ -387,8 +404,9 @@ def get_abi(name: str, abi: typing.List[typing.Dict]) -> type:
     """
     Create an ABI type from ABI JSON
 
-    Create a new ``type`` from parse ABI JSON with attributes
-    for the contracts functions and events.
+    Create a new ``type`` from parsed ABI JSON with attributes
+    for the contracts functions and events and a ``constructor``
+    attribute used for contract deployment.
 
     Parameters
     ----------
