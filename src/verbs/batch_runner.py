@@ -44,7 +44,8 @@ class BatchRunner:
                ...
 
         where ``Snapshot`` is the data returned from the
-        ``export_snapshot`` method of the sim-environment.
+        :py:meth:`verbs.envs.ForkEnv.export_snapshot`
+        method of the sim-environment.
 
     exec_func: typing.Callable
         Simulation execution function, should have the
