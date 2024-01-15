@@ -17,6 +17,10 @@ def test_abi_init(test_abi):
 
     assert decoded_event == (10, 10)
 
+    inputs = a.LiquidationCall.inputs
+
+    assert inputs == ["uint256", "uint256", "address", "bool"]
+
 
 def test_abi_from_file():
     a = abi.load_abi("tests/test.abi")
