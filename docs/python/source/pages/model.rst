@@ -6,7 +6,7 @@ Model Mechanics
 
    The mechanics of the ABM presented here are
    the intended usage of VERBS, but the intention
-   is that it also offers tools that allow users
+   is that it offers tools that allow users
    the flexibility to implement different
    model types and approaches.
 
@@ -48,7 +48,7 @@ Agents can implement the base class :py:class:`verbs.sim.BaseAgent`
 but otherwise should implement :py:meth:`verbs.sim.BaseAgent.update`
 and :py:meth:`verbs.sim.BaseAgent.record`.
 
-The :py:meth:`verbs.sim.BaseAgent.update` method should take
+The :py:meth:`verbs.sim.BaseAgent.update` method should take a
 Numpy random generator and simulation environment arguments
 and return a list of transactions to submit to the next block.
 

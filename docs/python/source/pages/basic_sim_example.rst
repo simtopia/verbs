@@ -25,7 +25,7 @@ available.
 
 We initialise the agent with
 
-* It's own address (converted from an integer)
+* Its own address (converted from an integer)
 * The address of the token
 * The token abi class
 * The number of the agents in the sim
@@ -61,7 +61,7 @@ In this example the agent performs 2 steps
   a randomly selected agent.
 
 The ``update`` method returns a list of calls to process as part of the
-next block, in this case returning a token transfer call.
+next block, in this case returning a token transfer transaction.
 
 .. caution::
 
@@ -78,7 +78,7 @@ This looks like:
        def update(
            self,
            rng: np.random.Generator,
-           network,
+           env,
        ):
            self.balance = self.abi.balanceOf.call(
                network, self.address, self.token_contract, [self.address]
@@ -88,11 +88,11 @@ This looks like:
                receiver = rng.choice(self.n_agents) + 100
                receiver = verbs.utils.int_to_address(receiver)
                amount = min(self.balance, 100_000)
-               send_call = self.abi.transfer.get_call(
+               send_transaction = self.abi.transfer.transaction(
                    self.address, self.token_contract, [receiver, amount]
                )
 
-           return [send_call]
+           return [send_transaction]
 
        else:
            return []
@@ -111,25 +111,29 @@ are collected across the agents at each step.
 
    An agent does not necessarily have to represent a single entity in a
    simulation, but could also represent a group of agents of the same
-   type. In this case the agent can submit multiple calls from it's
+   type. In this case the agent can submit multiple calls from its
    update function from the multiple agents it represents.
 
 Initialise Simulation
 ---------------------
 
-We first initialise the network/EVM, and deploy the token contract (the
-token ABI and bytecode have been omitted for brevity)
+We first initialise the simulation environment, and deploy the token
+contract (the token ABI and bytecode have been omitted for brevity)
 
 .. code-block:: python
 
-   net = verbs.EmptyEnv(1234, "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266")
+   env = verbs.EmptyEnv(1234)
 
    erc20_abi = verbs.abi.get_abi("ERC20", ERC20_ABI)
-   erc20_address = erc20_abi.constructor.deploy(net, ERC20_BYTECODE, [int(1e19)])
+
+   admin = verbs.utils.int_to_address(99999999)
+   env.create_account(admin, int(1e19))
+
+   erc20_address = erc20_abi.constructor.deploy(env, admin, ERC20_BYTECODE, [int(1e19)])
 
 The constructor :code:`verbs.EmptyEnv` initialises an empty EVM with the seed
-``1234`` and admin address. The token is initialise with an initial allotment
-of ``1e19`` wei (minted to the admin address that deploys the contract).
+``1234``. We also create an admin account that will deploy the contract. The token is
+initialise with an initial allotment of ``1e19`` wei (minted to the admin address).
 
 Initialise Agents
 -----------------
@@ -143,8 +147,8 @@ We initialise a set of agents with the token address and token ABI
     ]
 
     erc20_abi.transfer.execute(
-        net,
-        net.admin_address,
+        env,
+        admin,
         erc20_address,
         [agents[0].address, int(1e19)],
     )
@@ -155,11 +159,11 @@ newly minted tokens from the admin agent to the first agent in the set.
 Run the Simulation
 ------------------
 
-The network and agents are wrapped in a :py:class:`verbs.sim.Sim`
+The environment and agents are wrapped in a :py:class:`verbs.sim.Sim`
 
 .. code-block:: python
 
-   runner = verbs.sim.Sim(101, net, agents)
+   runner = verbs.sim.Sim(101, env, agents)
 
 and then we can run the simulation
 

@@ -13,7 +13,7 @@ directly interact with the EVM.
 ABI Type
 ========
 
-For example given parsed ABI JSON
+For example given a parsed ABI JSON Python object
 
 .. code-block:: python
 
@@ -66,13 +66,13 @@ and to directly interact with the EVM (encoding and decoding data)
 .. code-block:: python
 
    # Transaction submitted by agent inside a simulation step
-   call = Abi.foo.get_call(sender, address, [1, 2, 3])
+   transaction = Abi.foo.transaction(sender, address, [1, 2, 3])
    # Directly call the EVM (without committing) and decode result
    result = Abi.foo.call(env, sender, address, [1, 2, 3])
    # Directly call the EVM (and commit results) and decode result
    result = Abi.foo.execute(env, sender, address, [1, 2, 3])
 
-The ABI type also defines a constructor attributes that aids
+The ABI type also defines a constructor attribute that aids
 deploying contracts
 
 .. code-block:: python
