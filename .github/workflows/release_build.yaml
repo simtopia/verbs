@@ -23,8 +23,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # aarch64 fails?
-        target: [x86_64, x86, armv7, s390x, ppc64le]
+        # aarch64 and ppc64le fail?
+        target: [x86_64, x86, armv7, s390x]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
