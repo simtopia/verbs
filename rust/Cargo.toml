@@ -6,6 +6,7 @@ edition = "2021"
 [lib]
 name = "verbs"
 crate-type = ["cdylib", "rlib"]
+doctest = false
 
 [dependencies]
 revm.workspace = true

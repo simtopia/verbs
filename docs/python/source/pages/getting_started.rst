@@ -47,3 +47,22 @@ can run
    hatch run notebook:jupyter
 
 which will build the package and start a jupyter server.
+
+Github Dependency
+-----------------
+
+Verbs can be added as a github dependency in the `pyproject.toml
+
+.. code-block::
+
+   dependencies = [
+   "verbs@git+ssh://git@github.com/simtopia/rusty_venture.git"
+   ]
+
+but also requires that maturin is added as a build backend
+
+.. code-block::
+
+   [build-system]
+   requires = ["maturin>=1.2, <2.0"]
+   build-backend = "maturin"

@@ -16,9 +16,7 @@ an empty EVM state, or forked from a remote endpoint.
 
 .. code-block:: python
 
-   env = verbs.envs.EmptyEnv(
-       1234, "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
-   )
+   env = verbs.envs.EmptyEnv(1234)
 
 will initialise an environment class with an empty EVM state
 (i.e. with no accounts or contracts) and random
@@ -26,9 +24,7 @@ seed ``1234``. Likewise
 
 .. code-block:: python
 
-   env = verbs.envs.ForkEnv(
-       url, 1234, 1000, "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
-   )
+   env = verbs.envs.ForkEnv(url, 1234, 1000)
 
 will create an environment with a fork backend, with
 random seed `1234` and from block number `1000`. This
@@ -37,6 +33,19 @@ from the remote endpoint, and so can be used
 to run a simulation from an existing deployment, e.g.
 a calling a contract will fetch the contract code and
 any required storage values from the remote.
+
+Finally an in memory environment can be initialised
+from a snapshot of another environment
+
+.. code-block:: python
+
+   env = verbs.envs.EmptyEnv(1234)
+
+   # Deploy contracts etc.
+   ...
+
+   snapshot = env.export_snapshot()
+   new_env = verbs.envs.EmptyEnv(1234, snapshot)
 
 .. warning::
 
@@ -54,7 +63,7 @@ Both classes provide a common interface to allow Python
 to interact with and retrieve data from the Rust environment.
 
 * Deploy contracts and user accounts
-* Directly call end execute contracts
+* Directly call end execute contract functions
 * Submit transactions to be processed in the next block
 * Process the next simulated block
 * Retrieve logs/events generated in the last block and

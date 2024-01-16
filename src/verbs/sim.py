@@ -28,8 +28,9 @@ class BaseAgent:
     .. note::
 
        Creating an agent does not automatically create a corresponding
-       account im the EVM, this should be created using the ``deploy``
-       method, or :py:meth:`verbs.envs.EmptyEnv.create_account`.
+       account im the EVM, this should be created using the
+       :py:meth:`verbs.sim.BaseAgent.deploy` method, or
+       :py:meth:`verbs.envs.EmptyEnv.create_account`.
     """
 
     def deploy(self, env: Env, address: bytes, eth: int):
@@ -41,24 +42,24 @@ class BaseAgent:
 
         Parameters
         ----------
-        env: Env
+        env: verbs.types.Env
             Simulation environment.
         address: bytes
-            Address of the agent/account
+            Address of the agent/account.
         eth: int
-            initial Eth to assign to this account (in units of wei)
+            Initial Eth to assign to this account (in units of wei).
         """
         self.address = address
         env.create_account(address, eth)
 
-    def update(self, rng: np.random.Generator, network) -> typing.List[Transaction]:
+    def update(self, rng: np.random.Generator, env: Env) -> typing.List[Transaction]:
         """
         Update the state of the agent each step
 
         This method should **not** directly update the state
         of the EVM, and changes should be performed by returning
-        a list of :class:`verbs.types.Transaction`. This method can however call the
-        EVM without committing changes to the EVM, for example
+        a list of :class:`verbs.types.Transaction`. This method can however
+        call the EVM without committing changes to the EVM, for example
         to retrieve data from contracts.
 
         Parameters
@@ -66,7 +67,7 @@ class BaseAgent:
         rng: numpy.random.Generator
             Numpy random generator, should be used for any random
             sampling to ensure determinism of the simulation.
-        network
+        env: verbs.types.Env
             Network/EVM that the simulation interacts with.
 
         Returns
@@ -98,9 +99,9 @@ class Sim:
     """
     Simulation state and execution class
 
-    This class wraps the network, agents and seeded
+    This class wraps the environment, agents and seeded
     random number generation. A sim can be initialised
-    from either an empty network (i.e one with no deployed
+    from either an empty environment (i.e one with no deployed
     contracts/accounts) of from a backend that fetches
     data from a remote fork.
     """
@@ -108,7 +109,7 @@ class Sim:
     def __init__(
         self,
         seed: int,
-        network,
+        env: Env,
         agents: typing.Optional[BaseAgent] = None,
     ):
         """
@@ -124,7 +125,7 @@ class Sim:
             value is an empty list, allowing agents to be pushed
             after the simulation is initialised.
         """
-        self.network = network
+        self.env = env
 
         if agents is None:
             self.agents = list()
@@ -142,7 +143,7 @@ class Sim:
         Initialise a simulation with an empty environment
 
         Initialise a simulation, initialising a fresh environment
-        (i.e. one that contains no accounts, contracts etc.)
+        (i.e. one that contains no accounts, contracts etc.).
 
         Parameters
         ----------
@@ -157,10 +158,10 @@ class Sim:
         Returns
         -------
         Sim
-            Initialised empty simulation
+            Initialised empty simulation.
         """
-        net = EmptyEnv(seed)
-        return Sim(seed, net, agents)
+        env = EmptyEnv(seed)
+        return Sim(seed, env, agents)
 
     @classmethod
     def fork(
@@ -172,7 +173,7 @@ class Sim:
         """
         Initialise a simulation from a fork
 
-        Initialise a simulation, initialising a network using a forked
+        Initialise a simulation, initialising an environment using a forked
         backend. This backend can be used to fetch database values
         from a remote fork of the network state.
 
@@ -200,10 +201,10 @@ class Sim:
         Returns
         -------
         Sim
-            Initialised simulation with fork backend
+            Initialised simulation with fork backend.
         """
-        net = ForkEnv(node_url, seed, block_number)
-        return Sim(seed, net, agents)
+        env = ForkEnv(node_url, seed, block_number)
+        return Sim(seed, env, agents)
 
     def run(self, n_steps: int) -> typing.List[typing.List[typing.Any]]:
         """
@@ -234,10 +235,10 @@ class Sim:
         for _ in trange(n_steps):
 
             for agent in self.agents:
-                calls = agent.update(self.rng, self.network)
-                self.network.submit_transactions(calls)
+                calls = agent.update(self.rng, self.env)
+                self.env.submit_transactions(calls)
 
-            self.network.process_block()
+            self.env.process_block()
 
             agent_records = [agent.record() for agent in self.agents]
             records.append(agent_records)

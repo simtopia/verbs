@@ -20,27 +20,29 @@ From the previous example we might define an initialisation function
 .. code-block:: python
 
    def init_func(*, bytecode, constructor_args):
-        net = verbs.EmptyEnv(1234, "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266")
+        env = verbs.EmptyEnv(1234)
 
         erc20_abi = verbs.abi.get_abi("ERC20", ERC20_ABI)
         erc20_address = erc20_abi.constructor.deploy(
-            net, ERC20_BYTECODE, constructor_args
+            env, ERC20_BYTECODE, constructor_args
         )
+        admin = verbs.utils.int_to_address(99999999)
 
-        return net.export_snapshot(), erc20_address
+        return env.export_snapshot(), (erc20_address, admin)
 
-that initialises an empty environment and deploys a contract, and returns
-the snapshot and the address of the deployed contract. The initialisation
-function can have arbitrary positional and keyword arguments and should return
-a tuple containing the initial snapshot and any data that should be passed to the
-execution function.
+that initialises an empty environment and deploys a contract and admin account, and
+returns the snapshot and the addresses of the deployed contract and admin. The
+initialisation function can have arbitrary positional and keyword arguments and should
+return a tuple containing the initial snapshot and any data that should be passed
+to the execution function.
 
 The execution function could then be defined as
 
 .. code-block:: python
 
-    def exec_func(snapshot, n_steps, seed, erc20_address, *, activation_rate):
-        env = envs.EmptyEnv(seed, "", snapshot)
+    def exec_func(snapshot, n_steps, seed, addresses, *, activation_rate):
+        erc20_address, admin_address = addresses
+        env = envs.EmptyEnv(seed, snapshot)
         erc20_abi = verbs.abi.get_abi("ERC20", ERC20_ABI)
 
         agents = [
@@ -49,13 +51,13 @@ The execution function could then be defined as
         ]
 
         erc20_abi.transfer.execute(
-            net,
-            net.admin_address,
+            env,
+            admin_address,
             erc20_address,
             [agents[0].address, int(1e19)],
         )
 
-        runner = verbs.sim.Sim(101, net, agents)
+        runner = verbs.sim.Sim(101, env, agents)
         results = runner.run(n_steps)
         return results
 
