@@ -97,10 +97,12 @@ def parse_input_types(abi: typing.Dict) -> typing.List[str]:
 
     inputs = []
     for x in abi["inputs"]:
-        if x["type"] == "tuple":
-            inputs.append(tuple_parser(x["components"]))
-        else:
-            inputs.append(x["type"])
+        indexed = x.get("indexed", False)
+        if not indexed:
+            if x["type"] == "tuple":
+                inputs.append(tuple_parser(x["components"]))
+            else:
+                inputs.append(x["type"])
     return inputs
 
 

@@ -46,6 +46,12 @@ def test_abi():
             "anonymous": False,
             "inputs": [
                 {
+                    "indexed": True,
+                    "internalType": "address",
+                    "name": "by",
+                    "type": "address",
+                },
+                {
                     "indexed": False,
                     "internalType": "int256",
                     "name": "old_value",
