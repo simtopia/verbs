@@ -14,6 +14,7 @@ requires-python = ">=3.8"
 keywords = []
 authors = [
   { name = "Jordan", email = "jordan@simtopia.ai" },
+  { name = "Marc", email = "marc@simtopia.ai"}
 ]
 classifiers = [
   "Programming Language :: Python",
