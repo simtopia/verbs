@@ -5,6 +5,7 @@ import typing
 
 import eth_abi
 import eth_utils
+from solcx import compile_files, install_solc
 
 
 def encode_args(
@@ -93,3 +94,35 @@ def int_to_address(i: int) -> bytes:
 
     """
     return i.to_bytes(20, "big")
+
+
+def process_contract(contract_path: str, solc_version: str) -> typing.List[typing.Dict]:
+    """
+    Compile a solidity contract and return its abi and bytecode
+
+    Parameters
+    ----------
+    contract_path: str
+        Path to solidity contract.
+    solc_version: str
+        Solidity version used for compilation.
+
+    Returns
+    -------
+    typing.List[typing.Dict]
+        List of dictionary containing the contract name,
+        abi JSON and bytecode hex string.
+    """
+    install_solc(version=solc_version)
+
+    compiled_sol = compile_files(
+        [contract_path],
+        output_values=["abi", "bin"],
+        solc_version=solc_version,
+        allow_paths="../",
+    )
+
+    return [
+        dict(name=k.split(":")[-1], abi=v["abi"], bin=v["bin"])
+        for k, v in compiled_sol.items()
+    ]
