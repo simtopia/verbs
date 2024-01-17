@@ -1,97 +1,54 @@
-# Rust Ethereum ABM
+# VERBS
 
-Built around [Rust Ethereum Virtual Machine](https://github.com/bluealloy/revm)
+Python ABM library built around Rust backend.
 
-> :warning: There is a [bug in alloy](https://github.com/alloy-rs/core/issues/204) that
-> means vector return values are not processed correctly. You should uncomment
-> the lines in [Cargo.toml](./Cargo.toml#L34) that patch a version that correctly
-> parses vector arguments.
+## Getting Started
 
-## Rust Examples
+### Building from Source
 
-Examples can be run using cargo.
+Building VERBS requires [maturin to be installed](https://www.maturin.rs/installation).
 
-- Basic sim demonstrating agents moving around an ERC20 token
+> :warning: On OSX `patchelf`` should be manually installed using
+  [homebrew](https://brew.sh)
 
-  ```
-  cargo run --example basic_sim <N-steps> <N-agents>
-  ```
-
-- Initialising EVM state from mainet
-
-  ```
-  cargo run --release --example forked_sim <ALCHEMY-API-KEY>
-  ```
-
-## Loading Contracts
-
-Contracts deployment requires the ABI and deployment bytecode:
-
-- An ABI rust representation can generated using the `sol!` macro, e.g.
-
-  ```rust
-  use alloy_sol_types::sol;
-
-  // From and abi string
-  sol!(
-    SomeABI,
-    r#"<ABI-JSON-STRING>"#
-  )
-
-  // Or from an ABI file
-  sol!(
-    SomeABI,
-    <PATH-TO-ABI-FILE>
-  )
-  ```
-- Bytecode can be taken from live deployments or compiled from
-  a solidity using the Python script `scripts/process_contract.py`
-
-  ```bash
-  python scripts/process_contract.py <PATH_TO_CONTRACT> <SOL_VERSION> <OUTPUT_FOLDER>
-  ```
-
-## Python API
-
-### Pre-requisite on MacOS
-
-Install `patchelf` with [homebrew](https://brew.sh)
-
-```
-brew install patchelf
-```
-
-### On Windows, Linux, MacOS
-
-The Python API can be built locally using [hatch](https://hatch.pypa.io/latest/) by running
-
-```
-hatch run dev:develop
-```
-
-or a installable package can be built using
+The Python package can be built using [hatch](https://hatch.pypa.io/latest/)
+by running
 
 ```
 hatch run dev:build
 ```
 
-and Python linting can be run using
+### Jupyter Notebook
 
-```
-hatch run dev:lint
-```
-
-You can build the package, and then run a jupyter notebook using
+A jupyter notebook with VERBS installed as a dependency can be
+run using [hatch](https://hatch.pypa.io/latest/)
 
 ```
 hatch run notebook:jupyter
 ```
 
-## Documentation
+### Git Dependency
 
-Python documentation can be built using [sphinx](https://www.sphinx-doc.org/en/master/)
-by running
+VERBS can be added as a git dependency to your projects `pyproject.toml`
+but requires maturin to used as a build backend, for example
 
 ```
-hatch run sphinx:build
+[build-system]
+requires = ["maturin>=1.2,<2.0"]
+build-backend = "maturin"
 ```
+
+## Examples
+
+Examples of models implemented using VERBS can be
+found in `/examples`.
+
+## Developers & Contributing
+
+see [here](.github/docs/developers.md) for developer notes.
+
+## Rust Package
+
+The core rust simulation engine can be used to write simulation
+purely in Rust, with a significant gain in performance over
+Python in most cases. See [here](.github/docs/rust.md).
