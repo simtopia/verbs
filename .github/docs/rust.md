@@ -55,9 +55,3 @@ Contracts deployment requires the ABI and deployment bytecode:
     <PATH-TO-ABI-FILE>
   )
   ```
-- Bytecode can be taken from live deployments or compiled from
-  a solidity using the Python script `scripts/process_contract.py`
-
-  ```bash
-  python scripts/process_contract.py <PATH_TO_CONTRACT> <SOL_VERSION> <OUTPUT_FOLDER>
-  ```
