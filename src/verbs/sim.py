@@ -79,13 +79,18 @@ class BaseAgent:
         """
         raise NotImplementedError
 
-    def record(self) -> typing.Any:
+    def record(self, env: Env) -> typing.Any:
         """
         Record the state of the agent
 
         This method is called at the end of each step for all agents.
         It should return any data to be recorded over the course
         of the simulation.
+
+        Parameters
+        ----------
+        env: verbs.types.Env
+            Network/EVM that the simulation interacts with.
 
         Returns
         -------
@@ -240,7 +245,7 @@ class Sim:
 
             self.env.process_block()
 
-            agent_records = [agent.record() for agent in self.agents]
+            agent_records = [agent.record(self.env) for agent in self.agents]
             records.append(agent_records)
 
         return records

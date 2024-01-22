@@ -23,10 +23,10 @@ class Agent:
     def update(
         self,
         rng: np.random.Generator,
-        network,
+        env,
     ):
         self.balance = self.abi.balanceOf.call(
-            network, self.address, self.token_contract, [self.address]
+            env, self.address, self.token_contract, [self.address]
         )[0][0]
 
         if self.balance > 0:
@@ -41,7 +41,7 @@ class Agent:
         else:
             return []
 
-    def record(self):
+    def record(self, _env):
         return self.balance
 
 

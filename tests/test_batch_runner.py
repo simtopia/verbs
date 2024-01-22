@@ -1,35 +1,9 @@
-import numpy as np
-
 from verbs import abi, batch_runner, envs, sim, utils
 
 
-def test_batch_runner(bytecode, constructor_args, test_abi):
+def test_batch_runner(bytecode, constructor_args, test_abi, agent_type):
 
     test_abi = abi.get_abi("TEST", test_abi)
-
-    class Agent:
-        def __init__(self, i: int, contract: bytes):
-            self.address = utils.int_to_address(i)
-            self.contract = contract
-            self.current = 0
-
-        def update(
-            self,
-            rng: np.random.Generator,
-            network,
-        ):
-            self.current = test_abi.getValue.call(
-                network, self.address, self.contract, []
-            )[0][0]
-
-            set_call = test_abi.setValue.transaction(
-                self.address, self.contract, [self.current + 1]
-            )
-
-            return [set_call]
-
-        def record(self):
-            return self.current
 
     def init_func(_bytecode, _constructor_args):
         env = envs.EmptyEnv(1234)
@@ -42,7 +16,7 @@ def test_batch_runner(bytecode, constructor_args, test_abi):
 
     def exec_func(snapshot, n_steps, seed, contract_address):
         env = envs.EmptyEnv(seed, snapshot)
-        agent = Agent(1, contract_address)
+        agent = agent_type(1, contract_address, test_abi)
         sim_runner = sim.Sim(seed, env, [agent])
         results = sim_runner.run(n_steps)
         return results
