@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 
 from verbs import envs, utils
@@ -92,3 +93,33 @@ def constructor_args():
 @pytest.fixture
 def env():
     return envs.EmptyEnv(1234)
+
+
+@pytest.fixture
+def agent_type():
+    class Agent:
+        def __init__(self, i: int, contract: bytes, abi):
+            self.address = utils.int_to_address(i)
+            self.contract = contract
+            self.abi = abi
+            self.current = 0
+
+        def update(
+            self,
+            rng: np.random.Generator,
+            network,
+        ):
+            self.current = self.abi.getValue.call(
+                network, self.address, self.contract, []
+            )[0][0]
+
+            set_call = self.abi.setValue.transaction(
+                self.address, self.contract, [self.current + 1]
+            )
+
+            return [set_call]
+
+        def record(self, env):
+            return self.current
+
+    return Agent

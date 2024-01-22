@@ -1,42 +1,16 @@
-import numpy as np
-
 from verbs import abi, envs, sim, utils
 
 
-def test_snapshot_is_consistent(env, bytecode, constructor_args, test_abi):
+def test_snapshot_is_consistent(env, bytecode, constructor_args, test_abi, agent_type):
 
     test_abi = abi.get_abi("TEST", test_abi)
-
-    class Agent:
-        def __init__(self, i: int, contract: bytes):
-            self.address = utils.int_to_address(i)
-            self.contract = contract
-            self.current = 0
-
-        def update(
-            self,
-            rng: np.random.Generator,
-            network,
-        ):
-            self.current = test_abi.getValue.call(
-                network, self.address, self.contract, []
-            )[0][0]
-
-            set_call = test_abi.setValue.transaction(
-                self.address, self.contract, [self.current + 1]
-            )
-
-            return [set_call]
-
-        def record(self):
-            return self.current
 
     admin = utils.int_to_address(99)
     env.create_account(admin, int(1e19))
 
     address = env.deploy_contract(admin, "test_contract", bytecode + constructor_args)
 
-    agent = Agent(1, address)
+    agent = agent_type(1, address, test_abi)
 
     sim_runner = sim.Sim(101, env, [agent])
 
