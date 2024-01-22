@@ -11,4 +11,5 @@ Examples
 More Examples
 =============
 
-TODO
+See `verbs examples <https://github.com/simtopia/verbs-examples>`_
+for longer examples of models implemented using VERBS.

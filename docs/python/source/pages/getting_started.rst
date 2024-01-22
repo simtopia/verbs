@@ -51,12 +51,12 @@ which will build the package and start a jupyter server.
 Github Dependency
 -----------------
 
-Verbs can be added as a github dependency in the `pyproject.toml
+Verbs can be added as a github dependency in the `pyproject.toml`
 
 .. code-block::
 
    dependencies = [
-   "verbs@git+ssh://git@github.com/simtopia/rusty_venture.git"
+      "verbs@git+ssh://git@github.com/simtopia/verbs.git"
    ]
 
 but also requires that maturin is added as a build backend
