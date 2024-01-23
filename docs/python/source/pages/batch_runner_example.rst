@@ -9,7 +9,7 @@ A particular use-case is generating an initial snapshot from a remote fork
 (which is generally quite slow) and then quickly generate samples from
 the local snapshot.
 
-A batch runner is define dy two functions
+A batch runner is defined by two functions
 
 * An **initialisation function** that generates an initial snapshot of the
   simulation.
