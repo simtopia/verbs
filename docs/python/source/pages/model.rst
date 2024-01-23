@@ -34,7 +34,7 @@ Each step of the simulation performs several steps:
 
   * The time and block number are incremented
   * The queue of transactions is shuffled
-  * The queue of transactions is process, updating
+  * The queue of transactions is processed, updating
     the state of the EVM
 
 * The :code:`record` function of each agent is called
