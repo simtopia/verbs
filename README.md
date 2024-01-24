@@ -8,7 +8,7 @@ Python ABM library built around Rust backend.
 
 Building VERBS requires [maturin to be installed](https://www.maturin.rs/installation).
 
-> :warning: On OSX `patchelf`` should be manually installed using
+> :warning: On OSX ``patchelf`` should be manually installed using
   [homebrew](https://brew.sh)
 
 The Python package can be built using [hatch](https://hatch.pypa.io/latest/)
@@ -46,7 +46,10 @@ found in `/examples`. Larger examples can also be found in this
 
 ## Developers & Contributing
 
-see [here](.github/docs/developers.md) for developer notes.
+VERBS is under active development, if you notice a problem
+or have a suggestion please [open an issue](https://github.com/simtopia/verbs/issues).
+
+We welcome contributions to this project, see [here](.github/docs/developers.md)  for developer notes.
 
 ## Rust Package
 
