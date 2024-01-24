@@ -8,15 +8,21 @@ build-backend = "maturin"
 [project]
 name = "verbs"
 version = "0.1.0"
-description = 'Python Ethereum ABM Library'
+description = "Ethereum ABM Library"
+license = "MIT"
 readme = "README.md"
 requires-python = ">=3.8"
-keywords = []
+keywords = ["ethereum", "agent-based modelling", "simulation", "defi"]
 authors = [
   { name = "Jordan", email = "jordan@simtopia.ai" },
   { name = "Marc", email = "marc@simtopia.ai"}
 ]
+maintainers = [
+  { name = "Jordan", email = "jordan@simtopia.ai" },
+  { name = "Marc", email = "marc@simtopia.ai"}
+]
 classifiers = [
+  "Development Status :: 4 - Beta",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
