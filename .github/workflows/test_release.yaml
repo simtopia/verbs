@@ -1,0 +1,10 @@
+name: Main
+
+on: push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - run: echo HELLO
