@@ -9,9 +9,7 @@ jobs:
     steps:
       - name: Release from main
         if: github.ref == 'refs/heads/main'
-        steps:
-          - run: echo HELLO
+        run: echo HELLO
       - name: No release
         if: github.ref != 'refs/heads/main'
-        steps:
-          - run: echo '::warning ::Release can only be run from the main branch!'
+        run: echo '::warning ::Release can only be run from the main branch!'
