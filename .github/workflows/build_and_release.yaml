@@ -1,7 +1,7 @@
 name: build-and-release
 
 on:
-  - workflow_dispatch
+  workflow_dispatch
 
 jobs:
   check_main:
