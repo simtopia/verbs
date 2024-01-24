@@ -21,10 +21,6 @@ jobs:
         target: [x86_64, x86, armv7]
     needs: [check_main]
     steps:
-      - name: Release from main
-        if: github.ref == 'refs/heads/main'
-        steps:
-
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
