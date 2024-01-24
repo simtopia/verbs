@@ -9,7 +9,7 @@ jobs:
     steps:
       - name: Release from main
         if: github.ref == 'refs/heads/main'
-        run: echo '::notice ::Building and uploading release"
+        run: echo '::notice ::Building and uploading release'
       - name: No release
         if: github.ref != 'refs/heads/main'
         run: echo '::warning ::Release can only be run from the main branch!' && exit 1
