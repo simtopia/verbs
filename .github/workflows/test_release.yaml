@@ -6,6 +6,12 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
     steps:
-      - run: echo HELLO
+      - name: Release from main
+        if: github.ref == 'refs/heads/main'
+        steps:
+          - run: echo HELLO
+      - name: No release
+        if: github.ref != 'refs/heads/main'
+        steps:
+          - run: echo '::warning ::Release can only be run from the main branch!'
