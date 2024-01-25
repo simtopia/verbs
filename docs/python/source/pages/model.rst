@@ -49,7 +49,7 @@ but otherwise should implement :py:meth:`verbs.sim.BaseAgent.update`
 and :py:meth:`verbs.sim.BaseAgent.record`.
 
 The :py:meth:`verbs.sim.BaseAgent.update` method should take a
-Numpy random generator and simulation environment arguments
+Numpy random generator and simulation environment arguments,
 and return a list of transactions to submit to the next block.
 
 .. warning::

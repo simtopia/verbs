@@ -91,8 +91,7 @@ def parse_input_types(abi: typing.Dict) -> typing.List[str]:
                 inp.append(tuple_parser(y["components"]))
             else:
                 inp.append(y["type"])
-        input_tuple = ",".join(inp)
-        input_tuple = "(" + input_tuple + ")"
+        input_tuple = f"({','.join(inp)})"
         return input_tuple
 
     inputs = []
@@ -327,7 +326,7 @@ class Function:
 
     def execute(
         self,
-        env,
+        env: types.Env,
         sender: bytes,
         address: bytes,
         args: typing.List[typing.Any],

@@ -104,7 +104,7 @@ are collected across the agents at each step.
 .. code-block:: python
 
    ...
-       def record(self):
+       def record(self, env):
            return self.balance
 
 .. tip::
