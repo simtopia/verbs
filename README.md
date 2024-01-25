@@ -42,7 +42,7 @@ build-backend = "setuptools.build_meta"
 
 Examples of models implemented using VERBS can be
 found in `/examples`. Larger examples can also be found in this
-[examples repo]("https://github.com/simtopia/verbs-examples).
+[repo](https://github.com/simtopia/verbs-examples).
 
 ## Developers & Contributing
 
