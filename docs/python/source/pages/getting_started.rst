@@ -30,7 +30,7 @@ Building
 
 Using hatch the package can be built by running
 
-.. code-block::
+.. code-block:: bash
 
    hatch run dev:build
 
@@ -42,7 +42,7 @@ Jupyter Notebook
 If you want to start a Jupyter Notebook with verbs installed you
 can run
 
-.. code-block::
+.. code-block:: bash
 
    hatch run notebook:jupyter
 
@@ -53,16 +53,17 @@ Github Dependency
 
 Verbs can be added as a github dependency in the `pyproject.toml`
 
-.. code-block::
+.. code-block:: bash
 
    dependencies = [
       "verbs@git+ssh://git@github.com/simtopia/verbs.git"
    ]
 
-but also requires that maturin is added as a build backend
+but also requires that maturin is added as a build requirement,
+for example
 
-.. code-block::
+.. code-block:: bash
 
    [build-system]
-   requires = ["maturin>=1.2, <2.0"]
-   build-backend = "maturin"
+   requires = ["setuptools >= 61.0", "maturin>=1.2,<2.0"]
+   build-backend = "setuptools.build_meta"
