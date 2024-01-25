@@ -55,4 +55,4 @@ We welcome contributions to this project, see [here](.github/docs/developers.md)
 
 The core rust simulation engine can be used to write simulation
 purely in Rust, with a significant gain in performance over
-Python in most cases. See [here](.github/docs/rust.md).
+Python in most cases. See [here](.github/docs/rust.md) for usage notes.
