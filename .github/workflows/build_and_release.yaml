@@ -103,21 +103,25 @@ jobs:
 
   release:
     runs-on: ubuntu-latest
-    # if: "startsWith(github.ref, 'refs/tags/')"
     needs: [linux, windows, macos, sdist]
     steps:
       - run: echo "This will release"
+
+    # TODO: Uncomment when we want to release
+    # if: startsWith(github.ref, 'refs/tags/')
+    # environment:
+    #   name: pypi
+    #   url: https://pypi.org/p/verbs
+    # permissions:
+    #   id-token: write
     # steps:
-    #   - uses: actions/download-artifact@v3
-    #     with:
-    #       name: wheels
-    #   - name: Publish to PyPI
-    #     uses: PyO3/maturin-action@v1
-    #     env:
-    #       MATURIN_PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
-    #     with:
-    #       command: upload
-    #       args: --non-interactive --skip-existing *
+    # - name: Downloas dists
+    #   uses: actions/download-artifact@v3
+    #   with:
+    #     name: dist/
+    #     name dist
+    # - name: Publish distribution 📦 to PyPI
+    #   uses: pypa/gh-action-pypi-publish@release/v1
 
   build_docs:
     runs-on: ubuntu-latest
