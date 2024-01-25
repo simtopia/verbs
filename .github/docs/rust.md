@@ -21,7 +21,7 @@ Cargo commands can be run from the repo root.
 ## Rust Examples
 
 Examples of the libraries use can be found in
-[core/rust_sim/examples](core/rust_sim/examples).
+[core/rust_sim/examples](../../core/rust_sim/examples).
 
 The examples can be run using cargo:
 
