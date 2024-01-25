@@ -30,12 +30,12 @@ hatch run notebook:jupyter
 ### Git Dependency
 
 VERBS can be added as a git dependency to your projects `pyproject.toml`
-but requires maturin to used as a build backend, for example
+but requires maturin to be added as a build requirement, for example
 
 ```
 [build-system]
-requires = ["maturin>=1.2,<2.0"]
-build-backend = "maturin"
+requires = ["setuptools >= 61.0", "maturin>=1.2,<2.0"]
+build-backend = "setuptools.build_meta"
 ```
 
 ## Examples
