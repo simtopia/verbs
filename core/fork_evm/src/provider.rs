@@ -1,4 +1,4 @@
-use crate::runtime_client::{RuntimeClient, RuntimeClientBuilder};
+use super::runtime_client::{RuntimeClient, RuntimeClientBuilder};
 use ethers_core::types::Chain;
 use ethers_providers::{is_local_endpoint, Provider, DEFAULT_LOCAL_POLL_INTERVAL};
 use eyre::{Result, WrapErr};
