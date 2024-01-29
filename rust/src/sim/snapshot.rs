@@ -1,7 +1,8 @@
 use alloy_primitives::{Address, Bytes, B256, U256};
+use fork_evm::{LocalDB, DB};
 use pyo3::{types::PyBytes, Python};
 use revm::{
-    db::{AccountState, CacheDB, DatabaseRef, DbAccount, EmptyDB},
+    db::{AccountState, DbAccount},
     primitives::{AccountInfo, BlobExcessGasAndPrice, BlockEnv, Bytecode, Log},
 };
 use rust_sim::network::Network;
@@ -57,10 +58,7 @@ fn int_to_account_state(i: u8) -> AccountState {
     }
 }
 
-pub fn create_py_snapshot<'a, D: DatabaseRef>(
-    py: Python<'a>,
-    network: &mut Network<D>,
-) -> PyDbState<'a> {
+pub fn create_py_snapshot<'a, D: DB>(py: Python<'a>, network: &mut Network<D>) -> PyDbState<'a> {
     let block = network.evm.env.block.clone();
 
     let block_env = (
@@ -79,7 +77,7 @@ pub fn create_py_snapshot<'a, D: DatabaseRef>(
     let db = network.evm.db().unwrap();
 
     let accounts: Vec<(&'a PyBytes, PyDbAccount<'a>)> = db
-        .accounts
+        .accounts()
         .iter()
         .map(|(k, v)| {
             (
@@ -110,7 +108,7 @@ pub fn create_py_snapshot<'a, D: DatabaseRef>(
         .collect();
 
     let contracts: Vec<(&'a PyBytes, &'a PyBytes)> = db
-        .contracts
+        .contracts()
         .iter()
         .map(|(k, v)| {
             (
@@ -121,7 +119,7 @@ pub fn create_py_snapshot<'a, D: DatabaseRef>(
         .collect();
 
     let logs: Vec<PyLog> = db
-        .logs
+        .logs()
         .iter()
         .map(|x| {
             (
@@ -136,7 +134,7 @@ pub fn create_py_snapshot<'a, D: DatabaseRef>(
         .collect();
 
     let block_hashes: Vec<(&'a PyBytes, &'a PyBytes)> = db
-        .block_hashes
+        .block_hashes()
         .iter()
         .map(|(k, v)| {
             (
@@ -167,7 +165,7 @@ pub fn load_block_env(snapshot: &PyDbState) -> BlockEnv {
     }
 }
 
-pub fn load_snapshot(db: &mut CacheDB<EmptyDB>, snapshot: PyDbState) {
+pub fn load_snapshot(db: &mut LocalDB, snapshot: PyDbState) {
     for (k, v) in snapshot.1.into_iter() {
         db.accounts.insert(
             Address::from_slice(k.as_bytes()),

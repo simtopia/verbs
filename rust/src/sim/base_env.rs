@@ -1,20 +1,19 @@
 use super::snapshot;
 use crate::types::{event_to_py, result_to_py, PyAddress, PyEvent, PyExecutionResult};
 use alloy_primitives::{Address, U256};
-use fork_evm::Backend;
 use pyo3::prelude::*;
 
-use revm::db::{DatabaseRef, EmptyDB};
+use fork_evm::{ForkDb, LocalDB, DB};
 use rust_sim::contract::Transaction;
-use rust_sim::network::{BlockNumber, Network, RevertError};
+use rust_sim::network::{Network, RevertError};
 use std::mem;
 
 // Represents blocks updating every 15s
 const BLOCK_INTERVAL: u32 = 15;
 
-pub struct BaseEnv<DB: DatabaseRef> {
+pub struct BaseEnv<D: DB> {
     // EVM and deployed protocol
-    pub network: Network<DB>,
+    pub network: Network<D>,
     // Queue of calls submitted from Python
     pub call_queue: Vec<Transaction>,
     // RNG source
@@ -23,9 +22,9 @@ pub struct BaseEnv<DB: DatabaseRef> {
     pub step: usize,
 }
 
-impl BaseEnv<EmptyDB> {
+impl BaseEnv<LocalDB> {
     pub fn new(seed: u64) -> Self {
-        let network = Network::<EmptyDB>::init();
+        let network = Network::<LocalDB>::init();
 
         BaseEnv {
             network,
@@ -38,7 +37,7 @@ impl BaseEnv<EmptyDB> {
     pub fn from_snapshot(seed: u64, snapshot: snapshot::PyDbState) -> Self {
         let block_env = snapshot::load_block_env(&snapshot);
 
-        let mut network = Network::<EmptyDB>::init();
+        let mut network = Network::<LocalDB>::init();
         network.evm.env.block = block_env;
 
         snapshot::load_snapshot(network.evm.db().unwrap(), snapshot);
@@ -51,14 +50,9 @@ impl BaseEnv<EmptyDB> {
     }
 }
 
-impl BaseEnv<Backend> {
+impl BaseEnv<ForkDb> {
     pub fn new(node_url: &str, seed: u64, block_number: u64) -> Self {
-        let block_number = match block_number {
-            0 => BlockNumber::Latest,
-            n => BlockNumber::Number(n.into()),
-        };
-
-        let network = Network::<Backend>::init(node_url, block_number);
+        let network = Network::<ForkDb>::init(node_url, block_number);
         BaseEnv {
             network,
             call_queue: Vec::new(),
@@ -68,7 +62,7 @@ impl BaseEnv<Backend> {
     }
 }
 
-impl<DB: DatabaseRef> BaseEnv<DB> {
+impl<D: DB> BaseEnv<D> {
     pub fn process_block(&mut self) {
         // Update the block-time and number
         self.network.evm.env.block.timestamp += U256::from(BLOCK_INTERVAL);

@@ -1,5 +1,3 @@
-//! Temporary utility conversion traits between ethers-rs and alloy types.
-
 use alloy_json_abi::{Event, EventParam, Function, InternalType, Param, StateMutability};
 use alloy_primitives::{Address, B256, U256 as AlloyU256, U64 as AlloyU64};
 use ethers_core::{
@@ -7,11 +5,8 @@ use ethers_core::{
     types::{H160, H256, U256, U64},
 };
 
-/// Conversion trait to easily convert from Ethers types to Alloy types.
 pub trait ToAlloy {
     type To;
-
-    /// Converts the Ethers type to the corresponding Alloy type.
     fn to_alloy(self) -> Self::To;
 }
 

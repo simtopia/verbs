@@ -1,13 +1,13 @@
 use crate::agent::{AdminAgent, SimState};
 use crate::network::Network;
 use alloy_primitives::U256;
+use fork_evm::DB;
 use kdam::tqdm;
-use revm::db::DatabaseRef;
 
 // Represents blocks updating every 15s
 const BLOCK_INTERVAL: u32 = 15;
 
-pub fn run<A: AdminAgent, S: SimState, D: DatabaseRef>(
+pub fn run<A: AdminAgent, S: SimState, D: DB>(
     network: &mut Network<D>,
     admin_agent: &mut A,
     agents: &mut S,

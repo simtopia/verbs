@@ -3,21 +3,17 @@ use crate::contract::{Event, Transaction};
 use crate::utils::Eth;
 use alloy_primitives::{Address, Uint, B256, U256};
 use alloy_sol_types::SolCall;
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 pub use ethereum_types::U64;
-pub use ethers_core::types::BlockNumber;
-use ethers_providers::Middleware;
-use fork_evm::{Backend, BlockchainDb, BlockchainDbMeta, ProviderBuilder};
+use fork_evm::{ForkDb, LocalDB, DB};
 use log::debug;
-use revm::db::{CacheDB, DatabaseRef, EmptyDB};
 use revm::primitives::{AccountInfo, Bytecode, ExecutionResult, Log, ResultAndState, TxEnv};
 use revm::EVM;
-use std::collections::BTreeSet;
 use std::ops::Range;
 pub use utils::{create_call, decode_event, process_events, RevertError};
 
-pub struct Network<D: DatabaseRef> {
-    pub evm: EVM<CacheDB<D>>,
+pub struct Network<D: DB> {
+    pub evm: EVM<D>,
     pub last_events: Vec<Event>,
     pub event_history: Vec<Event>,
 }
@@ -27,7 +23,7 @@ trait CallEVM {
     fn call(&mut self, tx: TxEnv) -> ResultAndState;
 }
 
-impl<D: DatabaseRef> CallEVM for EVM<CacheDB<D>> {
+impl<D: DB> CallEVM for EVM<D> {
     fn execute(&mut self, tx: TxEnv) -> ExecutionResult {
         self.env.tx = tx;
 
@@ -47,46 +43,21 @@ impl<D: DatabaseRef> CallEVM for EVM<CacheDB<D>> {
     }
 }
 
-impl Network<Backend> {
-    pub fn init(node_url: &str, block_number: BlockNumber) -> Self {
-        let provider = ProviderBuilder::new(node_url).build().unwrap();
-
-        let rt = tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()
-            .unwrap();
-
-        let block = rt
-            .block_on(provider.get_block(block_number))
-            .unwrap()
-            .ok_or(anyhow!("failed to retrieve block"))
-            .unwrap();
-
-        let backend = Backend {
-            provider,
-            db: BlockchainDb::new(
-                BlockchainDbMeta {
-                    cfg_env: Default::default(),
-                    block_env: Default::default(),
-                    hosts: BTreeSet::from(["".to_string()]),
-                },
-                None,
-            ),
-            block_id: Some(block.number.unwrap().into()),
-        };
-
-        let db = CacheDB::new(backend);
+impl Network<ForkDb> {
+    pub fn init(node_url: &str, block_number: u64) -> Self {
+        let db = ForkDb::new(node_url, block_number);
         let mut evm = EVM::new();
-        evm.database(db);
+
         evm.env.cfg.limit_contract_code_size = Some(0x1000000);
         evm.env.cfg.disable_eip3607 = true;
         evm.env.block.gas_limit = U256::MAX;
-        evm.env.block.timestamp = U256::try_from(block.timestamp.as_u128()).unwrap();
-
-        evm.env.block.number = match block.number {
+        evm.env.block.timestamp = U256::try_from(db.block.timestamp.as_u128()).unwrap();
+        evm.env.block.number = match db.block.number {
             Some(n) => U256::try_from(n.as_u64()).unwrap(),
             None => U256::ZERO,
         };
+
+        evm.database(db);
 
         Self {
             evm,
@@ -96,10 +67,10 @@ impl Network<Backend> {
     }
 }
 
-impl Network<EmptyDB> {
+impl Network<LocalDB> {
     pub fn init() -> Self {
         let mut evm = EVM::new();
-        let db = CacheDB::new(EmptyDB::default());
+        let db = LocalDB::new();
 
         evm.env.cfg.limit_contract_code_size = Some(0x1000000);
         evm.env.cfg.disable_eip3607 = true;
@@ -120,7 +91,7 @@ impl Network<EmptyDB> {
     }
 
     pub fn from_range(start_balance: u128, r: Range<u64>) -> Self {
-        let mut network = Network::<EmptyDB>::init();
+        let mut network = Network::<LocalDB>::init();
         let start_balance = U256::from(start_balance);
 
         for n in r {
@@ -131,13 +102,13 @@ impl Network<EmptyDB> {
     }
 
     pub fn from_agents(start_balance: u128, agent_addresses: Vec<Address>) -> Self {
-        let mut network = Network::<EmptyDB>::init();
+        let mut network = Network::<LocalDB>::init();
         network.insert_agents(start_balance, agent_addresses);
         network
     }
 }
 
-impl<D: DatabaseRef> Network<D> {
+impl<D: DB> Network<D> {
     pub fn insert_account(&mut self, address: Address, start_balance: U256) {
         self.evm.db().unwrap().insert_account_info(
             address,
@@ -327,8 +298,8 @@ mod tests {
     );
 
     #[fixture]
-    fn deployment() -> (Network<EmptyDB>, Address, Address) {
-        let mut network = Network::<EmptyDB>::init();
+    fn deployment() -> (Network<LocalDB>, Address, Address) {
+        let mut network = Network::<LocalDB>::init();
 
         let constructor_args = <i128>::abi_encode(&101);
         let bytecode_hex = "608060405234801561001057600080fd5b50\
@@ -361,7 +332,7 @@ mod tests {
     }
 
     #[rstest]
-    fn direct_execute_and_call(deployment: (Network<EmptyDB>, Address, Address)) {
+    fn direct_execute_and_call(deployment: (Network<LocalDB>, Address, Address)) {
         let (mut network, contract_address, user_address) = deployment;
 
         let (v, _) = network
@@ -397,7 +368,7 @@ mod tests {
     }
 
     #[rstest]
-    fn processing_calls(deployment: (Network<EmptyDB>, Address, Address)) {
+    fn processing_calls(deployment: (Network<LocalDB>, Address, Address)) {
         let (mut network, contract_address, user_address) = deployment;
 
         let calls = vec![

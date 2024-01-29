@@ -1,7 +1,7 @@
 use super::base_env::BaseEnv;
 use super::snapshot;
 use crate::types::{PyAddress, PyEvent, PyExecutionResult, PyRevertError};
-use fork_evm::Backend;
+use fork_evm::ForkDb;
 use pyo3::prelude::*;
 use pyo3::types::PyBytes;
 
@@ -31,13 +31,13 @@ use pyo3::types::PyBytes;
 ///    env.submit_call(...)
 ///
 #[pyclass]
-pub struct ForkEnv(BaseEnv<Backend>);
+pub struct ForkEnv(BaseEnv<ForkDb>);
 
 #[pymethods]
 impl ForkEnv {
     #[new]
     pub fn new(node_url: &str, seed: u64, block_number: u64) -> PyResult<Self> {
-        Ok(Self(BaseEnv::<Backend>::new(node_url, seed, block_number)))
+        Ok(Self(BaseEnv::<ForkDb>::new(node_url, seed, block_number)))
     }
 
     /// Export a snap shot of the EVM state and block parameters
