@@ -1,10 +1,7 @@
-//! Wrap different providers
-
 use async_trait::async_trait;
-use ethers_core::types::U256;
 use ethers_providers::{
     Authorization, ConnectionDetails, Http, HttpRateLimitRetryPolicy, JsonRpcClient, JsonRpcError,
-    JwtAuth, JwtKey, ProviderError, PubsubClient, RetryClient, RetryClientBuilder, RpcError, Ws,
+    JwtAuth, JwtKey, ProviderError, RetryClient, RetryClientBuilder, RpcError, Ws,
 };
 use reqwest::{
     header::{HeaderName, HeaderValue},
@@ -22,8 +19,6 @@ enum InnerClient {
     Http(RetryClient<Http>),
     /// WebSocket client
     Ws(Ws),
-    // IPC client
-    // Ipc(Ipc),
 }
 
 /// Error type for the runtime provider
@@ -185,16 +180,7 @@ impl RuntimeClient {
 
                 Ok(InnerClient::Ws(client))
             }
-            // "file" => {
-            //     let path = url_to_file_path(&self.url)
-            //         .map_err(|_| RuntimeClientError::BadPath(self.url.to_string()))?;
 
-            //     let client = Ipc::connect(path)
-            //         .await
-            //         .map_err(|e| RuntimeClientError::ProviderError(e.into()))?;
-
-            //     Ok(InnerClient::Ipc(client))
-            // }
             _ => Err(RuntimeClientError::BadScheme(self.url.to_string())),
         }
     }
@@ -251,26 +237,6 @@ impl RuntimeClientBuilder {
     }
 }
 
-// #[cfg(windows)]
-// fn url_to_file_path(url: &Url) -> Result<PathBuf, ()> {
-//     const PREFIX: &str = "file:///pipe/";
-
-//     let url_str = url.as_str();
-
-//     if url_str.starts_with(PREFIX) {
-//         let pipe_name = &url_str[PREFIX.len()..];
-//         let pipe_path = format!(r"\\.\pipe\{}", pipe_name);
-//         return Ok(PathBuf::from(pipe_path));
-//     }
-
-//     url.to_file_path()
-// }
-
-// #[cfg(not(windows))]
-// fn url_to_file_path(url: &Url) -> Result<PathBuf, ()> {
-//     url.to_file_path()
-// }
-
 #[cfg_attr(target_arch = "wasm32", async_trait(?Send))]
 #[cfg_attr(not(target_arch = "wasm32"), async_trait)]
 impl JsonRpcClient for RuntimeClient {
@@ -303,48 +269,5 @@ impl JsonRpcClient for RuntimeClient {
             //     .map_err(|e| RuntimeClientError::ProviderError(e.into())),
         }?;
         Ok(res)
-    }
-}
-
-// We can also implement [`PubsubClient`] for our dynamic provider.
-impl PubsubClient for RuntimeClient {
-    // Since both `Ws` and `Ipc`'s `NotificationStream` associated type is the same,
-    // we can simply return one of them.
-    type NotificationStream = <Ws as PubsubClient>::NotificationStream;
-
-    fn subscribe<T: Into<U256>>(&self, id: T) -> Result<Self::NotificationStream, Self::Error> {
-        match self
-            .client
-            .try_read()
-            .map_err(|_| RuntimeClientError::LockError)?
-            .as_ref()
-            .unwrap()
-        {
-            InnerClient::Http(_) => Err(RuntimeClientError::ProviderError(
-                ProviderError::UnsupportedRPC,
-            )),
-            InnerClient::Ws(client) => Ok(PubsubClient::subscribe(client, id)
-                .map_err(|e| RuntimeClientError::ProviderError(e.into()))?),
-            // InnerClient::Ipc(client) => Ok(PubsubClient::subscribe(client, id)
-            //     .map_err(|e| RuntimeClientError::ProviderError(e.into()))?),
-        }
-    }
-
-    fn unsubscribe<T: Into<U256>>(&self, id: T) -> Result<(), Self::Error> {
-        match self
-            .client
-            .try_read()
-            .map_err(|_| (RuntimeClientError::LockError))?
-            .as_ref()
-            .unwrap()
-        {
-            InnerClient::Http(_) => Err(RuntimeClientError::ProviderError(
-                ProviderError::UnsupportedRPC,
-            )),
-            InnerClient::Ws(client) => Ok(PubsubClient::unsubscribe(client, id)
-                .map_err(|e| RuntimeClientError::ProviderError(e.into()))?),
-            // InnerClient::Ipc(client) => Ok(PubsubClient::unsubscribe(client, id)
-            //     .map_err(|e| RuntimeClientError::ProviderError(e.into()))?),
-        }
     }
 }
