@@ -12,9 +12,6 @@ use url::ParseError;
 const ALCHEMY_FREE_TIER_CUPS: u64 = 330;
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(45);
 
-const ALCHEMY_FREE_TIER_CUPS: u64 = 330;
-const REQUEST_TIMEOUT: Duration = Duration::from_secs(45);
-
 pub type RetryProvider = Provider<RuntimeClient>;
 
 #[derive(Debug)]

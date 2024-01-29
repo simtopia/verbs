@@ -1,7 +1,6 @@
 extern crate tracing;
 
 mod db;
-mod db;
 mod error;
 mod fork_db;
 mod local_db;
