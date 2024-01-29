@@ -9,7 +9,7 @@ build-backend = "maturin"
 name = "verbs"
 version = "0.1.0"
 description = "Ethereum ABM Library"
-license = "MIT"
+license = {file = "LICENSE"}
 readme = "README.md"
 requires-python = ">=3.8"
 keywords = ["ethereum", "agent-based modelling", "simulation", "defi"]
