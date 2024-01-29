@@ -3,9 +3,9 @@ use super::snapshot::PyDbState;
 use super::base_env::BaseEnv;
 use super::snapshot;
 use crate::types::{PyAddress, PyEvent, PyExecutionResult, PyRevertError};
+use fork_evm::LocalDB;
 use pyo3::prelude::*;
 use pyo3::types::PyBytes;
-use revm::db::EmptyDB;
 
 /// Simulation environment initialised with an empty in-memory database
 ///
@@ -26,15 +26,15 @@ use revm::db::EmptyDB;
 ///    env.submit_call(...)
 ///
 #[pyclass]
-pub struct EmptyEnv(BaseEnv<EmptyDB>);
+pub struct EmptyEnv(BaseEnv<LocalDB>);
 
 #[pymethods]
 impl EmptyEnv {
     #[new]
     pub fn new(seed: u64, snapshot: Option<PyDbState>) -> PyResult<Self> {
         Ok(match snapshot {
-            Some(s) => Self(BaseEnv::<EmptyDB>::from_snapshot(seed, s)),
-            None => Self(BaseEnv::<EmptyDB>::new(seed)),
+            Some(s) => Self(BaseEnv::<LocalDB>::from_snapshot(seed, s)),
+            None => Self(BaseEnv::<LocalDB>::new(seed)),
         })
     }
 

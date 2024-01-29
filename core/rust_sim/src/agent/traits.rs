@@ -2,15 +2,11 @@ use crate::contract::Transaction;
 use crate::network::Network;
 use alloy_primitives::Address;
 use fastrand::Rng;
-use revm::db::DatabaseRef;
+use fork_evm::DB;
 pub use sim_macros::SimState;
 
 pub trait SimState {
-    fn call_agents<D: DatabaseRef>(
-        &mut self,
-        rng: &mut Rng,
-        network: &mut Network<D>,
-    ) -> Vec<Transaction>;
+    fn call_agents<D: DB>(&mut self, rng: &mut Rng, network: &mut Network<D>) -> Vec<Transaction>;
     fn record_agents(&mut self);
 }
 
@@ -23,9 +19,9 @@ pub trait AdminAgent {
     /// * `rng` - Fastrand rng state
     /// * `network` - Protocol deployment(s)
     ///
-    fn update<D: DatabaseRef>(&mut self, rng: &mut Rng, network: &mut Network<D>);
+    fn update<D: DB>(&mut self, rng: &mut Rng, network: &mut Network<D>);
     /// Post block update, can be used to process events
-    fn post_update<D: DatabaseRef>(&mut self, network: &mut Network<D>);
+    fn post_update<D: DB>(&mut self, network: &mut Network<D>);
 }
 
 /// Agent trait used to update all agents each model update.
@@ -38,11 +34,7 @@ pub trait Agent {
     /// * `rng` - Fastrand rng state
     /// * `network` - Protocol deployment(s)
     ///
-    fn update<D: DatabaseRef>(
-        &mut self,
-        rng: &mut Rng,
-        network: &mut Network<D>,
-    ) -> Vec<Transaction>;
+    fn update<D: DB>(&mut self, rng: &mut Rng, network: &mut Network<D>) -> Vec<Transaction>;
     /// Get the address of the agent.
     fn get_address(&self) -> Address;
 }
@@ -64,7 +56,7 @@ pub trait AgentSet {
     /// * `rng` - Fastrand rng state
     /// * `network` - Protocol deployment(s)
     ///
-    fn call<D: DatabaseRef>(
+    fn call<D: DB>(
         &mut self,
         rng: &mut fastrand::Rng,
         network: &mut Network<D>,
@@ -84,18 +76,14 @@ pub trait RecordedAgentSet<R> {
 mod tests {
     use super::*;
     use alloy_primitives::{Address, U256};
-    use revm::db::EmptyDB;
+    use fork_evm::LocalDB;
 
     struct DummyAgentSet {
         v: bool,
     }
 
     impl AgentSet for DummyAgentSet {
-        fn call<D: DatabaseRef>(
-            &mut self,
-            _rng: &mut Rng,
-            _network: &mut Network<D>,
-        ) -> Vec<Transaction> {
+        fn call<D: DB>(&mut self, _rng: &mut Rng, _network: &mut Network<D>) -> Vec<Transaction> {
             vec![Transaction {
                 function_selector: [0, 0, 0, 0],
                 callee: Address::ZERO,
@@ -127,7 +115,7 @@ mod tests {
         };
 
         let mut rng = fastrand::Rng::with_seed(101);
-        let mut network = &mut Network::<EmptyDB>::init();
+        let mut network = &mut Network::<LocalDB>::init();
 
         let calls = x.call_agents(&mut rng, &mut network);
 

@@ -1,7 +1,7 @@
 use crate::ecr20;
 use alloy_primitives::{Address, Uint, U256};
 use fastrand::Rng;
-use revm::db::DatabaseRef;
+use fork_evm::DB;
 use rust_sim::agent::{AdminAgent, Agent, AgentSet, AgentVec, RecordedAgent, SimState};
 use rust_sim::contract::Transaction;
 use rust_sim::network::{create_call, Network};
@@ -9,8 +9,8 @@ use rust_sim::network::{create_call, Network};
 pub struct DummyAdminAgent {}
 
 impl AdminAgent for DummyAdminAgent {
-    fn update<D: DatabaseRef>(&mut self, _rng: &mut Rng, _network: &mut Network<D>) {}
-    fn post_update<D: DatabaseRef>(&mut self, _network: &mut Network<D>) {}
+    fn update<D: DB>(&mut self, _rng: &mut Rng, _network: &mut Network<D>) {}
+    fn post_update<D: DB>(&mut self, _network: &mut Network<D>) {}
 }
 
 pub struct SimpleAgent {
@@ -34,11 +34,7 @@ impl SimpleAgent {
 }
 
 impl Agent for SimpleAgent {
-    fn update<D: DatabaseRef>(
-        &mut self,
-        rng: &mut Rng,
-        network: &mut Network<D>,
-    ) -> Vec<Transaction> {
+    fn update<D: DB>(&mut self, rng: &mut Rng, network: &mut Network<D>) -> Vec<Transaction> {
         self.current_balance = network
             .direct_call(
                 self.address,
