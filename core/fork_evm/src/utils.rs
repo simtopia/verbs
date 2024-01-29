@@ -3,8 +3,6 @@ use revm::{interpreter::CallScheme, primitives::CreateScheme};
 use serde::{Deserialize, Serialize};
 use tokio::runtime::{Handle, Runtime};
 
-pub use revm::primitives::State as StateChangeset;
-
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "UPPERCASE")]
 #[derive(Default)]
