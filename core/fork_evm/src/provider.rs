@@ -111,3 +111,13 @@ fn resolve_path(path: &Path) -> Result<PathBuf, ()> {
         std::env::current_dir().map(|d| d.join(path)).map_err(drop)
     }
 }
+
+#[cfg(windows)]
+fn resolve_path(path: &Path) -> Result<PathBuf, ()> {
+    if let Some(s) = path.to_str() {
+        if s.starts_with(r"\\.\pipe\") {
+            return Ok(path.to_path_buf());
+        }
+    }
+    Err(())
+}
