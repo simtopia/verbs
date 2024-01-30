@@ -2,6 +2,8 @@
 
 Python ABM library built around Rust backend.
 
+Full documentation can be found [here](https://simtopia.github.io/verbs/).
+
 ## Getting Started
 
 ### Installation
