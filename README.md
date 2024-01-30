@@ -4,6 +4,14 @@ Python ABM library built around Rust backend.
 
 ## Getting Started
 
+### Installation
+
+VERBS can be installed via pip using
+
+```
+pip install verbs
+```
+
 ### Building from Source
 
 Building VERBS requires [maturin to be installed](https://www.maturin.rs/installation).
@@ -29,7 +37,7 @@ hatch run notebook:jupyter
 
 ### Git Dependency
 
-VERBS can be added as a git dependency to your projects `pyproject.toml`
+VERBS can be added as a direct dependency to your projects `pyproject.toml`
 but requires maturin to be added as a build requirement, for example
 
 ```
@@ -49,10 +57,12 @@ found in `/examples`. Larger examples can also be found in this
 VERBS is under active development, if you notice a problem
 or have a suggestion please [open an issue](https://github.com/simtopia/verbs/issues).
 
-We welcome contributions to this project, see [here](.github/docs/developers.md)  for developer notes.
+We welcome contributions to this project, see [here](https://github.com/simtopia/verbs/blob/main/.github/docs/developers.md)
+for developer notes.
 
 ## Rust Package
 
 The core rust simulation engine can be used to write simulation
 purely in Rust, with a significant gain in performance over
-Python in most cases. See [here](.github/docs/rust.md) for usage notes.
+Python in most cases. See [here](https://github.com/simtopia/verbs/blob/main/.github/docs/rust.md)
+for usage notes.
