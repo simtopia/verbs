@@ -15,7 +15,7 @@ jobs:
           uses: actions/upload-artifact@v4
           with:
             name: rust_build
-            path: target
+            path: target/debug
 
   rust_tests:
     needs: rust_build
@@ -27,7 +27,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: rust_build
-          path: target
+          path: target/debug
       - name: Run Rust tests
         run: cargo test
 
@@ -41,7 +41,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: rust_build
-          path: target
+          path: target/debug
       - name: Run Rust examples
         run: cargo run --example basic_sim 200 100
 
@@ -58,7 +58,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: rust_build
-          path: target
+          path: target/debug
       - name: Formatting
         run: cargo fmt --all -- --check
       - name: Clippy
@@ -70,7 +70,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
       - run: pip install hatch
@@ -80,14 +80,14 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: python_build
-          path: target/wheels/verbs-*.whl
+          path: target/wheels/verbs-*linux_x86_64.whl
 
   python_tests:
     needs: maturin_build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
       - name: Download wheel
@@ -95,7 +95,7 @@ jobs:
         with:
           name: python_build
       - name: Install package
-        run: pip install verbs-*.whl
+        run: pip install verbs-*linux_x86_64.whl
       - name: Install pytest
         run: pip install pytest
       - name: Run tests
@@ -106,7 +106,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
       - name: Download wheel
@@ -114,7 +114,7 @@ jobs:
         with:
           name: python_build
       - name: Install package
-        run: pip install verbs-*.whl
+        run: pip install verbs-*linux_x86_64.whl
       - name: Run basic example
         run: python examples/basic_sim.py
       - name: Run batch runner example
@@ -125,7 +125,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
       - name: Install hatch
