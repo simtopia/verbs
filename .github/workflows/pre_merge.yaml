@@ -3,66 +3,25 @@ run-name: ${{ github.actor }} pre-merge
 on: [pull_request]
 
 jobs:
-  rust_build:
+  rust_checks:
       if: github.event.pull_request.draft == false
       runs-on: ubuntu-latest
       container: rust:latest
       steps:
         - uses: actions/checkout@v4
+        - uses: dtolnay/rust-toolchain@stable
+          with:
+            components: rustfmt, clippy
         - name: Build Rust package
           run: cargo build --workspace
-        - name: Upload package
-          uses: actions/upload-artifact@v4
-          with:
-            name: rust_build
-            path: target/debug
-
-  rust_tests:
-    needs: rust_build
-    runs-on: ubuntu-latest
-    container: rust:latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Download Rust build
-        uses: actions/download-artifact@v4
-        with:
-          name: rust_build
-          path: target/debug
-      - name: Run Rust tests
-        run: cargo test
-
-  rust_examples:
-    needs: rust_build
-    runs-on: ubuntu-latest
-    container: rust:latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Download Rust build
-        uses: actions/download-artifact@v4
-        with:
-          name: rust_build
-          path: target/debug
-      - name: Run Rust examples
-        run: cargo run --example basic_sim 200 100
-
-  rust_formatting:
-    needs: rust_build
-    runs-on: ubuntu-latest
-    container: rust:latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          components: rustfmt, clippy
-      - name: Download Rust build
-        uses: actions/download-artifact@v4
-        with:
-          name: rust_build
-          path: target/debug
-      - name: Formatting
-        run: cargo fmt --all -- --check
-      - name: Clippy
-        run: cargo clippy -- -Dwarnings
+        - name: Rust tests
+          run: cargo test
+        - name: Rust example
+          run: cargo run --example basic_sim 200 100
+        - name: Rust formatting
+          run: cargo fmt --all -- --check
+        - name: Clippy
+          run: cargo clippy -- -Dwarnings
 
   maturin_build:
     if: github.event.pull_request.draft == false
@@ -80,7 +39,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: python_build
-          path: target/wheels/verbs-*linux_x86_64.whl
+          path: target/wheels/verbs-*-manylinux_2_34_x86_64.whl
 
   python_tests:
     needs: maturin_build
@@ -95,7 +54,7 @@ jobs:
         with:
           name: python_build
       - name: Install package
-        run: pip install verbs-*linux_x86_64.whl
+        run: pip install verbs-*-manylinux_2_34_x86_64.whl
       - name: Install pytest
         run: pip install pytest
       - name: Run tests
@@ -114,7 +73,7 @@ jobs:
         with:
           name: python_build
       - name: Install package
-        run: pip install verbs-*linux_x86_64.whl
+        run: pip install verbs-*-manylinux_2_34_x86_64.whl
       - name: Run basic example
         run: python examples/basic_sim.py
       - name: Run batch runner example
@@ -128,7 +87,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Install hatch
-        run: pip install hatch
-      - name: Build sphinx docs
-        run: hatch run sphinx:build
+      # - name: Install hatch
+      #   run: pip install hatch
+      # - name: Build sphinx docs
+      #   run: hatch run sphinx:build
