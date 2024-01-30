@@ -1,0 +1,22 @@
+[package]
+name = "verbs"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "verbs"
+crate-type = ["cdylib", "rlib"]
+doctest = false
+
+[dependencies]
+revm.workspace = true
+alloy-primitives.workspace = true
+alloy-sol-types.workspace = true
+fastrand.workspace = true
+
+numpy = "0.20.0"
+pyo3 = { version="0.20.0", features = ["extension-module"] }
+pyo3-log = "0.9.0"
+
+rust_sim = { path = "../core/rust_sim" }
+fork-evm = { path = "../core/fork_evm" }

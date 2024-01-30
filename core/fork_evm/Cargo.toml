@@ -1,0 +1,39 @@
+[package]
+name = "fork-evm"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+revm = { workspace = true, features = ["std", "serde"] }
+
+alloy-primitives.workspace = true
+alloy-sol-types.workspace = true
+alloy-json-abi = "0.4.2"
+
+ethers-core.workspace = true
+ethers-providers.workspace = true
+ethers-middleware.workspace = true
+
+# Encoding/decoding
+serde_json = "1"
+serde = "1"
+hex.workspace = true
+
+# Error handling
+eyre = "0.6"
+thiserror = "1"
+
+# Logging
+tracing = "0.1"
+
+# Threading/futures
+tokio.workspace = true
+parking_lot = "0.12"
+futures.workspace = true
+
+# Misc
+url = "2"
+auto_impl = "1"
+itertools = "0.11.0"
+async-trait = "0.1.74"
+reqwest = { version = "0.11.22", default-features = false }

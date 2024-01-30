@@ -1,0 +1,31 @@
+[package]
+name = "rust_sim"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+revm = { workspace = true, features = ["ethersdb"] }
+
+alloy-primitives.workspace = true
+alloy-sol-types.workspace = true
+ethereum-types.workspace = true
+
+# TODO: These should be changed out for alloy
+ethers-core.workspace = true
+ethers-providers.workspace = true
+
+fastrand.workspace = true
+hex.workspace = true
+tokio.workspace = true
+futures.workspace = true
+
+kdam = "0.3.0"
+log = "0.4.19"
+anyhow = "1.0.75"
+
+sim-macros = { path="../macros" }
+fork-evm = { path="../fork_evm" }
+
+[dev-dependencies]
+assert_approx_eq = "1.1.0"
+rstest = "0.18.2"
