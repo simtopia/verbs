@@ -129,10 +129,13 @@ jobs:
           python-version: '3.10'
       - run: pip install hatch
       - run: hatch run sphinx:build
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-pages-artifact@v3.0.0
         with:
-          name: github-pages
           path: docs/python/build/html
+      # - uses: actions/upload-artifact@v4
+      #   with:
+      #     name: github-pages
+      #     path: docs/python/build/html
 
   publish_docs:
     runs-on: ubuntu-latest
