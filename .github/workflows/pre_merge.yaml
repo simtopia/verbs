@@ -1,0 +1,134 @@
+name: pre-merge
+run-name: ${{ github.actor }} pre-merge
+on: [pull_request]
+
+jobs:
+  rust_build:
+      if: github.event.pull_request.draft == false
+      runs-on: ubuntu-latest
+      container: rust:latest
+      steps:
+        - uses: actions/checkout@v4
+        - name: Build Rust package
+          run: cargo build --workspace
+        - name: Upload package
+          uses: actions/upload-artifact@v4
+          with:
+            name: rust_build
+            path: target
+
+  rust_tests:
+    needs: rust_build
+    runs-on: ubuntu-latest
+    container: rust:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download Rust build
+        uses: actions/download-artifact@v4
+        with:
+          name: rust_build
+          path: target
+      - name: Run Rust tests
+        run: cargo test
+
+  rust_examples:
+    needs: rust_build
+    runs-on: ubuntu-latest
+    container: rust:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download Rust build
+        uses: actions/download-artifact@v4
+        with:
+          name: rust_build
+          path: target
+      - name: Run Rust examples
+        run: cargo run --example basic_sim 200 100
+
+  rust_formatting:
+    needs: rust_build
+    runs-on: ubuntu-latest
+    container: rust:latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: [rustfmt, clippy]
+      - name: Download Rust build
+        uses: actions/download-artifact@v4
+        with:
+          name: rust_build
+          path: target
+      - name: Formatting
+        run: cargo fmt --all -- --check
+      - name: Clippy
+        run: cargo clippy -- -Dwarnings
+
+  maturin_build:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - run: pip install hatch
+      - name: Maturin build
+        run: hatch run dev:build
+      - name: Upload wheel
+        uses: actions/upload-artifact@v4
+        with:
+          name: python_build
+          path: target/wheels/verbs-*.whl
+
+  python_tests:
+    needs: maturin_build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Download wheel
+        uses: actions/download-artifact@v4
+        with:
+          name: python_build
+      - name: Install package
+        run: pip install verbs-*.whl
+      - name: Install pytest
+        run: pip install pytest
+      - name: Run tests
+        run: pytest -v tests
+
+  python_examples:
+    needs: maturin_build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Download wheel
+        uses: actions/download-artifact@v4
+        with:
+          name: python_build
+      - name: Install package
+        run: pip install verbs-*.whl
+      - name: Run basic example
+        run: python examples/basic_sim.py
+      - name: Run batch runner example
+        run: python examples/batch_runner.py
+
+  python_docs:
+    needs: maturin_build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install hatch
+        run: pip install hatch
+      - name: Build sphinx docs
+        run: hatch run sphinx:build
