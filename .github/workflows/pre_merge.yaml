@@ -89,7 +89,7 @@ jobs:
           python-version: '3.11'
       - name: Install hatch
         run: pip install hatch
-      - name: Install dependencies
+      - name: Get dependencies
         run: hatch --env sphinx dep show requirements -e > requirements.txt
       - name: Install Sphinx requirements
         run: pip install -r requirements.txt
@@ -98,6 +98,6 @@ jobs:
         with:
           name: python_build
       - name: Install package
-        run: pip install verbs-*-manylinux_2_34_x86_64.whl
+        run: pip install -e verbs-*-manylinux_2_34_x86_64.whl
       - name: Build Sphinx
         run: sphinx-build -M html docs/python/source docs/python/build
