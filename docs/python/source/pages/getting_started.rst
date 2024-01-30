@@ -2,6 +2,15 @@
 Getting Started
 ***************
 
+Installation
+============
+
+Verbs can be installed via pip
+
+.. code-block:: bash
+
+   pip install verbs
+
 Building from Source
 ====================
 
