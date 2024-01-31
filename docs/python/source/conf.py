@@ -8,10 +8,12 @@
 import os
 import sys
 
+import pkg_resources
+
 project = "VERBS"
 copyright = "2023, Simtopia"
 author = "Simtopia"
-release = "0.1.0"
+release = pkg_resources.get_distribution("verbs").version
 
 sys.path.insert(0, os.path.abspath("../../../src"))
 
