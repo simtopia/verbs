@@ -39,7 +39,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: python_build
-          path: target/wheels/verbs-*-manylinux_2_34_x86_64.whl
+          path: target/wheels/verbs-*.whl
 
   python_tests:
     needs: maturin_build
@@ -98,6 +98,6 @@ jobs:
         with:
           name: python_build
       - name: Install package
-        run: pip install -e verbs-*-manylinux_2_34_x86_64.whl
+        run: pip install verbs-*-linux_x86_64.whl
       - name: Build Sphinx
         run: sphinx-build -M html docs/python/source docs/python/build
