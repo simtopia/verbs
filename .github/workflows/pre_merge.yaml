@@ -32,7 +32,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install hatch
+      - name: Install hatch 🐣
+        run: pip install hatch
       - name: Maturin build
         run: hatch run dev:build
       - name: Upload wheel
@@ -57,7 +58,7 @@ jobs:
         run: pip install verbs-*-manylinux_2_34_x86_64.whl
       - name: Install pytest
         run: pip install pytest
-      - name: Run tests
+      - name: Run tests 🧪
         run: pytest -v tests
 
   python_examples:
@@ -80,24 +81,13 @@ jobs:
         run: python examples/batch_runner.py
 
   python_docs:
-    needs: maturin_build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Install hatch
+      - name: Install hatch 🐣
         run: pip install hatch
-      - name: Get dependencies
-        run: hatch --env sphinx dep show requirements -e > requirements.txt
-      - name: Install Sphinx requirements
-        run: pip install -r requirements.txt
-      - name: Download wheel
-        uses: actions/download-artifact@v4
-        with:
-          name: python_build
-      - name: Install package
-        run: pip install verbs-*-linux_x86_64.whl
-      - name: Build Sphinx
-        run: sphinx-build -M html docs/python/source docs/python/build
+      - name: Install verbs and build docs 📚
+        run: hatch run sphinx:build
