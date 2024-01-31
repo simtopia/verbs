@@ -11,7 +11,7 @@ import sys
 project = "VERBS"
 copyright = "2023, Simtopia"
 author = "Simtopia"
-release = "0.1.0"
+release = "0.1.1"
 
 sys.path.insert(0, os.path.abspath("../../../src"))
 
