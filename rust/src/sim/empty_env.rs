@@ -20,10 +20,11 @@ use pyo3::types::PyBytes;
 ///
 /// .. code-block:: python
 ///
+///    # Initialise a completely empty db
 ///    env = EmptyEnv(101)
-///    # Or from a snapshot
+///    # Or initialise from a snapshot
 ///    env = EmptyEnv(101, snapshot=snapshot)
-///    # Or load a cache from a previous fork run
+///    # Or load a cache from a previous forked run
 ///    env = EmptyEnv(101, cache=cache)
 ///    ...
 ///    env.submit_call(...)
@@ -60,6 +61,12 @@ impl EmptyEnv {
     }
 
     /// Current step (i.e. block) of the simulation
+    ///
+    /// Returns
+    /// -------
+    /// int
+    ///     Current step of the simulation.
+    ///
     #[getter]
     fn get_step(&self) -> PyResult<usize> {
         Ok(self.0.step)
