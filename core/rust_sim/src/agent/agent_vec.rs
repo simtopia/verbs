@@ -146,7 +146,7 @@ mod tests {
 
     #[fixture]
     fn network() -> Network<LocalDB> {
-        Network::<LocalDB>::init()
+        Network::<LocalDB>::init(U256::ZERO, U256::ZERO)
     }
 
     #[fixture]

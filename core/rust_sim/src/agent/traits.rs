@@ -115,7 +115,7 @@ mod tests {
         };
 
         let mut rng = fastrand::Rng::with_seed(101);
-        let mut network = &mut Network::<LocalDB>::init();
+        let mut network = &mut Network::<LocalDB>::init(U256::ZERO, U256::ZERO);
 
         let calls = x.call_agents(&mut rng, &mut network);
 

@@ -1,5 +1,5 @@
 use alloy_primitives::{Address, Bytes, B256, U256};
-use fork_evm::{LocalDB, DB};
+use fork_evm::{LocalDB, Requests, DB};
 use pyo3::{types::PyBytes, Python};
 use revm::{
     db::{AccountState, DbAccount},
@@ -23,6 +23,28 @@ pub type PyBlockEnv<'a> = (
 pub type PyAccountInfo<'a> = (&'a PyBytes, u64, &'a PyBytes, Option<&'a PyBytes>);
 
 pub type PyDbAccount<'a> = (PyAccountInfo<'a>, u8, Vec<(&'a PyBytes, &'a PyBytes)>);
+
+fn info_to_py<'a>(py: Python<'a>, info: &AccountInfo) -> PyAccountInfo<'a> {
+    (
+        PyBytes::new(py, info.balance.as_le_slice()),
+        info.nonce,
+        PyBytes::new(py, info.code_hash.as_slice()),
+        info.code
+            .as_ref()
+            .map(|b| bytes_to_py(py, b.bytes().clone())),
+    )
+}
+
+fn py_to_info(info: PyAccountInfo) -> AccountInfo {
+    AccountInfo {
+        balance: U256::from_le_slice(info.0.as_bytes()),
+        nonce: info.1,
+        code_hash: B256::from_slice(info.2.as_bytes()),
+        code: info
+            .3
+            .map(|x| Bytecode::new_raw(Bytes::copy_from_slice(x.as_bytes()))),
+    }
+}
 
 pub type PyLog<'a> = (&'a PyBytes, Vec<&'a PyBytes>, &'a PyBytes);
 
@@ -54,8 +76,45 @@ fn int_to_account_state(i: u8) -> AccountState {
         1 => AccountState::Touched,
         2 => AccountState::StorageCleared,
         3 => AccountState::None,
-        _ => panic!("Got an unexpected value to cast to an account state"),
+        _ => panic!("Got an unexpected value {} to cast to an account state", i),
     }
+}
+
+pub type PyRequests<'a> = (
+    u128,
+    u128,
+    Vec<(&'a PyBytes, PyAccountInfo<'a>)>,
+    Vec<(&'a PyBytes, &'a PyBytes, &'a PyBytes)>,
+);
+
+pub fn create_py_request_history<'a>(
+    py: Python<'a>,
+    time_stamp: U256,
+    block_number: U256,
+    requests: &Requests,
+) -> PyRequests<'a> {
+    let time_stamp: u128 = time_stamp.try_into().unwrap();
+    let block_number: u128 = block_number.try_into().unwrap();
+
+    let py_accounts: Vec<(&'a PyBytes, PyAccountInfo)> = requests
+        .accounts
+        .iter()
+        .map(|(address, info)| (address_to_py(py, *address), info_to_py(py, info)))
+        .collect();
+
+    let py_storage: Vec<(&'a PyBytes, &'a PyBytes, &'a PyBytes)> = requests
+        .storage
+        .iter()
+        .map(|(address, idx, value)| {
+            (
+                address_to_py(py, *address),
+                PyBytes::new(py, idx.as_le_slice()),
+                PyBytes::new(py, value.as_le_slice()),
+            )
+        })
+        .collect();
+
+    (time_stamp, block_number, py_accounts, py_storage)
 }
 
 pub fn create_py_snapshot<'a, D: DB>(py: Python<'a>, network: &mut Network<D>) -> PyDbState<'a> {
@@ -83,15 +142,7 @@ pub fn create_py_snapshot<'a, D: DB>(py: Python<'a>, network: &mut Network<D>) -
             (
                 address_to_py(py, *k),
                 (
-                    (
-                        PyBytes::new(py, v.info.balance.as_le_slice()),
-                        v.info.nonce,
-                        PyBytes::new(py, v.info.code_hash.as_slice()),
-                        v.info
-                            .code
-                            .as_ref()
-                            .map(|b| bytes_to_py(py, b.bytes().clone())),
-                    ),
+                    info_to_py(py, &v.info),
                     account_state_to_int(&v.account_state),
                     v.storage
                         .iter()
@@ -147,6 +198,26 @@ pub fn create_py_snapshot<'a, D: DB>(py: Python<'a>, network: &mut Network<D>) -
     (block_env, accounts, contracts, logs, block_hashes)
 }
 
+pub fn load_cache(cache: PyRequests, db: &mut LocalDB) {
+    for (address, info) in cache.2.into_iter() {
+        db.accounts.insert(
+            Address::from_slice(address.as_bytes()),
+            DbAccount {
+                info: py_to_info(info),
+                ..Default::default()
+            },
+        );
+    }
+
+    for (address, idx, value) in cache.3.into_iter() {
+        let address = Address::from_slice(address.as_bytes());
+        db.accounts.get_mut(&address).unwrap().storage.insert(
+            U256::from_le_slice(idx.as_bytes()),
+            U256::from_le_slice(value.as_bytes()),
+        );
+    }
+}
+
 pub fn load_block_env(snapshot: &PyDbState) -> BlockEnv {
     let block = snapshot.0;
 
@@ -170,15 +241,7 @@ pub fn load_snapshot(db: &mut LocalDB, snapshot: PyDbState) {
         db.accounts.insert(
             Address::from_slice(k.as_bytes()),
             DbAccount {
-                info: AccountInfo {
-                    balance: U256::from_le_slice(v.0 .0.as_bytes()),
-                    nonce: v.0 .1,
-                    code_hash: B256::from_slice(v.0 .2.as_bytes()),
-                    code: v
-                        .0
-                         .3
-                        .map(|x| Bytecode::new_raw(Bytes::copy_from_slice(x.as_bytes()))),
-                },
+                info: py_to_info(v.0),
                 account_state: int_to_account_state(v.1),
                 storage: v
                     .2

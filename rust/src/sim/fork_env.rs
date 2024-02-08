@@ -49,6 +49,15 @@ impl ForkEnv {
         Ok(self.0.export_state(py))
     }
 
+    pub fn export_cache<'a>(&mut self, py: Python<'a>) -> PyResult<snapshot::PyRequests<'a>> {
+        Ok(snapshot::create_py_request_history(
+            py,
+            self.0.network.evm.env.block.timestamp,
+            self.0.network.evm.env.block.number,
+            self.0.network.get_request_history(),
+        ))
+    }
+
     /// Current step (i.e. block) of the simulation
     #[getter]
     fn get_step(&self) -> PyResult<usize> {

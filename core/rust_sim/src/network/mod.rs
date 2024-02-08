@@ -5,7 +5,7 @@ use alloy_primitives::{Address, Uint, B256, U256};
 use alloy_sol_types::SolCall;
 use anyhow::Result;
 pub use ethereum_types::U64;
-use fork_evm::{ForkDb, LocalDB, DB};
+use fork_evm::{ForkDb, LocalDB, Requests, DB};
 use log::debug;
 use revm::primitives::{AccountInfo, Bytecode, ExecutionResult, Log, ResultAndState, TxEnv};
 use revm::EVM;
@@ -65,16 +65,25 @@ impl Network<ForkDb> {
             event_history: Vec::new(),
         }
     }
+
+    pub fn get_request_history(&self) -> &Requests {
+        match &self.evm.db {
+            Some(db) => &db.requests,
+            None => panic!("No DB set"),
+        }
+    }
 }
 
 impl Network<LocalDB> {
-    pub fn init() -> Self {
+    pub fn init(timestamp: U256, block_number: U256) -> Self {
         let mut evm = EVM::new();
         let db = LocalDB::new();
 
         evm.env.cfg.limit_contract_code_size = Some(0x1000000);
         evm.env.cfg.disable_eip3607 = true;
         evm.env.block.gas_limit = U256::MAX;
+        evm.env.block.timestamp = timestamp;
+        evm.env.block.number = block_number;
 
         let start_balance = U256::to_weth(10_000);
         evm.database(db);
@@ -90,8 +99,13 @@ impl Network<LocalDB> {
         network
     }
 
-    pub fn from_range(start_balance: u128, r: Range<u64>) -> Self {
-        let mut network = Network::<LocalDB>::init();
+    pub fn from_range(
+        timestamp: U256,
+        block_number: U256,
+        start_balance: u128,
+        r: Range<u64>,
+    ) -> Self {
+        let mut network = Network::<LocalDB>::init(timestamp, block_number);
         let start_balance = U256::from(start_balance);
 
         for n in r {
@@ -101,8 +115,13 @@ impl Network<LocalDB> {
         network
     }
 
-    pub fn from_agents(start_balance: u128, agent_addresses: Vec<Address>) -> Self {
-        let mut network = Network::<LocalDB>::init();
+    pub fn from_agents(
+        timestamp: U256,
+        block_number: U256,
+        start_balance: u128,
+        agent_addresses: Vec<Address>,
+    ) -> Self {
+        let mut network = Network::<LocalDB>::init(timestamp, block_number);
         network.insert_agents(start_balance, agent_addresses);
         network
     }
@@ -299,7 +318,7 @@ mod tests {
 
     #[fixture]
     fn deployment() -> (Network<LocalDB>, Address, Address) {
-        let mut network = Network::<LocalDB>::init();
+        let mut network = Network::<LocalDB>::init(U256::ZERO, U256::ZERO);
 
         let constructor_args = <i128>::abi_encode(&101);
         let bytecode_hex = "608060405234801561001057600080fd5b50\

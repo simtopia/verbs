@@ -1,5 +1,6 @@
 use alloy_primitives::{Address, B256, U256 as AlloyU256};
 use ethers_core::types::{H160, H256, U256};
+use revm::primitives::AccountInfo;
 
 pub trait ToAlloy {
     type To;
@@ -46,4 +47,10 @@ impl ToEthers for B256 {
     fn to_ethers(self) -> Self::To {
         H256(self.0)
     }
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct Requests {
+    pub accounts: Vec<(Address, AccountInfo)>,
+    pub storage: Vec<(Address, AlloyU256, AlloyU256)>,
 }
