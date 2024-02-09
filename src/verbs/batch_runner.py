@@ -42,7 +42,7 @@ def batch_run(
     The simulation environment for each sample can optionally
     be initialised from either a provided snapshot
     (generated using the
-    :py:meth:`verbs.envs.ForkEnv.export_snapshot`) method,
+    :py:meth:`verbs.envs.ForkEnv.export_snapshot` method),
     or a cache (generated using the
     :py:meth:`verbs.envs.ForkEnv.export_cache` method).
 
