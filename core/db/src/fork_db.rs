@@ -1,6 +1,7 @@
 use super::db::DB;
 use super::error::DatabaseError;
 use super::provider::ProviderBuilder;
+use super::types::Requests;
 use crate::runtime_client::RuntimeClient;
 use crate::types::{ToAlloy, ToEthers};
 use alloy_primitives::{keccak256, Bytes};
@@ -25,6 +26,7 @@ pub struct ForkDb {
     provider: Provider<RuntimeClient>,
     block_id: Option<BlockId>,
     pub block: Block<H256>,
+    pub requests: Requests,
 }
 
 impl ForkDb {
@@ -58,6 +60,7 @@ impl ForkDb {
             provider,
             block_id: Some(block.number.unwrap().into()),
             block,
+            requests: Requests::default(),
         }
     }
 
@@ -182,10 +185,13 @@ impl Database for ForkDb {
             Entry::Vacant(entry) => {
                 let info = basic_from_fork(&self.provider, address, self.block_id);
                 let account = match info {
-                    Ok(i) => DbAccount {
-                        info: i,
-                        ..Default::default()
-                    },
+                    Ok(i) => {
+                        self.requests.accounts.push((address, i.clone()));
+                        DbAccount {
+                            info: i,
+                            ..Default::default()
+                        }
+                    }
                     Err(_) => DbAccount::new_not_existing(),
                 };
                 entry.insert(account)
@@ -218,6 +224,7 @@ impl Database for ForkDb {
                                 storage_from_fork(&self.provider, address, index, self.block_id);
                             match slot {
                                 Ok(s) => {
+                                    self.requests.storage.push((address, index, s));
                                     entry.insert(s);
                                     Ok(s)
                                 }

@@ -1,7 +1,7 @@
 use crate::agent::{AdminAgent, SimState};
 use crate::network::Network;
 use alloy_primitives::U256;
-use fork_evm::DB;
+use db::DB;
 use kdam::tqdm;
 
 // Represents blocks updating every 15s

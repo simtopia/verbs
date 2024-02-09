@@ -1,5 +1,5 @@
 [package]
-name = "fork-evm"
+name = "db"
 version.workspace = true
 edition.workspace = true
 

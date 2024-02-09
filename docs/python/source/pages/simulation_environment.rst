@@ -11,50 +11,114 @@ generated during execution.
 Initialisation
 ==============
 
-A simulation environment can be initialised with either
-an empty EVM state, or forked from a remote endpoint.
+The EVM state of the simulation environment is stored as
+local in memory data structures. This in-memory database
+can be initialised in several ways dependent on the use
+case:
+
+Empty Database
+--------------
+
+In this case the DB contains no data
+and so the simulation should manually deploy contracts and
+protocols. This is generally ok for small tests and
+protocols, but can be labour intensive for larger protocols.
+
+The simulation environment is then just initialised with a
+random seed
 
 .. code-block:: python
 
    env = verbs.envs.EmptyEnv(1234)
 
-will initialise an environment class with an empty EVM state
-(i.e. with no accounts or contracts) and random
-seed ``1234``. Likewise
+Remote fork
+-----------
+
+In this case the DB can request
+data not present in a local database from a remote endpoint
+(e.g. alchemy). For example if the EVM requires the bytecode
+and storage values of a contract to execute a transaction in
+the simulation, and they are not available locally, it will
+attempt to retrieve data from the remote endpoint. This
+means you can run simulations against actual deployed protocols,
+but this comes at a performance cost, given the need to
+retrieve data (possibly over the internet). For complex
+protocols this may mean a large number of requests are required
+to load sub-contracts and their data.
+
+The environment is initialised with a endpoint url, random seed
+and block number, for example:
 
 .. code-block:: python
 
    env = verbs.envs.ForkEnv(url, 1234, 1000)
 
 will create an environment with a fork backend, with
-random seed `1234` and from block number `1000`. This
-environment requests data that does not exist locally
-from the remote endpoint, and so can be used
-to run a simulation from an existing deployment, e.g.
-a calling a contract will fetch the contract code and
-any required storage values from the remote.
-
-Finally an in memory environment can be initialised
-from a snapshot of another environment
-
-.. code-block:: python
-
-   env = verbs.envs.EmptyEnv(1234)
-
-   # Deploy contracts etc.
-   ...
-
-   snapshot = env.export_snapshot()
-   new_env = verbs.envs.EmptyEnv(1234, snapshot)
+random seed `1234`, from block number `1000`.
 
 .. warning::
 
-   Since the fork environment makes requests from a remote
-   endpoint it is generally significantly slower for
-   simulation usage compared to a purely local EVM. To this
-   end we provide functionality to create a snapshot of
-   the EVM state and use this to execute a purely local
-   simulation without the performance penalty.
+   This simulation environment is *significantly* slower than
+   a purely in memory db!
+
+Snapshot
+--------
+
+The environment DB state can be initialised from
+a snapshot of the state from a previous simulation. This can
+either be used to start a simulation from a warm-start or to
+continue a previous simulation. Note that this snapshot contains
+the full state of the EVM including the states of any agents in
+the simulation.
+
+A snapshot can be created from a environment, and then directly
+used to initialise an :py:class:`verbs.envs.EmptyEnv`
+
+.. code-block:: python
+
+   env = verbs.envs.ForkEnv(url, 1234, 1000)
+   # Initialise & run a simulation
+   snapshot = env.export_snapshot()
+   # Use this snapshot to initialise a new environment
+   new_env = verbs.envs.EmptyEnv(1234, snapshot=snapshot)
+
+Cache
+-----
+
+The overcome the performance drawbacks of the simulation, the
+values requested during a simulation can be stored, and then
+used to initialise values in a purely local database. This
+should mean that any values that were requested (e.g. contracts
+and their storage values) should be present, but not data
+manually deployed (e.g. agent accounts or manually deployed
+contracts).
+
+This can be used to generate required data from an initially
+slow simulation, but then subsequent simulations using the
+cache can be run without the performance penalty.
+
+This can be initialised by first creating a
+:py:class:`verbs.envs.ForkEnv` and then creating a cache that
+can be used to directly initialise a
+:py:class:`verbs.envs.EmptyEnv`, for example
+
+.. code-block:: python
+
+   env = verbs.envs.ForkEnv(url, 1234, 1000)
+   # Initialise & run a simulation
+   ...
+   # Export the cached requests
+   cache = env.export_cache()
+   # Use this cache to initialise a new environment
+   faster_env = verbs.envs.EmptyEnv(1234, cache=cache)
+
+.. warning::
+
+   This assumes that the initial simulation will request
+   all the data required for subsequent simulations, i.e.
+   that subsequent simulations call the same contracts/functions
+   as the initial simulation. Missing data will lead to
+   the simulation crashing or unexpected behaviour.
 
 Functionality
 =============

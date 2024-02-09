@@ -1,7 +1,7 @@
 use super::base_env::BaseEnv;
 use super::snapshot;
 use crate::types::{PyAddress, PyEvent, PyExecutionResult, PyRevertError};
-use fork_evm::ForkDb;
+use db::ForkDb;
 use pyo3::prelude::*;
 use pyo3::types::PyBytes;
 
@@ -15,9 +15,9 @@ use pyo3::types::PyBytes;
 /// -----
 /// Due to requests made by the backend this environment
 /// is a lot slower than a purely in memory deployment. One
-/// use-case is to run a dummy simulation to retrieve
+/// use-case is to run a simulation to retrieve
 /// storage values and contracts required for a simulation,
-/// then use a snapshot of this environment to initialise
+/// then use the cache from this environment to initialise
 /// other in memory simulations.
 ///
 /// Examples
@@ -29,6 +29,15 @@ use pyo3::types::PyBytes;
 ///    env = verbs.envs.ForkEnv(alchemy_url, 101, 12345)
 ///    ...
 ///    env.submit_call(...)
+///
+/// To then use the cache from this simulation to
+/// run subsequent simulations
+///
+/// .. code-block:: python
+///
+///    cache = env.export_cache()
+///
+///    new_env = verbs.envs.EmptyEnv(101, cache=cache)
 ///
 #[pyclass]
 pub struct ForkEnv(BaseEnv<ForkDb>);
@@ -49,7 +58,53 @@ impl ForkEnv {
         Ok(self.0.export_state(py))
     }
 
+    /// Export a cache of calls made by the DB
+    ///
+    /// Exports a cache of requests made to the remote endpoint, i.e. requests
+    /// for account data and storage values. This data can then be used
+    /// to initialise the db for a purely local database for use in other
+    /// simulations.
+    ///
+    /// Examples
+    /// --------
+    ///
+    /// .. code-block:: python
+    ///
+    ///    env = verbs.envs.ForkEnv(alchemy_url, 101, 12345)
+    ///    # Run simulation from fork
+    ///    ...
+    ///    # Get cache of requests
+    ///    cache = env.export_cache()
+    ///    # Directly initialise a new environment from the cache
+    ///    new_env = verbs.envs.EmptyEnv(101, cache=cache)
+    ///
+    /// Returns
+    /// -------
+    ///
+    /// typing.List[typing.Tuple]
+    ///     Tuple containing:
+    ///
+    ///     - Env block timestamp
+    ///     - Env block number
+    ///     - List of account info requests
+    ///     - List of storage value requests
+    ///
+    pub fn export_cache<'a>(&mut self, py: Python<'a>) -> PyResult<snapshot::PyRequests<'a>> {
+        Ok(snapshot::create_py_request_history(
+            py,
+            self.0.network.evm.env.block.timestamp,
+            self.0.network.evm.env.block.number,
+            self.0.network.get_request_history(),
+        ))
+    }
+
     /// Current step (i.e. block) of the simulation
+    ///
+    /// Returns
+    /// -------
+    /// int
+    ///     Current step of the simulation.
+    ///
     #[getter]
     fn get_step(&self) -> PyResult<usize> {
         Ok(self.0.step)

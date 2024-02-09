@@ -17,7 +17,12 @@ pub fn main() {
     let start_balance = 1000000000000u128;
     let admin_address = Address::from(Uint::from(999));
 
-    let mut sim = Network::from_range(start_balance, 1..n_users.try_into().unwrap());
+    let mut sim = Network::from_range(
+        U256::ZERO,
+        U256::ZERO,
+        start_balance,
+        1..n_users.try_into().unwrap(),
+    );
 
     let token_address = sim.deploy_contract(
         admin_address,

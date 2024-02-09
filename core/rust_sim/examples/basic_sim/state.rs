@@ -1,7 +1,7 @@
 use crate::ecr20;
 use alloy_primitives::{Address, Uint, U256};
+use db::DB;
 use fastrand::Rng;
-use fork_evm::DB;
 use rust_sim::agent::{AdminAgent, Agent, AgentSet, AgentVec, RecordedAgent, SimState};
 use rust_sim::contract::Transaction;
 use rust_sim::network::{create_call, Network};

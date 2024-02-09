@@ -2,7 +2,7 @@ use crate::agent::traits::{Agent, AgentSet, RecordedAgent, RecordedAgentSet};
 use crate::contract::Transaction;
 use crate::network::Network;
 use alloy_primitives::Address;
-use fork_evm::DB;
+use db::DB;
 use std::mem;
 
 /// Implementation of agent set tracking agents as a vector.
@@ -98,7 +98,7 @@ mod tests {
     use super::*;
     use crate::agent::traits;
     use alloy_primitives::{Uint, U256};
-    use fork_evm::LocalDB;
+    use db::LocalDB;
     use rstest::*;
 
     struct TestAgent {
@@ -146,7 +146,7 @@ mod tests {
 
     #[fixture]
     fn network() -> Network<LocalDB> {
-        Network::<LocalDB>::init()
+        Network::<LocalDB>::init(U256::ZERO, U256::ZERO)
     }
 
     #[fixture]

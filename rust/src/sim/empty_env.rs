@@ -3,7 +3,8 @@ use super::snapshot::PyDbState;
 use super::base_env::BaseEnv;
 use super::snapshot;
 use crate::types::{PyAddress, PyEvent, PyExecutionResult, PyRevertError};
-use fork_evm::LocalDB;
+use db::LocalDB;
+use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
 use pyo3::types::PyBytes;
 
@@ -19,9 +20,12 @@ use pyo3::types::PyBytes;
 ///
 /// .. code-block:: python
 ///
+///    # Initialise a completely empty db
 ///    env = EmptyEnv(101)
-///    # Or from a snapshot
-///    env = EmptyEnv(101, snapshot)
+///    # Or initialise from a snapshot
+///    env = EmptyEnv(101, snapshot=snapshot)
+///    # Or load a cache from a previous forked run
+///    env = EmptyEnv(101, cache=cache)
 ///    ...
 ///    env.submit_call(...)
 ///
@@ -31,11 +35,20 @@ pub struct EmptyEnv(BaseEnv<LocalDB>);
 #[pymethods]
 impl EmptyEnv {
     #[new]
-    pub fn new(seed: u64, snapshot: Option<PyDbState>) -> PyResult<Self> {
-        Ok(match snapshot {
-            Some(s) => Self(BaseEnv::<LocalDB>::from_snapshot(seed, s)),
-            None => Self(BaseEnv::<LocalDB>::new(seed)),
-        })
+    #[pyo3(signature = (seed, snapshot=None, cache=None))]
+    pub fn new(
+        seed: u64,
+        snapshot: Option<PyDbState>,
+        cache: Option<snapshot::PyRequests>,
+    ) -> PyResult<Self> {
+        match (snapshot, cache) {
+            (None, None) => Ok(Self(BaseEnv::<LocalDB>::new(0, 0, seed))),
+            (None, Some(c)) => Ok(Self(BaseEnv::<LocalDB>::from_cache(seed, c))),
+            (Some(s), None) => Ok(Self(BaseEnv::<LocalDB>::from_snapshot(seed, s))),
+            (Some(_), Some(_)) => Err(PyRuntimeError::new_err(
+                "Env must be initialised from either a snapshot or a cache but not both.",
+            )),
+        }
     }
 
     /// Export a snap shot of the EVM state and block parameters
@@ -48,6 +61,12 @@ impl EmptyEnv {
     }
 
     /// Current step (i.e. block) of the simulation
+    ///
+    /// Returns
+    /// -------
+    /// int
+    ///     Current step of the simulation.
+    ///
     #[getter]
     fn get_step(&self) -> PyResult<usize> {
         Ok(self.0.step)

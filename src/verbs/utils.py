@@ -7,6 +7,8 @@ import eth_abi
 import eth_utils
 from solcx import compile_files, install_solc
 
+import verbs.types
+
 
 def encode_args(
     types: typing.List[str],
@@ -96,6 +98,9 @@ def int_to_address(i: int) -> bytes:
     return i.to_bytes(20, "big")
 
 
+ZERO_ADDRESS = int_to_address(0)
+
+
 def process_contract(contract_path: str, solc_version: str) -> typing.List[typing.Dict]:
     """
     Compile a solidity contract and return its abi and bytecode
@@ -126,3 +131,87 @@ def process_contract(contract_path: str, solc_version: str) -> typing.List[typin
         dict(name=k.split(":")[-1], abi=v["abi"], bin=v["bin"])
         for k, v in compiled_sol.items()
     ]
+
+
+def cache_to_json(cache: verbs.types.Cache) -> typing.List:
+    """
+    Convert a request cache to a JSON compatible data-structure
+
+    Converts a cache of data requests from a fork-env (generated
+    using :py:meth:`verbs.envs.ForkEnv.export_cache`) into
+    a JSON friendly data structure, i.e. it converts tuples to
+    lists and bytes to hex strings.
+
+    Examples
+    --------
+
+    .. code-block:: python
+
+       env = verbs.envs.ForkEnv(...)
+       cache = env.export_cache()
+       cache_json = verbs.utils.cache_to_json(cache)
+       # Can now export the cache to a JSON file
+
+    Parameters
+    ----------
+    cache: verbs.types.Cache
+        Cache generated using :py:meth:`verbs.envs.ForkEnv.export_cache`.
+
+    Returns
+    -------
+    typing.List
+        JSON compatible data structure with bytes replaces with
+        corresponding hex string.
+    """
+    accounts = [
+        [x[0].hex(), [x[1][0].hex(), x[1][1], x[1][2].hex(), x[1][3].hex()]]
+        for x in cache[2]
+    ]
+    storage = [[x[0].hex(), x[1].hex(), x[2].hex()] for x in cache[3]]
+    return [cache[0], cache[1], accounts, storage]
+
+
+def cache_from_json(cache_json: typing.List) -> verbs.types.Cache:
+    """
+    Convert a cache JSON data into env compatible format
+
+    Converts a JSON compatible data structure representing a cache
+    back into the format required for use when initialising a
+    simulation environment.
+
+    Examples
+    --------
+
+    .. code-block:: python
+
+       cache =verbs.utils.cache_from_json(cache_json)
+       env = verbs.envs.EmptyEnv(101, cache)
+
+    Parameters
+    ----------
+    cache_json: typing.List
+        Cache JSON data structure.
+
+    Returns
+    -------
+    verbs.types.Cache
+        Cache converted to format for initialisation of a
+        simulation environment.
+    """
+    accounts = [
+        (
+            bytes.fromhex(x[0]),
+            (
+                bytes.fromhex(x[1][0]),
+                x[1][1],
+                bytes.fromhex(x[1][2]),
+                bytes.fromhex(x[1][3]),
+            ),
+        )
+        for x in cache_json[2]
+    ]
+    storage = [
+        (bytes.fromhex(x[0]), bytes.fromhex(x[1]), bytes.fromhex(x[2]))
+        for x in cache_json[3]
+    ]
+    return (cache_json[0], cache_json[1], accounts, storage)

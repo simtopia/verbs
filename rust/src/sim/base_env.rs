@@ -1,9 +1,11 @@
-use super::snapshot;
+use super::snapshot::{
+    create_py_snapshot, load_block_env, load_cache, load_snapshot, PyDbState, PyRequests,
+};
 use crate::types::{event_to_py, result_to_py, PyAddress, PyEvent, PyExecutionResult};
 use alloy_primitives::{Address, U256};
 use pyo3::prelude::*;
 
-use fork_evm::{ForkDb, LocalDB, DB};
+use db::{ForkDb, LocalDB, DB};
 use rust_sim::contract::Transaction;
 use rust_sim::network::{Network, RevertError};
 use std::mem;
@@ -23,8 +25,11 @@ pub struct BaseEnv<D: DB> {
 }
 
 impl BaseEnv<LocalDB> {
-    pub fn new(seed: u64) -> Self {
-        let network = Network::<LocalDB>::init();
+    pub fn new(timestamp: u128, block_number: u128, seed: u64) -> Self {
+        let network = Network::<LocalDB>::init(
+            U256::try_from(timestamp).unwrap(),
+            U256::try_from(block_number).unwrap(),
+        );
 
         BaseEnv {
             network,
@@ -34,13 +39,32 @@ impl BaseEnv<LocalDB> {
         }
     }
 
-    pub fn from_snapshot(seed: u64, snapshot: snapshot::PyDbState) -> Self {
-        let block_env = snapshot::load_block_env(&snapshot);
+    pub fn from_snapshot(seed: u64, snapshot: PyDbState) -> Self {
+        let block_env = load_block_env(&snapshot);
 
-        let mut network = Network::<LocalDB>::init();
+        let mut network = Network::<LocalDB>::init(block_env.timestamp, block_env.number);
         network.evm.env.block = block_env;
 
-        snapshot::load_snapshot(network.evm.db().unwrap(), snapshot);
+        load_snapshot(network.evm.db().unwrap(), snapshot);
+        BaseEnv {
+            network,
+            call_queue: Vec::new(),
+            rng: fastrand::Rng::with_seed(seed),
+            step: 0,
+        }
+    }
+
+    pub fn from_cache(seed: u64, requests: PyRequests) -> Self {
+        let mut network = Network::<LocalDB>::init(
+            U256::try_from(requests.0).unwrap(),
+            U256::try_from(requests.1).unwrap(),
+        );
+
+        match network.evm.db() {
+            Some(db) => load_cache(requests, db),
+            None => panic!("Database required"),
+        };
+
         BaseEnv {
             network,
             call_queue: Vec::new(),
@@ -93,8 +117,8 @@ impl<D: DB> BaseEnv<D> {
             .collect()
     }
 
-    pub fn export_state<'a>(&mut self, py: Python<'a>) -> snapshot::PyDbState<'a> {
-        snapshot::create_py_snapshot(py, &mut self.network)
+    pub fn export_state<'a>(&mut self, py: Python<'a>) -> PyDbState<'a> {
+        create_py_snapshot(py, &mut self.network)
     }
 
     pub fn submit_transaction(

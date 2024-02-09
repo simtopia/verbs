@@ -1,4 +1,4 @@
-core/fork_evm/target
+core/db/target
 core/macros/target
 core/rust_sim/target
 
