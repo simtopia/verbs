@@ -57,7 +57,7 @@ The execution function could then be defined as
             [agents[0].address, int(1e19)],
         )
 
-        runner = verbs.sim.Sim(101, env, agents)
+        runner = verbs.sim.Sim(seed, env, agents)
         results = runner.run(n_steps)
         return results
 
