@@ -137,7 +137,31 @@ def cache_to_json(cache: verbs.types.Cache) -> typing.List:
     """
     Convert a request cache to a JSON compatible data-structure
 
+    Converts a cache of data requests from a fork-env (generated
+    using :py:meth:`verbs.envs.ForkEnv.export_cache`) into
+    a JSON friendly data structure, i.e. it converts tuples to
+    lists and bytes to hex strings.
 
+    Examples
+    --------
+
+    .. code-block:: python
+
+       env = verbs.envs.ForkEnv(...)
+       cache = env.export_cache()
+       cache_json = verbs.utils.cache_to_json(cache)
+       # Can now export the cache to a JSON file
+
+    Parameters
+    ----------
+    cache: verbs.types.Cache
+        Cache generated using :py:meth:`verbs.envs.ForkEnv.export_cache`.
+
+    Returns
+    -------
+    typing.List
+        JSON compatible data structure with bytes replaces with
+        corresponding hex string.
     """
     accounts = [
         [x[0].hex(), [x[1][0].hex(), x[1][1], x[1][2].hex(), x[1][3].hex()]]
@@ -148,6 +172,32 @@ def cache_to_json(cache: verbs.types.Cache) -> typing.List:
 
 
 def cache_from_json(cache_json: typing.List) -> verbs.types.Cache:
+    """
+    Convert a cache JSON data into env compatible format
+
+    Converts a JSON compatible data structure representing a cache
+    back into the format required for use when initialising a
+    simulation environment.
+
+    Examples
+    --------
+
+    .. code-block:: python
+
+       cache =verbs.utils.cache_from_json(cache_json)
+       env = verbs.envs.EmptyEnv(101, cache)
+
+    Parameters
+    ----------
+    cache_json: typing.List
+        Cache JSON data structure.
+
+    Returns
+    -------
+    verbs.types.Cache
+        Cache converted to format for initialisation of a
+        simulation environment.
+    """
     accounts = [
         (
             bytes.fromhex(x[0]),
