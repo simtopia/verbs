@@ -242,7 +242,6 @@ impl RuntimeClientBuilder {
 impl JsonRpcClient for RuntimeClient {
     type Error = RuntimeClientError;
 
-    #[allow(implied_bounds_entailment)]
     async fn request<T, R>(&self, method: &str, params: T) -> Result<R, Self::Error>
     where
         T: Debug + Serialize + Send + Sync,
@@ -264,9 +263,6 @@ impl JsonRpcClient for RuntimeClient {
             InnerClient::Ws(ws) => JsonRpcClient::request(ws, method, params)
                 .await
                 .map_err(|e| RuntimeClientError::ProviderError(e.into())),
-            // InnerClient::Ipc(ipc) => JsonRpcClient::request(ipc, method, params)
-            //     .await
-            //     .map_err(|e| RuntimeClientError::ProviderError(e.into())),
         }?;
         Ok(res)
     }
