@@ -24,7 +24,7 @@ log = "0.4.19"
 anyhow = "1.0.75"
 
 sim-macros = { path="../macros" }
-fork-evm = { path="../fork_evm" }
+db = { path="../db" }
 
 [dev-dependencies]
 assert_approx_eq = "1.1.0"

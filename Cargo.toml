@@ -3,7 +3,7 @@
 members = [
     "core/rust_sim",
     "core/macros",
-    "core/fork_evm",
+    "core/db",
     "rust"
 ]
 resolver = "2"

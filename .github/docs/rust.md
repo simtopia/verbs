@@ -13,8 +13,9 @@ It currently consists of 3 sub-crates
 
 * `core/rust_sim/`: Rust Ethereum ABM library.
 * `core/macros/`: Macros used by the `rust_sim crate`.
-* `core/fork_evm`: Simple single threaded EVM backend that
-  requests storage values from a remote endpoint.
+* `core/db`: Streamlined single threaded EVM database
+  backend that allows for both in-memory and forking
+  from deployed chains.
 
 Cargo commands can be run from the repo root.
 

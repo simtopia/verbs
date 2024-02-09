@@ -5,7 +5,7 @@ use crate::types::{event_to_py, result_to_py, PyAddress, PyEvent, PyExecutionRes
 use alloy_primitives::{Address, U256};
 use pyo3::prelude::*;
 
-use fork_evm::{ForkDb, LocalDB, DB};
+use db::{ForkDb, LocalDB, DB};
 use rust_sim::contract::Transaction;
 use rust_sim::network::{Network, RevertError};
 use std::mem;

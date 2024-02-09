@@ -1,8 +1,8 @@
 use crate::contract::Transaction;
 use crate::network::Network;
 use alloy_primitives::Address;
+use db::DB;
 use fastrand::Rng;
-use fork_evm::DB;
 pub use sim_macros::SimState;
 
 pub trait SimState {
@@ -76,7 +76,7 @@ pub trait RecordedAgentSet<R> {
 mod tests {
     use super::*;
     use alloy_primitives::{Address, U256};
-    use fork_evm::LocalDB;
+    use db::LocalDB;
 
     struct DummyAgentSet {
         v: bool,

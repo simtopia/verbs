@@ -1,7 +1,7 @@
 use super::base_env::BaseEnv;
 use super::snapshot;
 use crate::types::{PyAddress, PyEvent, PyExecutionResult, PyRevertError};
-use fork_evm::ForkDb;
+use db::ForkDb;
 use pyo3::prelude::*;
 use pyo3::types::PyBytes;
 
