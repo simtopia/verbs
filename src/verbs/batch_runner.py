@@ -14,7 +14,7 @@ import typing
 
 import joblib
 
-from verbs.envs import EmptyEnv
+import verbs
 
 
 def batch_run(
@@ -104,14 +104,14 @@ def batch_run(
         the list of data produced by each Monte-Carlo sample.
     """
     assert not (
-        snapshot is None and cache is None
+        snapshot is not None and cache is not None
     ), "Either a snapshot or cache should be provided, not both"
 
     n_param_samples = len(parameters_samples)
     arg_set = itertools.product(parameters_samples, range(n_samples))
 
     def inner_runner(params, seed):
-        env = EmptyEnv(seed, cache=cache, snapshot=snapshot)
+        env = verbs.envs.EmptyEnv(seed, cache=cache, snapshot=snapshot)
         return sim_func(env, seed, n_steps, **params, **sim_kwargs)
 
     results = joblib.Parallel(n_jobs=n_jobs, verbose=verbose)(
