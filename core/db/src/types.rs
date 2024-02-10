@@ -49,8 +49,10 @@ impl ToEthers for B256 {
     }
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct Requests {
+    pub start_timestamp: AlloyU256,
+    pub start_block_number: AlloyU256,
     pub accounts: Vec<(Address, AccountInfo)>,
     pub storage: Vec<(Address, AlloyU256, AlloyU256)>,
 }
