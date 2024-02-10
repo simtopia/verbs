@@ -87,14 +87,9 @@ pub type PyRequests<'a> = (
     Vec<(&'a PyBytes, &'a PyBytes, &'a PyBytes)>,
 );
 
-pub fn create_py_request_history<'a>(
-    py: Python<'a>,
-    time_stamp: U256,
-    block_number: U256,
-    requests: &Requests,
-) -> PyRequests<'a> {
-    let time_stamp: u128 = time_stamp.try_into().unwrap();
-    let block_number: u128 = block_number.try_into().unwrap();
+pub fn create_py_request_history<'a>(py: Python<'a>, requests: &Requests) -> PyRequests<'a> {
+    let timestamp: u128 = requests.start_timestamp.try_into().unwrap();
+    let block_number: u128 = requests.start_block_number.try_into().unwrap();
 
     let py_accounts: Vec<(&'a PyBytes, PyAccountInfo)> = requests
         .accounts
@@ -114,7 +109,7 @@ pub fn create_py_request_history<'a>(
         })
         .collect();
 
-    (time_stamp, block_number, py_accounts, py_storage)
+    (timestamp, block_number, py_accounts, py_storage)
 }
 
 pub fn create_py_snapshot<'a, D: DB>(py: Python<'a>, network: &mut Network<D>) -> PyDbState<'a> {

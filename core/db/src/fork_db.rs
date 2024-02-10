@@ -52,6 +52,15 @@ impl ForkDb {
         let mut contracts = HashMap::new();
         contracts.insert(KECCAK_EMPTY, Bytecode::new());
         contracts.insert(B256::ZERO, Bytecode::new());
+
+        // Track the original time and block for when we want
+        //  to run a sim using the same cache
+        let timestamp = U256::try_from(block.timestamp.as_u128()).unwrap();
+        let block_number = match block.number {
+            Some(n) => U256::try_from(n.as_u64()).unwrap(),
+            None => U256::ZERO,
+        };
+
         Self {
             accounts: HashMap::new(),
             contracts,
@@ -60,7 +69,12 @@ impl ForkDb {
             provider,
             block_id: Some(block.number.unwrap().into()),
             block,
-            requests: Requests::default(),
+            requests: Requests {
+                start_timestamp: timestamp,
+                start_block_number: block_number,
+                accounts: Vec::new(),
+                storage: Vec::new(),
+            },
         }
     }
 
