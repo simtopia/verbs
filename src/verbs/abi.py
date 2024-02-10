@@ -293,7 +293,7 @@ class Function:
         address: bytes,
         args: typing.List[typing.Any],
         value: int = 0,
-    ) -> (typing.Tuple[typing.Any, ...], typing.List, int):
+    ) -> typing.Tuple[typing.Tuple[typing.Any, ...], typing.List, int]:
         """
         Directly call this function without committing any changes
 
@@ -331,7 +331,7 @@ class Function:
         address: bytes,
         args: typing.List[typing.Any],
         value: int = 0,
-    ) -> (typing.Tuple[typing.Any, ...], typing.List, int):
+    ) -> typing.Tuple[typing.Tuple[typing.Any, ...], typing.List, int]:
         """
         Directly call this function and commit any changes
 

@@ -115,7 +115,7 @@ class Sim:
         self,
         seed: int,
         env: Env,
-        agents: typing.Optional[BaseAgent] = None,
+        agents: typing.Optional[typing.List[BaseAgent]] = None,
     ):
         """
         Parameters
@@ -142,7 +142,7 @@ class Sim:
     @classmethod
     def new(
         seed: int,
-        agents: typing.Optional[typing.List[typing.Any]] = None,
+        agents: typing.Optional[typing.List[BaseAgent]] = None,
     ):
         """
         Initialise a simulation with an empty environment
@@ -173,7 +173,7 @@ class Sim:
         node_url: str,
         block_number: int,
         seed: int,
-        agents: typing.Optional[typing.List[typing.Any]] = None,
+        agents: typing.Optional[typing.List[BaseAgent]] = None,
     ):
         """
         Initialise a simulation from a fork
