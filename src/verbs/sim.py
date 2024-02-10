@@ -10,7 +10,7 @@ import numpy as np
 from tqdm import trange
 
 from verbs.envs import EmptyEnv, ForkEnv
-from verbs.types import Env, Transaction
+from verbs.types import Cache, Env, Transaction
 
 
 class BaseAgent:
@@ -140,9 +140,11 @@ class Sim:
         self.rng = np.random.default_rng(seed)
 
     @classmethod
-    def new(
+    def empty(
         seed: int,
         agents: typing.Optional[typing.List[BaseAgent]] = None,
+        snapshot=None,
+        cache: Cache = None,
     ):
         """
         Initialise a simulation with an empty environment
@@ -159,13 +161,19 @@ class Sim:
             List of agents to include in the simulation. Default
             value is an empty list, allowing agents to be pushed
             after the simulation is initialised.
+        snapshot
+            Optional snapshot used to initialise the simulation
+            environment.
+        cache
+            Optional cache used to initialise the simulation
+            environment.
 
         Returns
         -------
         Sim
             Initialised empty simulation.
         """
-        env = EmptyEnv(seed)
+        env = EmptyEnv(seed, snapshot=snapshot, cache=cache)
         return Sim(seed, env, agents)
 
     @classmethod
