@@ -34,6 +34,8 @@ jobs:
           python-version: '3.11'
       - name: Install hatch 🐣
         run: pip install hatch
+      - name: Python pre-commit checks ✅
+        run: hatch run dev:lint
       - name: Maturin build
         run: hatch run dev:build
       - name: Upload wheel
