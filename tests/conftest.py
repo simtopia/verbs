@@ -98,20 +98,21 @@ def env():
 @pytest.fixture
 def agent_type():
     class Agent:
-        def __init__(self, i: int, contract: bytes, abi):
+        def __init__(self, i: int, contract: bytes, abi, offset: int = 0):
             self.address = utils.int_to_address(i)
             self.contract = contract
             self.abi = abi
             self.current = 0
+            self.offset = offset
 
         def update(
             self,
             rng: np.random.Generator,
-            network,
+            env,
         ):
-            self.current = self.abi.getValue.call(
-                network, self.address, self.contract, []
-            )[0][0]
+            self.current = self.abi.getValue.call(env, self.address, self.contract, [])[
+                0
+            ][0]
 
             set_call = self.abi.setValue.transaction(
                 self.address, self.contract, [self.current + 1]
@@ -120,7 +121,7 @@ def agent_type():
             return [set_call]
 
         def record(self, env):
-            return self.current
+            return self.current + self.offset
 
     return Agent
 

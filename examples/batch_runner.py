@@ -46,26 +46,16 @@ class Agent:
         return self.balance
 
 
-def init_func(*, bytecode, constructor_args):
-    env = verbs.envs.EmptyEnv(1234)
-
-    admin = verbs.utils.int_to_address(99999999)
-    env.create_account(admin, int(1e19))
-
-    erc20_abi = verbs.abi.get_abi("ERC20", erc20_contract.ERC20_ABI)
-    erc20_address = erc20_abi.constructor.deploy(
-        env, admin, erc20_contract.ERC20_BYTECODE, [int(1e19)]
-    )
-
-    return env.export_snapshot(), (erc20_address, admin)
-
-
-def exec_func(snapshot, n_steps, seed, addresses, *, activation_rate):
-    erc20_address, admin = addresses
-
-    env = verbs.envs.EmptyEnv(seed, snapshot)
-    erc20_abi = verbs.abi.get_abi("ERC20", erc20_contract.ERC20_ABI)
-
+def sim_func(
+    env,
+    seed,
+    n_steps,
+    *,
+    activation_rate,
+    erc20_address,
+    erc20_abi,
+    admin_address,
+):
     agents = [
         Agent(i + 100, erc20_address, erc20_abi, N_AGENTS, activation_rate)
         for i in range(N_AGENTS)
@@ -73,27 +63,38 @@ def exec_func(snapshot, n_steps, seed, addresses, *, activation_rate):
 
     erc20_abi.transfer.execute(
         env,
-        admin,
+        admin_address,
         erc20_address,
         [agents[0].address, int(1e19)],
     )
 
-    runner = verbs.sim.Sim(101, env, agents)
+    runner = verbs.sim.Sim(seed, env, agents)
     results = runner.run(n_steps)
     return results
 
 
 def run(n_steps, n_samples):
-    b = verbs.batch_runner.BatchRunner(init_func, exec_func)
+    env = verbs.envs.EmptyEnv(1234)
 
-    batch_results = b.run(
-        n_steps,
-        n_samples,
-        [dict(activation_rate=0.1), dict(activation_rate=0.2)],
-        init_kwargs=dict(
-            bytecode=erc20_contract.ERC20_BYTECODE, constructor_args=[int(1e19)]
-        ),
-        n_jobs=1,
+    admin_address = verbs.utils.int_to_address(99999999)
+    env.create_account(admin_address, int(1e19))
+
+    erc20_abi = verbs.abi.get_abi("ERC20", erc20_contract.ERC20_ABI)
+    erc20_address = erc20_abi.constructor.deploy(
+        env, admin_address, erc20_contract.ERC20_BYTECODE, [int(1e19)]
+    )
+
+    snapshot = env.export_snapshot()
+
+    batch_results = verbs.batch_runner.batch_run(
+        sim_func,
+        n_steps=n_steps,
+        n_samples=n_samples,
+        parameters_samples=[dict(activation_rate=0.1), dict(activation_rate=0.2)],
+        snapshot=snapshot,
+        erc20_address=erc20_address,
+        erc20_abi=erc20_abi,
+        admin_address=admin_address,
     )
 
     return batch_results
