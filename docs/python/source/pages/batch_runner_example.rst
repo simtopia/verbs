@@ -104,14 +104,14 @@ generate them, in this case they will have the structure
        {
            "params": {"activation_rate": 0.1},
            "samples": [
-               # List of Monte-Carlos samples results
+               # List of Monte-Carlo sample results
                ...
            ]
        },
        {
            "params": {"activation_rate": 0.2},
            "samples": [
-               # List of Monte-Carlos samples results
+               # List of Monte-Carlo sample results
                ...
            ]
        }
