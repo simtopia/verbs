@@ -7,7 +7,7 @@ build-backend = "maturin"
 
 [project]
 name = "verbs"
-version = "0.1.1"
+version = "0.2.0"
 description = "Ethereum ABM Library"
 license = {file = "LICENSE"}
 readme = "README.md"
