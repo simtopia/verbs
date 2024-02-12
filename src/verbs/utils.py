@@ -1,6 +1,7 @@
 """
 Ethereum ABI and numerical utilities
 """
+
 import typing
 
 import eth_abi
