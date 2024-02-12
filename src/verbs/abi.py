@@ -57,6 +57,7 @@ to attributes with numbered suffixes according to their order
 in the ABI, e.g. if the ABI contained two functions named ``foo``
 the resulting type will have ``foo0`` and ``foo1`` attributes.
 """
+
 import json
 import typing
 
