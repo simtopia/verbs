@@ -247,9 +247,7 @@ impl<D: DB> Network<D> {
             execution_result,
             check_call,
         );
-        if let Some(event) = result.events {
-            self.last_events.push(event)
-        }
+        self.last_events.push(result)
     }
 
     pub fn process_transactions(&mut self, transactions: Vec<Transaction>, step: usize) {

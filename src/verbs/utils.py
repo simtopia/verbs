@@ -6,6 +6,7 @@ import typing
 
 import eth_abi
 import eth_utils
+import pandas as pd
 from solcx import compile_files, install_solc
 
 import verbs.types
@@ -216,3 +217,32 @@ def cache_from_json(cache_json: typing.List) -> verbs.types.Cache:
         for x in cache_json[3]
     ]
     return (cache_json[0], cache_json[1], accounts, storage)
+
+
+def events_to_dataframe(events: typing.List[typing.Tuple]) -> pd.DataFrame:
+    """
+    Convert a list of event tuples to a Pandas dataframe
+
+    Convert a list of events returned from
+    :py:meth:`verbs.envs.EmptyEnv.get_event_history` to
+    a Pandas dataframe. Note that brevity the dataframe
+    omits the logs attached to the events.
+
+    Parameters
+    ----------
+    events: list
+        List of tuples representing simulation events.
+
+    Returns
+    -------
+    pd.DataFrame
+        Dataframe containing records of simulation events
+    """
+
+    columns = ["success", "selector", "step", "sequence"]
+
+    df = pd.DataFrame.from_records(
+        [(x[0], x[1], x[3], x[4]) for x in events], columns=columns
+    )
+
+    return df

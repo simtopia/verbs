@@ -1,7 +1,6 @@
-use crate::contract::{Event, Transaction, TransactionResult};
+use crate::contract::{Event, Transaction};
 use alloy_primitives::{Address, Bytes, U256};
 use alloy_sol_types::{decode_revert_reason, SolCall, SolEvent};
-use log::warn;
 use revm::primitives::{ExecutionResult, Log, Output, TransactTo, TxEnv};
 use std::fmt;
 
@@ -107,45 +106,35 @@ pub fn result_to_output_with_events(
     sender: Address,
     execution_result: ExecutionResult,
     checked: bool,
-) -> TransactionResult {
+) -> Event {
     match execution_result {
         ExecutionResult::Success { output, logs, .. } => match output {
-            Output::Call(_) => TransactionResult {
+            Output::Call(_) => Event {
                 success: true,
-                output,
-                events: Some(Event {
-                    function_selector,
-                    logs,
-                    step,
-                    sequence,
-                }),
+                function_selector,
+                logs,
+                step,
+                sequence,
             },
             Output::Create(..) => {
                 panic!("Unexpected call to create contract during simulation.")
             }
         },
-        ExecutionResult::Revert { output, .. } => {
-            if checked {
-                panic!(
-                    "Failed to call {:?} from {} due to revert: {:?}",
-                    function_selector,
-                    sender,
-                    decode_revert_reason(&output.0)
-                )
-            } else {
-                warn!(
-                    "Failed to call {:?} from {} due to revert: {:?}",
-                    function_selector,
-                    sender,
-                    decode_revert_reason(&output.0)
-                );
-                TransactionResult {
-                    success: false,
-                    output: Output::Call(Bytes::default()),
-                    events: None,
-                }
-            }
-        }
+        ExecutionResult::Revert { output, .. } => match checked {
+            true => panic!(
+                "Failed to call {:?} from {} due to revert: {:?}",
+                function_selector,
+                sender,
+                decode_revert_reason(&output.0)
+            ),
+            false => Event {
+                success: true,
+                function_selector,
+                logs: Vec::default(),
+                step,
+                sequence,
+            },
+        },
         ExecutionResult::Halt { reason, .. } => {
             panic!(
                 "Failed to call {:?} from {} due to halt: {:?}",
