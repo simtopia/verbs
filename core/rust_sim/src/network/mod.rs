@@ -3,7 +3,6 @@ use crate::contract::{Event, Transaction};
 use crate::utils::Eth;
 use alloy_primitives::{Address, Uint, B256, U256};
 use alloy_sol_types::SolCall;
-use anyhow::Result;
 use db::{ForkDb, LocalDB, Requests, DB};
 pub use ethereum_types::U64;
 use log::debug;
