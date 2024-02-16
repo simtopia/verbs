@@ -4,7 +4,7 @@ use db::DB;
 use fastrand::Rng;
 use rust_sim::agent::{Agent, AgentSet, AgentVec, RecordedAgent, SimState};
 use rust_sim::contract::Transaction;
-use rust_sim::network::{create_call, Network};
+use rust_sim::network::{create_call, Env};
 
 pub struct SimpleAgent {
     pub address: Address,
@@ -27,7 +27,7 @@ impl SimpleAgent {
 }
 
 impl Agent for SimpleAgent {
-    fn update<D: DB>(&mut self, rng: &mut Rng, network: &mut Network<D>) -> Vec<Transaction> {
+    fn update<D: DB>(&mut self, rng: &mut Rng, network: &mut Env<D>) -> Vec<Transaction> {
         self.current_balance = network
             .direct_call(
                 self.address,

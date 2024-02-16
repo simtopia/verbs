@@ -1,5 +1,5 @@
 use crate::agent::SimState;
-use crate::network::Network;
+use crate::network::Env;
 use alloy_primitives::U256;
 use db::DB;
 use kdam::tqdm;
@@ -7,12 +7,7 @@ use kdam::tqdm;
 // Represents blocks updating every 15s
 const BLOCK_INTERVAL: u32 = 15;
 
-pub fn run<S: SimState, D: DB>(
-    network: &mut Network<D>,
-    agents: &mut S,
-    seed: u64,
-    n_steps: usize,
-) {
+pub fn run<S: SimState, D: DB>(network: &mut Env<D>, agents: &mut S, seed: u64, n_steps: usize) {
     let mut rng = fastrand::Rng::with_seed(seed);
 
     for i in tqdm!(0..n_steps) {

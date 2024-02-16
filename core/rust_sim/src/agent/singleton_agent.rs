@@ -1,6 +1,6 @@
 use crate::agent::traits::{Agent, AgentSet, RecordedAgent, RecordedAgentSet};
 use crate::contract::Transaction;
-use crate::network::Network;
+use crate::network::Env;
 use alloy_primitives::Address;
 use db::DB;
 use std::mem;
@@ -46,11 +46,7 @@ impl<R: 'static, A: Agent + RecordedAgent<R> + 'static> AgentSet for SingletonAg
     /// * `rng` - Fastrand rng state
     /// * `network` - Protocol deployment(s)
     ///
-    fn call<D: DB>(
-        &mut self,
-        rng: &mut fastrand::Rng,
-        network: &mut Network<D>,
-    ) -> Vec<Transaction> {
+    fn call<D: DB>(&mut self, rng: &mut fastrand::Rng, network: &mut Env<D>) -> Vec<Transaction> {
         self.agent.update(rng, network)
     }
     /// Record the current state of the agent.

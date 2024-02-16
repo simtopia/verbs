@@ -37,7 +37,7 @@ fn impl_sim_state_macro(ast: &syn::DeriveInput) -> TokenStream {
     let output = quote! {
         impl SimState for #name {
             fn call_agents<D: DB>(
-                &mut self, rng: &mut Rng, network: &mut Network<D>
+                &mut self, rng: &mut Rng, network: &mut Env<D>
             ) -> Vec<Transaction> {
                 let mut calls = Vec::<Transaction>::new();
                 #call_tokens

@@ -3,7 +3,7 @@ mod state;
 
 use alloy_primitives::{Address, Uint, U256};
 use rust_sim::agent::AgentVec;
-use rust_sim::network::Network;
+use rust_sim::network::Env;
 use rust_sim::sim_runner::run;
 use rust_sim::{utils, LocalDB};
 use state::{AgentState, SimpleAgent};
@@ -17,7 +17,7 @@ pub fn main() {
     let start_balance = 1000000000000u128;
     let admin_address = Address::from(Uint::from(999));
 
-    let mut sim = Network::<LocalDB>::init(U256::ZERO, U256::ZERO);
+    let mut sim = Env::<LocalDB>::init(U256::ZERO, U256::ZERO);
 
     let token_address = sim.deploy_contract(
         admin_address,

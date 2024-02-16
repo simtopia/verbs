@@ -10,7 +10,7 @@ use revm::primitives::{AccountInfo, Bytecode, ExecutionResult, Log, ResultAndSta
 use revm::EVM;
 pub use utils::{create_call, decode_event, process_events, RevertError};
 
-pub struct Network<D: DB> {
+pub struct Env<D: DB> {
     pub evm: EVM<D>,
     pub last_events: Vec<Event>,
     pub event_history: Vec<Event>,
@@ -41,7 +41,7 @@ impl<D: DB> CallEVM for EVM<D> {
     }
 }
 
-impl Network<ForkDb> {
+impl Env<ForkDb> {
     pub fn init(node_url: &str, block_number: u64) -> Self {
         let db = ForkDb::new(node_url, block_number);
         let mut evm = EVM::new();
@@ -72,7 +72,7 @@ impl Network<ForkDb> {
     }
 }
 
-impl Network<LocalDB> {
+impl Env<LocalDB> {
     pub fn init(timestamp: U256, block_number: U256) -> Self {
         let mut evm = EVM::new();
         let db = LocalDB::new();
@@ -98,7 +98,7 @@ impl Network<LocalDB> {
     }
 }
 
-impl<D: DB> Network<D> {
+impl<D: DB> Env<D> {
     pub fn insert_account(&mut self, address: Address, start_balance: U256) {
         self.evm.db().unwrap().insert_account_info(
             address,
@@ -286,8 +286,8 @@ mod tests {
     );
 
     #[fixture]
-    fn deployment() -> (Network<LocalDB>, Address, Address) {
-        let mut network = Network::<LocalDB>::init(U256::ZERO, U256::ZERO);
+    fn deployment() -> (Env<LocalDB>, Address, Address) {
+        let mut network = Env::<LocalDB>::init(U256::ZERO, U256::ZERO);
 
         let constructor_args = <i128>::abi_encode(&101);
         let bytecode_hex = "608060405234801561001057600080fd5b50\
@@ -320,7 +320,7 @@ mod tests {
     }
 
     #[rstest]
-    fn direct_execute_and_call(deployment: (Network<LocalDB>, Address, Address)) {
+    fn direct_execute_and_call(deployment: (Env<LocalDB>, Address, Address)) {
         let (mut network, contract_address, user_address) = deployment;
 
         let (v, _) = network
@@ -356,7 +356,7 @@ mod tests {
     }
 
     #[rstest]
-    fn processing_calls(deployment: (Network<LocalDB>, Address, Address)) {
+    fn processing_calls(deployment: (Env<LocalDB>, Address, Address)) {
         let (mut network, contract_address, user_address) = deployment;
 
         let calls = vec![

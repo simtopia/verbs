@@ -7,7 +7,7 @@ use pyo3::prelude::*;
 
 use db::{ForkDb, LocalDB, DB};
 use rust_sim::contract::Transaction;
-use rust_sim::network::{Network, RevertError};
+use rust_sim::network::{Env, RevertError};
 use std::mem;
 
 // Represents blocks updating every 15s
@@ -15,7 +15,7 @@ const BLOCK_INTERVAL: u32 = 15;
 
 pub struct BaseEnv<D: DB> {
     // EVM and deployed protocol
-    pub network: Network<D>,
+    pub network: Env<D>,
     // Queue of calls submitted from Python
     pub call_queue: Vec<Transaction>,
     // RNG source
@@ -26,7 +26,7 @@ pub struct BaseEnv<D: DB> {
 
 impl BaseEnv<LocalDB> {
     pub fn new(timestamp: u128, block_number: u128, seed: u64) -> Self {
-        let network = Network::<LocalDB>::init(
+        let network = Env::<LocalDB>::init(
             U256::try_from(timestamp).unwrap(),
             U256::try_from(block_number).unwrap(),
         );
@@ -42,7 +42,7 @@ impl BaseEnv<LocalDB> {
     pub fn from_snapshot(seed: u64, snapshot: PyDbState) -> Self {
         let block_env = load_block_env(&snapshot);
 
-        let mut network = Network::<LocalDB>::init(block_env.timestamp, block_env.number);
+        let mut network = Env::<LocalDB>::init(block_env.timestamp, block_env.number);
         network.evm.env.block = block_env;
 
         load_snapshot(network.evm.db().unwrap(), snapshot);
@@ -55,7 +55,7 @@ impl BaseEnv<LocalDB> {
     }
 
     pub fn from_cache(seed: u64, requests: PyRequests) -> Self {
-        let mut network = Network::<LocalDB>::init(
+        let mut network = Env::<LocalDB>::init(
             U256::try_from(requests.0).unwrap(),
             U256::try_from(requests.1).unwrap(),
         );
@@ -76,7 +76,7 @@ impl BaseEnv<LocalDB> {
 
 impl BaseEnv<ForkDb> {
     pub fn new(node_url: &str, seed: u64, block_number: u64) -> Self {
-        let network = Network::<ForkDb>::init(node_url, block_number);
+        let network = Env::<ForkDb>::init(node_url, block_number);
         BaseEnv {
             network,
             call_queue: Vec::new(),

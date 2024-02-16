@@ -4,7 +4,7 @@ use dai_abi::ABI as DAI_ABI;
 
 use alloy_primitives::{Address, U256};
 use db::ForkDb;
-use rust_sim::network::Network;
+use rust_sim::network::Env;
 use rust_sim::utils::address_from_hex;
 
 pub fn main() {
@@ -12,7 +12,7 @@ pub fn main() {
 
     let url_str = format!("https://eth-mainnet.g.alchemy.com/v2/{}", args[1]);
 
-    let mut net = Network::<ForkDb>::init(&url_str, 0);
+    let mut net = Env::<ForkDb>::init(&url_str, 0);
 
     let dai_address = address_from_hex("0x6B175474E89094C44Da98b954EedeAC495271d0F");
 

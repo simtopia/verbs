@@ -1,6 +1,6 @@
 use crate::agent::traits::{Agent, AgentSet, RecordedAgent, RecordedAgentSet};
 use crate::contract::Transaction;
-use crate::network::Network;
+use crate::network::Env;
 use alloy_primitives::Address;
 use db::DB;
 use std::mem;
@@ -72,11 +72,7 @@ impl<R: 'static, A: Agent + RecordedAgent<R> + 'static> AgentSet for AgentVec<R,
     /// * `rng` - Fastrand rng state
     /// * `network` - Protocol deployment(s)
     ///
-    fn call<D: DB>(
-        &mut self,
-        rng: &mut fastrand::Rng,
-        network: &mut Network<D>,
-    ) -> Vec<Transaction> {
+    fn call<D: DB>(&mut self, rng: &mut fastrand::Rng, network: &mut Env<D>) -> Vec<Transaction> {
         self.agents
             .iter_mut()
             .flat_map(|x| x.update(rng, network))
@@ -110,7 +106,7 @@ mod tests {
         fn update<D: DB>(
             &mut self,
             _rng: &mut fastrand::Rng,
-            _network: &mut crate::network::Network<D>,
+            _network: &mut crate::network::Env<D>,
         ) -> Vec<crate::contract::Transaction> {
             self.value += 1;
             vec![
@@ -145,8 +141,8 @@ mod tests {
     }
 
     #[fixture]
-    fn network() -> Network<LocalDB> {
-        Network::<LocalDB>::init(U256::ZERO, U256::ZERO)
+    fn network() -> Env<LocalDB> {
+        Env::<LocalDB>::init(U256::ZERO, U256::ZERO)
     }
 
     #[fixture]
@@ -155,7 +151,7 @@ mod tests {
     }
 
     #[rstest]
-    fn test_agent_vec(mut network: Network<LocalDB>, mut rng: fastrand::Rng) {
+    fn test_agent_vec(mut network: Env<LocalDB>, mut rng: fastrand::Rng) {
         let a = Address::from(Uint::from(101u128));
         let b = Address::from(Uint::from(202u128));
 

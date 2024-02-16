@@ -1,12 +1,12 @@
 use crate::contract::Transaction;
-use crate::network::Network;
+use crate::network::Env;
 use alloy_primitives::Address;
 use db::DB;
 use fastrand::Rng;
 pub use sim_macros::SimState;
 
 pub trait SimState {
-    fn call_agents<D: DB>(&mut self, rng: &mut Rng, network: &mut Network<D>) -> Vec<Transaction>;
+    fn call_agents<D: DB>(&mut self, rng: &mut Rng, network: &mut Env<D>) -> Vec<Transaction>;
     fn record_agents(&mut self);
 }
 
@@ -20,7 +20,7 @@ pub trait Agent {
     /// * `rng` - Fastrand rng state
     /// * `network` - Protocol deployment(s)
     ///
-    fn update<D: DB>(&mut self, rng: &mut Rng, network: &mut Network<D>) -> Vec<Transaction>;
+    fn update<D: DB>(&mut self, rng: &mut Rng, network: &mut Env<D>) -> Vec<Transaction>;
     /// Get the address of the agent.
     fn get_address(&self) -> Address;
 }
@@ -42,11 +42,7 @@ pub trait AgentSet {
     /// * `rng` - Fastrand rng state
     /// * `network` - Protocol deployment(s)
     ///
-    fn call<D: DB>(
-        &mut self,
-        rng: &mut fastrand::Rng,
-        network: &mut Network<D>,
-    ) -> Vec<Transaction>;
+    fn call<D: DB>(&mut self, rng: &mut fastrand::Rng, network: &mut Env<D>) -> Vec<Transaction>;
     /// Record the state of all the agents
     fn record(&mut self);
     /// Get a vector of agent addresses contained in this set
@@ -69,7 +65,7 @@ mod tests {
     }
 
     impl AgentSet for DummyAgentSet {
-        fn call<D: DB>(&mut self, _rng: &mut Rng, _network: &mut Network<D>) -> Vec<Transaction> {
+        fn call<D: DB>(&mut self, _rng: &mut Rng, _network: &mut Env<D>) -> Vec<Transaction> {
             vec![Transaction {
                 function_selector: [0, 0, 0, 0],
                 callee: Address::ZERO,
@@ -101,7 +97,7 @@ mod tests {
         };
 
         let mut rng = fastrand::Rng::with_seed(101);
-        let mut network = &mut Network::<LocalDB>::init(U256::ZERO, U256::ZERO);
+        let mut network = &mut Env::<LocalDB>::init(U256::ZERO, U256::ZERO);
 
         let calls = x.call_agents(&mut rng, &mut network);
 
