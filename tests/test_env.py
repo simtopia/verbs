@@ -76,3 +76,7 @@ def test_revert_exception(env, bytecode, constructor_args, test_abi):
     # Should revert as value is > 1000
     with pytest.raises(envs.RevertError):
         a.setValue.execute(env, utils.ZERO_ADDRESS, address, [1001])
+
+    # Should also raise from a call
+    with pytest.raises(envs.RevertError):
+        a.setValue.call(env, utils.ZERO_ADDRESS, address, [1001])
