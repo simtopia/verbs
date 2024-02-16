@@ -1,4 +1,6 @@
-from verbs import abi, utils
+import pytest
+
+from verbs import abi, envs, utils
 
 INITIAL_VALUE = 101
 
@@ -56,3 +58,25 @@ def test_sim_update(env, bytecode, constructor_args, test_abi):
     # Get new value after block update
     result_2, _, _ = a.getValue.call(env, admin, address, [])
     assert result_2[0] == 202
+
+
+def test_revert_exception(env, bytecode, constructor_args, test_abi):
+
+    env.create_account(utils.ZERO_ADDRESS, int(1e19))
+
+    a = abi.get_abi("ABI", test_abi)
+
+    address = env.deploy_contract(
+        utils.ZERO_ADDRESS, "test_contract", bytecode + constructor_args
+    )
+
+    # Should be fine
+    a.setValue.execute(env, utils.ZERO_ADDRESS, address, [500])
+
+    # Should revert as value is > 1000
+    with pytest.raises(envs.RevertError):
+        a.setValue.execute(env, utils.ZERO_ADDRESS, address, [1001])
+
+    # Should also raise from a call
+    with pytest.raises(envs.RevertError):
+        a.setValue.call(env, utils.ZERO_ADDRESS, address, [1001])

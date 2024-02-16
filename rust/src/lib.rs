@@ -10,8 +10,9 @@ use pyo3::prelude::*;
 ///
 #[pymodule]
 #[pyo3(name = "envs")]
-fn verbs(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
+fn verbs(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<sim::EmptyEnv>()?;
     m.add_class::<sim::ForkEnv>()?;
+    m.add("RevertError", py.get_type::<types::PyRevertError>())?;
     Ok(())
 }

@@ -262,7 +262,7 @@ impl EmptyEnv {
     ///
     /// Raises
     /// ------
-    /// RevertError
+    /// verbs.envs.RevertError
     ///     Raises an exception if the transaction is reverted.
     ///
     pub fn call<'a>(
@@ -272,13 +272,13 @@ impl EmptyEnv {
         contract_address: PyAddress,
         encoded_args: Vec<u8>,
         value: u128,
-    ) -> Result<PyExecutionResult, PyRevertError> {
+    ) -> PyResult<PyExecutionResult> {
         let result = self
             .0
             .call(py, sender, contract_address, encoded_args, value);
         match result {
             Ok(x) => Ok(x),
-            Err(x) => Err(x.into()),
+            Err(x) => Err(PyRevertError::new_err(x.output)),
         }
     }
 
@@ -307,7 +307,7 @@ impl EmptyEnv {
     ///
     /// Raises
     /// ------
-    /// RevertError
+    /// verbs.envs.RevertError
     ///     Raises an exception if the transaction is reverted.
     ///
     pub fn execute<'a>(
@@ -317,13 +317,13 @@ impl EmptyEnv {
         contract_address: PyAddress,
         encoded_args: Vec<u8>,
         value: u128,
-    ) -> Result<PyExecutionResult, PyRevertError> {
+    ) -> PyResult<PyExecutionResult> {
         let result = self
             .0
             .execute(py, sender, contract_address, encoded_args, value);
         match result {
             Ok(x) => Ok(x),
-            Err(x) => Err(x.into()),
+            Err(x) => Err(PyRevertError::new_err(x.output)),
         }
     }
 }
