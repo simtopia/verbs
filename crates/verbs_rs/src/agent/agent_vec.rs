@@ -1,8 +1,8 @@
 use crate::agent::traits::{Agent, AgentSet, RecordedAgent, RecordedAgentSet};
 use crate::contract::Transaction;
-use crate::network::Env;
+use crate::env::Env;
+use crate::DB;
 use alloy_primitives::Address;
-use db::DB;
 use std::mem;
 
 /// Implementation of agent set tracking agents as a vector.
@@ -93,8 +93,8 @@ impl<R: 'static, A: Agent + RecordedAgent<R> + 'static> AgentSet for AgentVec<R,
 mod tests {
     use super::*;
     use crate::agent::traits;
+    use crate::LocalDB;
     use alloy_primitives::{Uint, U256};
-    use db::LocalDB;
     use rstest::*;
 
     struct TestAgent {
@@ -106,7 +106,7 @@ mod tests {
         fn update<D: DB>(
             &mut self,
             _rng: &mut fastrand::Rng,
-            _network: &mut crate::network::Env<D>,
+            _network: &mut crate::env::Env<D>,
         ) -> Vec<crate::contract::Transaction> {
             self.value += 1;
             vec![

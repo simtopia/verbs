@@ -1,8 +1,8 @@
 use crate::agent::traits::{Agent, AgentSet, RecordedAgent, RecordedAgentSet};
 use crate::contract::Transaction;
-use crate::network::Env;
+use crate::env::Env;
+use crate::DB;
 use alloy_primitives::Address;
-use db::DB;
 use std::mem;
 
 /// Implementation of agent set for a single agent.

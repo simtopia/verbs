@@ -12,7 +12,7 @@ Python dependency management. Development tasks can also be run using hatch comm
 
 ## Structure
 
-* `core/`: Rust simulation environment crates, can also be
+* `crates/`: Rust simulation environment crates, can also be
   used as an independent Rust library for simulation development.
 * `docs/`: Sphinx documentations files
 * `examples/`: Model examples.

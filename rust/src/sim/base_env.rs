@@ -5,10 +5,10 @@ use crate::types::{event_to_py, result_to_py, PyAddress, PyEvent, PyExecutionRes
 use alloy_primitives::{Address, U256};
 use pyo3::prelude::*;
 
-use db::{ForkDb, LocalDB, DB};
-use rust_sim::contract::Transaction;
-use rust_sim::network::{Env, RevertError};
 use std::mem;
+use verbs_db::{ForkDb, LocalDB, DB};
+use verbs_rs::contract::Transaction;
+use verbs_rs::env::{Env, RevertError};
 
 // Represents blocks updating every 15s
 const BLOCK_INTERVAL: u32 = 15;

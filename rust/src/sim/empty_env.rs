@@ -3,10 +3,10 @@ use super::snapshot::PyDbState;
 use super::base_env::BaseEnv;
 use super::snapshot;
 use crate::types::{PyAddress, PyEvent, PyExecutionResult, PyRevertError};
-use db::LocalDB;
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
 use pyo3::types::PyBytes;
+use verbs_rs::LocalDB;
 
 /// Simulation environment initialised with an empty in-memory database
 ///

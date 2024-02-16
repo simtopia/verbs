@@ -2,11 +2,11 @@ mod ecr20;
 mod state;
 
 use alloy_primitives::{Address, Uint, U256};
-use rust_sim::agent::AgentVec;
-use rust_sim::network::Env;
-use rust_sim::sim_runner::run;
-use rust_sim::{utils, LocalDB};
 use state::{AgentState, SimpleAgent};
+use verbs_rs::agent::AgentVec;
+use verbs_rs::env::Env;
+use verbs_rs::sim_runner::run;
+use verbs_rs::{utils, LocalDB};
 
 use clap::Parser;
 

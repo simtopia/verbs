@@ -1,9 +1,9 @@
 use crate::contract::Transaction;
-use crate::network::Env;
+use crate::env::Env;
+use crate::DB;
 use alloy_primitives::Address;
-use db::DB;
 use fastrand::Rng;
-pub use sim_macros::SimState;
+pub use verbs_macros::SimState;
 
 pub trait SimState {
     fn call_agents<D: DB>(&mut self, rng: &mut Rng, network: &mut Env<D>) -> Vec<Transaction>;
@@ -57,8 +57,8 @@ pub trait RecordedAgentSet<R> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::LocalDB;
     use alloy_primitives::{Address, U256};
-    use db::LocalDB;
 
     struct DummyAgentSet {
         v: bool,

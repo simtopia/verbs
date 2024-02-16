@@ -8,12 +8,12 @@ gain in performance over native Python.
 
 ## Structure
 
-The core Rust library can be found in the `core/` folder.
+The core Rust library can be found in the `crates/` folder.
 It currently consists of 3 sub-crates
 
-* `core/rust_sim/`: Rust Ethereum ABM library.
-* `core/macros/`: Macros used by the `rust_sim crate`.
-* `core/db`: Streamlined single threaded EVM database
+* `crates/verbs_rs/`: Rust Ethereum ABM library.
+* `crates/verbs_macros/`: Macros used by the `verbs-rs crate`.
+* `crates/verbs_db`: Streamlined single threaded EVM database
   backend that allows for both in-memory and forking
   from deployed chains.
 
@@ -22,20 +22,20 @@ Cargo commands can be run from the repo root.
 ## Rust Examples
 
 Examples of the libraries use can be found in
-[core/rust_sim/examples](../../core/rust_sim/examples).
+[crates/verbs_rs/examples](../../crates/verbs_rs/examples).
 
 The examples can be run using cargo:
 
 - Basic sim demonstrating agents moving around an ERC20 token
 
   ```
-  cargo run --example basic_sim <N-steps> <N-agents>
+  cargo run --release --example basic_sim -- -s <N-steps> -n <N-agents>
   ```
 
 - Initialising EVM state from mainet
 
   ```
-  cargo run --release --example forked_sim <ALCHEMY-API-KEY>
+  cargo run --release --example forked_sim -- -key <ALCHEMY-API-KEY>
   ```
 
 ## Loading Contracts

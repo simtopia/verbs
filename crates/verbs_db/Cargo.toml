@@ -1,5 +1,5 @@
 [package]
-name = "db"
+name = "verbs-db"
 version.workspace = true
 edition.workspace = true
 

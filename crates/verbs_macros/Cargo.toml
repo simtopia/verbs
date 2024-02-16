@@ -1,5 +1,5 @@
 [package]
-name = "sim-macros"
+name = "verbs-macros"
 version.workspace = true
 edition.workspace = true
 

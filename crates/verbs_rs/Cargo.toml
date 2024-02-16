@@ -1,5 +1,5 @@
 [package]
-name = "rust_sim"
+name = "verbs-rs"
 version.workspace = true
 edition.workspace = true
 
@@ -22,8 +22,8 @@ futures.workspace = true
 kdam = "0.3.0"
 log = "0.4.19"
 
-sim-macros = { path="../macros" }
-db = { path="../db" }
+verbs-macros = { path="../verbs_macros" }
+verbs-db = { path="../verbs_db" }
 
 [dev-dependencies]
 assert_approx_eq = "1.1.0"

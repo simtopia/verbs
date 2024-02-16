@@ -1,7 +1,7 @@
 use crate::agent::SimState;
-use crate::network::Env;
+use crate::env::Env;
+use crate::DB;
 use alloy_primitives::U256;
-use db::DB;
 use kdam::tqdm;
 
 // Represents blocks updating every 15s

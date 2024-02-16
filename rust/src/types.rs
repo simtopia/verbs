@@ -3,8 +3,8 @@ use pyo3::exceptions::PyException;
 use pyo3::types::PyBytes;
 use pyo3::{create_exception, Python};
 use revm::primitives::ExecutionResult;
-use rust_sim::{contract::Event, network::RevertError};
 use std::borrow::Cow;
+use verbs_rs::{contract::Event, env::RevertError};
 
 create_exception!(envs, PyRevertError, PyException);
 

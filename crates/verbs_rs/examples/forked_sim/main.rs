@@ -3,9 +3,9 @@ mod dai_abi;
 use alloy_primitives::{Address, U256};
 use clap::Parser;
 use dai_abi::ABI as DAI_ABI;
-use rust_sim::network::Env;
-use rust_sim::utils::address_from_hex;
-use rust_sim::ForkDb;
+use verbs_rs::env::Env;
+use verbs_rs::utils::address_from_hex;
+use verbs_rs::ForkDb;
 
 #[derive(Parser, Debug)]
 #[command(about, long_about = None)]

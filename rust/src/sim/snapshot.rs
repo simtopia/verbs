@@ -1,11 +1,11 @@
 use alloy_primitives::{Address, Bytes, B256, U256};
-use db::{LocalDB, Requests, DB};
 use pyo3::{types::PyBytes, Python};
 use revm::{
     db::{AccountState, DbAccount},
     primitives::{AccountInfo, BlobExcessGasAndPrice, BlockEnv, Bytecode, Log},
 };
-use rust_sim::network::Env;
+use verbs_rs::env::Env;
+use verbs_rs::{LocalDB, Requests, DB};
 
 use crate::types::{address_to_py, bytes_to_py};
 
