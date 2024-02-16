@@ -14,8 +14,13 @@ contract Contract {
   }
 
   function setValue(int256 x) public {
-    int256 old_x = _x;
-    _x = x;
-    emit ValueUpdated(old_x, x);
+    if( x > 1000){
+      revert(" Value must be less than 1000");
+    }
+    else{
+      int256 old_x = _x;
+      _x = x;
+      emit ValueUpdated(old_x, x);
+    }
   }
 }
