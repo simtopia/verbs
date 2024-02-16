@@ -8,32 +8,43 @@ use rust_sim::sim_runner::run;
 use rust_sim::{utils, LocalDB};
 use state::{AgentState, SimpleAgent};
 
-pub fn main() {
-    let args: Vec<String> = std::env::args().collect();
+use clap::Parser;
 
-    let n_users: usize = args[1].parse::<usize>().unwrap();
-    let n_steps: usize = args[2].parse::<usize>().unwrap();
+#[derive(Parser, Debug)]
+#[command(about, long_about = None)]
+struct Args {
+    /// Number of agents
+    #[arg(short, long, default_value_t = 100)]
+    n_agents: usize,
+
+    /// Number of simulation steps
+    #[arg(short, long, default_value_t = 100)]
+    steps: usize,
+}
+
+pub fn main() {
+    let args = Args::parse();
 
     let start_balance = 1000000000000u128;
     let admin_address = Address::from(Uint::from(999));
 
-    let mut sim = Env::<LocalDB>::init(U256::ZERO, U256::ZERO);
+    let mut env = Env::<LocalDB>::init(U256::ZERO, U256::ZERO);
 
-    let token_address = sim.deploy_contract(
+    let token_address = env.deploy_contract(
         admin_address,
         "ECR20",
         utils::constructor_data(ecr20::BYTECODE, None),
     );
 
-    let agents: Vec<SimpleAgent> = (0..n_users)
+    let agents: Vec<SimpleAgent> = (0..args.n_agents)
         .into_iter()
-        .map(|x| SimpleAgent::new(x, n_users, token_address))
+        .map(|x| SimpleAgent::new(x, args.n_agents, token_address))
         .collect();
 
-    sim.insert_accounts(start_balance, agents.iter().map(|a| a.address).collect());
+    env.insert_accounts(start_balance, agents.iter().map(|a| a.address).collect());
 
     for agent in &agents {
-        sim.direct_execute(
+        env.direct_execute(
             agent.address,
             token_address,
             ecr20::ABI::approveCall {
@@ -49,7 +60,7 @@ pub fn main() {
         agents: AgentVec::from(agents),
     };
 
-    run(&mut sim, &mut state, 101, n_steps);
+    run(&mut env, &mut state, 101, args.steps);
 
     let _agent_data = state.agents.get_records();
 }

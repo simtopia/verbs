@@ -7,10 +7,20 @@ use db::ForkDb;
 use rust_sim::network::Env;
 use rust_sim::utils::address_from_hex;
 
-pub fn main() {
-    let args: Vec<String> = std::env::args().collect();
+use clap::Parser;
 
-    let url_str = format!("https://eth-mainnet.g.alchemy.com/v2/{}", args[1]);
+#[derive(Parser, Debug)]
+#[command(about, long_about = None)]
+struct Args {
+    /// Number of agents
+    #[arg(short, long)]
+    key: String,
+}
+
+pub fn main() {
+    let args = Args::parse();
+
+    let url_str = format!("https://eth-mainnet.g.alchemy.com/v2/{}", args.key);
 
     let mut net = Env::<ForkDb>::init(&url_str, 0);
 
