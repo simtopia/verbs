@@ -10,20 +10,6 @@ pub trait SimState {
     fn record_agents(&mut self);
 }
 
-/// Admin agent type called at that start of each simulation step.
-pub trait AdminAgent {
-    /// Update the state of the agent, and network in place.
-    ///
-    /// # Arguments
-    ///
-    /// * `rng` - Fastrand rng state
-    /// * `network` - Protocol deployment(s)
-    ///
-    fn update<D: DB>(&mut self, rng: &mut Rng, network: &mut Network<D>);
-    /// Post block update, can be used to process events
-    fn post_update<D: DB>(&mut self, network: &mut Network<D>);
-}
-
 /// Agent trait used to update all agents each model update.
 pub trait Agent {
     /// Update the agent and optionally return a call to the EVM

@@ -2,16 +2,9 @@ use crate::ecr20;
 use alloy_primitives::{Address, Uint, U256};
 use db::DB;
 use fastrand::Rng;
-use rust_sim::agent::{AdminAgent, Agent, AgentSet, AgentVec, RecordedAgent, SimState};
+use rust_sim::agent::{Agent, AgentSet, AgentVec, RecordedAgent, SimState};
 use rust_sim::contract::Transaction;
 use rust_sim::network::{create_call, Network};
-
-pub struct DummyAdminAgent {}
-
-impl AdminAgent for DummyAdminAgent {
-    fn update<D: DB>(&mut self, _rng: &mut Rng, _network: &mut Network<D>) {}
-    fn post_update<D: DB>(&mut self, _network: &mut Network<D>) {}
-}
 
 pub struct SimpleAgent {
     pub address: Address,

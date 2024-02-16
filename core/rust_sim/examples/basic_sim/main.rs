@@ -6,7 +6,7 @@ use rust_sim::agent::AgentVec;
 use rust_sim::network::Network;
 use rust_sim::sim_runner::run;
 use rust_sim::utils;
-use state::{AgentState, DummyAdminAgent, SimpleAgent};
+use state::{AgentState, SimpleAgent};
 
 pub fn main() {
     let args: Vec<String> = std::env::args().collect();
@@ -29,8 +29,6 @@ pub fn main() {
         "ECR20",
         utils::constructor_data(ecr20::BYTECODE, None),
     );
-
-    let mut admin_agent = DummyAdminAgent {};
 
     let agents: Vec<SimpleAgent> = (0..n_users)
         .into_iter()
@@ -56,7 +54,7 @@ pub fn main() {
         agents: AgentVec::from(agents),
     };
 
-    run(&mut sim, &mut admin_agent, &mut state, 101, n_steps);
+    run(&mut sim, &mut state, 101, n_steps);
 
     let _agent_data = state.agents.get_records();
 }
