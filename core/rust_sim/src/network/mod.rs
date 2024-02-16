@@ -1,14 +1,13 @@
 mod utils;
 use crate::contract::{Event, Transaction};
 use crate::utils::Eth;
-use alloy_primitives::{Address, Uint, B256, U256};
+use alloy_primitives::{Address, B256, U256};
 use alloy_sol_types::SolCall;
 use db::{ForkDb, LocalDB, Requests, DB};
 pub use ethereum_types::U64;
 use log::debug;
 use revm::primitives::{AccountInfo, Bytecode, ExecutionResult, Log, ResultAndState, TxEnv};
 use revm::EVM;
-use std::ops::Range;
 pub use utils::{create_call, decode_event, process_events, RevertError};
 
 pub struct Network<D: DB> {
@@ -97,33 +96,6 @@ impl Network<LocalDB> {
 
         network
     }
-
-    pub fn from_range(
-        timestamp: U256,
-        block_number: U256,
-        start_balance: u128,
-        r: Range<u64>,
-    ) -> Self {
-        let mut network = Network::<LocalDB>::init(timestamp, block_number);
-        let start_balance = U256::from(start_balance);
-
-        for n in r {
-            network.insert_account(Address::from(Uint::from(n)), start_balance);
-        }
-
-        network
-    }
-
-    pub fn from_agents(
-        timestamp: U256,
-        block_number: U256,
-        start_balance: u128,
-        agent_addresses: Vec<Address>,
-    ) -> Self {
-        let mut network = Network::<LocalDB>::init(timestamp, block_number);
-        network.insert_agents(start_balance, agent_addresses);
-        network
-    }
 }
 
 impl<D: DB> Network<D> {
@@ -134,7 +106,7 @@ impl<D: DB> Network<D> {
         );
     }
 
-    pub fn insert_agents(&mut self, start_balance: u128, addresses: Vec<Address>) {
+    pub fn insert_accounts(&mut self, start_balance: u128, addresses: Vec<Address>) {
         let start_balance = U256::from(start_balance);
         for address in addresses {
             self.insert_account(address, start_balance);

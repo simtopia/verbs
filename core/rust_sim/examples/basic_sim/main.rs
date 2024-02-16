@@ -5,7 +5,7 @@ use alloy_primitives::{Address, Uint, U256};
 use rust_sim::agent::AgentVec;
 use rust_sim::network::Network;
 use rust_sim::sim_runner::run;
-use rust_sim::utils;
+use rust_sim::{utils, LocalDB};
 use state::{AgentState, SimpleAgent};
 
 pub fn main() {
@@ -17,12 +17,7 @@ pub fn main() {
     let start_balance = 1000000000000u128;
     let admin_address = Address::from(Uint::from(999));
 
-    let mut sim = Network::from_range(
-        U256::ZERO,
-        U256::ZERO,
-        start_balance,
-        1..n_users.try_into().unwrap(),
-    );
+    let mut sim = Network::<LocalDB>::init(U256::ZERO, U256::ZERO);
 
     let token_address = sim.deploy_contract(
         admin_address,
@@ -35,7 +30,7 @@ pub fn main() {
         .map(|x| SimpleAgent::new(x, n_users, token_address))
         .collect();
 
-    let start_balance = U256::from(start_balance);
+    sim.insert_accounts(start_balance, agents.iter().map(|a| a.address).collect());
 
     for agent in &agents {
         sim.direct_execute(
@@ -43,7 +38,7 @@ pub fn main() {
             token_address,
             ecr20::ABI::approveCall {
                 spender: agent.address,
-                tokens: start_balance,
+                tokens: U256::from(start_balance),
             },
             U256::ZERO,
         )
