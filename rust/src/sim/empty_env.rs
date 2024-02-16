@@ -110,6 +110,7 @@ impl EmptyEnv {
     /// course of the simulation.
     /// Events are a tuple containing:
     ///
+    /// * Boolean indicating if the transaction was successful
     /// * The selector of the function called
     /// * A vector of logs
     /// * The step the event was generated

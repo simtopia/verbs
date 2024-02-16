@@ -8,7 +8,6 @@ use alloy_primitives::{keccak256, Bytes};
 pub use ethers_core::types::BlockNumber;
 use ethers_core::types::{BigEndianHash, Block, BlockId, NameOrAddress, H256};
 use ethers_providers::{Middleware, Provider, ProviderError};
-use eyre::anyhow;
 use revm::db::in_memory_db::DbAccount;
 use revm::db::{AccountState, DatabaseCommit};
 use revm::primitives::{
@@ -43,11 +42,12 @@ impl ForkDb {
             .build()
             .unwrap();
 
-        let block = rt
-            .block_on(provider.get_block(block_number))
-            .unwrap()
-            .ok_or(anyhow!("failed to retrieve block"))
-            .unwrap();
+        let block = rt.block_on(provider.get_block(block_number)).unwrap();
+
+        let block = match block {
+            Some(b) => b,
+            None => panic!("Could not retrieve block"),
+        };
 
         let mut contracts = HashMap::new();
         contracts.insert(KECCAK_EMPTY, Bytecode::new());

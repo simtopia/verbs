@@ -31,6 +31,8 @@ pub struct TransactionResult {
 
 /// Wraps event logs with additional event information
 pub struct Event {
+    /// If the event was successful
+    pub success: bool,
     /// Name of the function being called.
     pub function_selector: [u8; 4],
     /// Event data
