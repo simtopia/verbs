@@ -9,4 +9,4 @@ mod types;
 pub use db::DB;
 pub use fork_db::ForkDb;
 pub use local_db::LocalDB;
-pub use types::Requests;
+pub use types::RequestCache;

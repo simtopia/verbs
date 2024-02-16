@@ -5,7 +5,7 @@ use revm::{
     primitives::{AccountInfo, BlobExcessGasAndPrice, BlockEnv, Bytecode, Log},
 };
 use verbs_rs::env::Env;
-use verbs_rs::{LocalDB, Requests, DB};
+use verbs_rs::{LocalDB, RequestCache, DB};
 
 use crate::types::{address_to_py, bytes_to_py};
 
@@ -87,7 +87,7 @@ pub type PyRequests<'a> = (
     Vec<(&'a PyBytes, &'a PyBytes, &'a PyBytes)>,
 );
 
-pub fn create_py_request_history<'a>(py: Python<'a>, requests: &Requests) -> PyRequests<'a> {
+pub fn create_py_request_history<'a>(py: Python<'a>, requests: &RequestCache) -> PyRequests<'a> {
     let timestamp: u128 = requests.start_timestamp.try_into().unwrap();
     let block_number: u128 = requests.start_block_number.try_into().unwrap();
 

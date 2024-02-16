@@ -1,7 +1,7 @@
 use super::db::DB;
 use super::error::DatabaseError;
 use super::provider::ProviderBuilder;
-use super::types::Requests;
+use super::types::RequestCache;
 use crate::runtime_client::RuntimeClient;
 use crate::types::{ToAlloy, ToEthers};
 use alloy_primitives::{keccak256, Bytes};
@@ -25,7 +25,7 @@ pub struct ForkDb {
     provider: Provider<RuntimeClient>,
     block_id: Option<BlockId>,
     pub block: Block<H256>,
-    pub requests: Requests,
+    pub requests: RequestCache,
 }
 
 impl ForkDb {
@@ -69,7 +69,7 @@ impl ForkDb {
             provider,
             block_id: Some(block.number.unwrap().into()),
             block,
-            requests: Requests {
+            requests: RequestCache {
                 start_timestamp: timestamp,
                 start_block_number: block_number,
                 accounts: Vec::new(),

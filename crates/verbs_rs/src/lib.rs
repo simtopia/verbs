@@ -4,4 +4,4 @@ pub mod env;
 pub mod sim_runner;
 pub mod utils;
 
-pub use verbs_db::{ForkDb, LocalDB, Requests, DB};
+pub use verbs_db::{ForkDb, LocalDB, RequestCache, DB};
