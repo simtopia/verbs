@@ -1,13 +1,11 @@
 mod dai_abi;
 
-use dai_abi::ABI as DAI_ABI;
-
 use alloy_primitives::{Address, U256};
-use db::ForkDb;
+use clap::Parser;
+use dai_abi::ABI as DAI_ABI;
 use rust_sim::network::Env;
 use rust_sim::utils::address_from_hex;
-
-use clap::Parser;
+use rust_sim::ForkDb;
 
 #[derive(Parser, Debug)]
 #[command(about, long_about = None)]
@@ -22,11 +20,11 @@ pub fn main() {
 
     let url_str = format!("https://eth-mainnet.g.alchemy.com/v2/{}", args.key);
 
-    let mut net = Env::<ForkDb>::init(&url_str, 0);
+    let mut env = Env::<ForkDb>::init(&url_str, 0);
 
     let dai_address = address_from_hex("0x6B175474E89094C44Da98b954EedeAC495271d0F");
 
-    let decimals = net
+    let decimals = env
         .direct_call(
             Address::ZERO,
             dai_address,
@@ -35,7 +33,7 @@ pub fn main() {
         )
         .unwrap();
 
-    let total_supply = net
+    let total_supply = env
         .direct_call(
             Address::ZERO,
             dai_address,

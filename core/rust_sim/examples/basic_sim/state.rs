@@ -1,10 +1,10 @@
 use crate::ecr20;
 use alloy_primitives::{Address, Uint, U256};
-use db::DB;
 use fastrand::Rng;
 use rust_sim::agent::{Agent, AgentSet, AgentVec, RecordedAgent, SimState};
 use rust_sim::contract::Transaction;
 use rust_sim::network::{create_call, Env};
+use rust_sim::DB;
 
 pub struct SimpleAgent {
     pub address: Address,
