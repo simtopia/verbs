@@ -74,7 +74,6 @@ dependencies = [
  "alloy-primitives",
  "alloy-sol-type-parser",
  "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -763,11 +762,9 @@ checksum = "7e962a19be5cfc3f3bf6dd8f61eb50107f356ad6270fbb3ed41476571db78be5"
 name = "db"
 version = "0.1.0"
 dependencies = [
- "alloy-json-abi",
  "alloy-primitives",
  "alloy-sol-types",
  "async-trait",
- "auto_impl",
  "ethers-core",
  "ethers-middleware",
  "ethers-providers",
@@ -775,14 +772,12 @@ dependencies = [
  "futures",
  "hex",
  "itertools 0.11.0",
- "parking_lot",
  "reqwest",
  "revm",
  "serde",
  "serde_json",
  "thiserror",
  "tokio",
- "tracing",
  "url",
 ]
 
