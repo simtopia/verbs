@@ -10,7 +10,6 @@ API Reference
    verbs.abi
    verbs.batch_runner
    verbs.sim
-   verbs.types
    verbs.utils
 
 The ``verbs.envs`` module also exposes simulation

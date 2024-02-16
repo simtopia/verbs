@@ -262,7 +262,7 @@ impl EmptyEnv {
     ///
     /// Raises
     /// ------
-    /// RevertError
+    /// verbs.envs.RevertError
     ///     Raises an exception if the transaction is reverted.
     ///
     pub fn call<'a>(
@@ -307,7 +307,7 @@ impl EmptyEnv {
     ///
     /// Raises
     /// ------
-    /// RevertError
+    /// verbs.envs.RevertError
     ///     Raises an exception if the transaction is reverted.
     ///
     pub fn execute<'a>(
