@@ -1,3 +1,5 @@
+//! Numerical and Ethereum utilities
+
 use alloy_primitives::{Address, U256};
 use revm::primitives::bitvec::macros::internal::funty::Fundamental;
 
@@ -93,7 +95,7 @@ pub fn div_u256(x: U256, y: U256, precision: i32) -> f64 {
 /// # Arguments
 ///
 /// * `bytecode_hex` - &str Contract bytecode hex
-/// * `args` - Option<Vec<u8>> ABI encoded constructor arguments
+/// * `args` - `Option<Vec<u8>>` ABI encoded constructor arguments
 ///
 pub fn constructor_data(bytecode_hex: &str, mut args: Option<Vec<u8>>) -> Vec<u8> {
     let mut bytecode: Vec<u8> = data_bytes_from_hex(bytecode_hex);

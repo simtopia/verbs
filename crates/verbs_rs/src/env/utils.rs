@@ -1,3 +1,6 @@
+//! EVM and data processing utilities
+//!
+
 use crate::contract::{Event, Transaction};
 use alloy_primitives::{Address, Bytes, U256};
 use alloy_sol_types::{decode_revert_reason, SolCall, SolEvent};

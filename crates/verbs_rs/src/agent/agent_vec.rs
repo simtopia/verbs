@@ -1,3 +1,11 @@
+//! Vector data structure of simulation agents
+//!
+//! Data structure that stores a vector of agents
+//! of one type. Implements functionality to
+//! iterate over and update agents, and
+//! record and retrieve simulated agent data.
+//!
+
 use crate::agent::traits::{Agent, AgentSet, RecordedAgent, RecordedAgentSet};
 use crate::contract::Transaction;
 use crate::env::Env;
@@ -79,8 +87,8 @@ impl<R: 'static, A: Agent + RecordedAgent<R> + 'static> AgentSet for AgentVec<R,
             .collect()
     }
     /// Record the current state of the agents in this set.
-    fn record(&mut self) {
-        let records: Vec<R> = self.agents.iter_mut().map(|x| x.record()).collect();
+    fn record<D: DB>(&mut self, env: &mut Env<D>) {
+        let records: Vec<R> = self.agents.iter_mut().map(|x| x.record(env)).collect();
         self.records.push(records);
     }
     /// Get the addresses of the agents in this set.
@@ -135,13 +143,13 @@ mod tests {
     }
 
     impl traits::RecordedAgent<u64> for TestAgent {
-        fn record(&mut self) -> u64 {
+        fn record<D: DB>(&mut self, _env: &mut Env<D>) -> u64 {
             self.value
         }
     }
 
     #[fixture]
-    fn network() -> Env<LocalDB> {
+    fn env() -> Env<LocalDB> {
         Env::<LocalDB>::init(U256::ZERO, U256::ZERO)
     }
 
@@ -151,7 +159,7 @@ mod tests {
     }
 
     #[rstest]
-    fn test_agent_vec(mut network: Env<LocalDB>, mut rng: fastrand::Rng) {
+    fn test_agent_vec(mut env: Env<LocalDB>, mut rng: fastrand::Rng) {
         let a = Address::from(Uint::from(101u128));
         let b = Address::from(Uint::from(202u128));
 
@@ -170,13 +178,13 @@ mod tests {
 
         assert_eq!(agent_vec.get_addresses(), vec![a, b]);
 
-        agent_vec.record();
+        agent_vec.record(&mut env);
         assert_eq!(agent_vec.records.len(), 1);
 
-        let calls = agent_vec.call(&mut rng, &mut network);
+        let calls = agent_vec.call(&mut rng, &mut env);
         assert_eq!(calls.len(), 4);
 
-        agent_vec.record();
+        agent_vec.record(&mut env);
         assert_eq!(agent_vec.records.len(), 2);
 
         let records = agent_vec.take_records();

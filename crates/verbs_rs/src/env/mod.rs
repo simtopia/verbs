@@ -1,3 +1,12 @@
+//! Simulation environments
+//!
+//! A simulation environment wraps a local
+//! EVM & database with tracking of simulation
+//! events. It also provides functionality to
+//! deploy contracts, interact contracts and
+//! process quees of transcations.
+//!
+
 mod utils;
 use crate::contract::{Event, Transaction};
 use crate::utils::Eth;

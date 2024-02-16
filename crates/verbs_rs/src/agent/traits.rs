@@ -1,3 +1,25 @@
+//! Traits designating required simulation agent functionality
+//!
+//! The traits are intended to be used in a hierarchical manner:
+//!
+//! * [SimState] collect all simulation agents, where fields
+//!   may be different agent types. This trait then describes
+//!   functions called during simulation execution
+//! * [AgentSet] is intended as a homogeneous collection of
+//!   an agent type
+//! * [Agent] is an individual agent that may be member of an
+//!   [AgentSet]
+//!
+//! Implementers have the flexibility to only use part of this
+//! structure though, for instance an implementation of
+//! [SimState] could implement an individual agent.
+//!
+//! Since it is a common use case to want to iterate over a
+//! agents of different types, the macro `#[derive(SimState)]`
+//! will automatically implement functions that iterate
+//! over field containing agents.
+//!
+
 use crate::contract::Transaction;
 use crate::env::Env;
 use crate::DB;
@@ -5,9 +27,20 @@ use alloy_primitives::Address;
 use fastrand::Rng;
 pub use verbs_macros::SimState;
 
+/// Simulation agent state trait
+///
+/// Trait providing an interface to update the
+/// state of all agents over the course of a
+/// simulation. This trait can be automatically
+/// derived for a struct where the fields
+/// are sets of agents of a single type using the
+/// `#[derive(SimState)]` macro. This will
+/// generate the code to automatically iterate
+/// over each set of agents in turn.
+///
 pub trait SimState {
-    fn call_agents<D: DB>(&mut self, rng: &mut Rng, network: &mut Env<D>) -> Vec<Transaction>;
-    fn record_agents(&mut self);
+    fn call_agents<D: DB>(&mut self, rng: &mut Rng, env: &mut Env<D>) -> Vec<Transaction>;
+    fn record_agents<D: DB>(&mut self, env: &mut Env<D>);
 }
 
 /// Agent trait used to update all agents each model update.
@@ -17,10 +50,10 @@ pub trait Agent {
     ///
     /// # Arguments
     ///
-    /// * `rng` - Fastrand rng state
-    /// * `network` - Protocol deployment(s)
+    /// * `rng`: Fastrand rng state
+    /// * `env`: Simulation environment
     ///
-    fn update<D: DB>(&mut self, rng: &mut Rng, network: &mut Env<D>) -> Vec<Transaction>;
+    fn update<D: DB>(&mut self, rng: &mut Rng, env: &mut Env<D>) -> Vec<Transaction>;
     /// Get the address of the agent.
     fn get_address(&self) -> Address;
 }
@@ -30,7 +63,7 @@ pub trait RecordedAgent<R> {
     /// Get a record of the current state of the agent. Records are
     /// collected as a vector of vectors representing the state of a
     /// collection of agents over the history of the simulation.
-    fn record(&mut self) -> R;
+    fn record<D: DB>(&mut self, env: &mut Env<D>) -> R;
 }
 
 /// A collection of homogenous agents
@@ -40,11 +73,11 @@ pub trait AgentSet {
     /// # Arguments
     ///
     /// * `rng` - Fastrand rng state
-    /// * `network` - Protocol deployment(s)
+    /// * `env` - Simulation environment
     ///
-    fn call<D: DB>(&mut self, rng: &mut fastrand::Rng, network: &mut Env<D>) -> Vec<Transaction>;
+    fn call<D: DB>(&mut self, rng: &mut fastrand::Rng, env: &mut Env<D>) -> Vec<Transaction>;
     /// Record the state of all the agents
-    fn record(&mut self);
+    fn record<D: DB>(&mut self, env: &mut Env<D>);
     /// Get a vector of agent addresses contained in this set
     fn get_addresses(&self) -> Vec<Address>;
 }
@@ -65,7 +98,7 @@ mod tests {
     }
 
     impl AgentSet for DummyAgentSet {
-        fn call<D: DB>(&mut self, _rng: &mut Rng, _network: &mut Env<D>) -> Vec<Transaction> {
+        fn call<D: DB>(&mut self, _rng: &mut Rng, _env: &mut Env<D>) -> Vec<Transaction> {
             vec![Transaction {
                 function_selector: [0, 0, 0, 0],
                 callee: Address::ZERO,
@@ -76,7 +109,7 @@ mod tests {
             }]
         }
 
-        fn record(&mut self) {}
+        fn record<D: DB>(&mut self, _env: &mut Env<D>) {}
 
         fn get_addresses(&self) -> Vec<Address> {
             vec![Address::ZERO]

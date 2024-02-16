@@ -26,10 +26,10 @@ fn impl_sim_state_macro(ast: &syn::DeriveInput) -> TokenStream {
 
         if field_name.is_some() {
             call_tokens.extend(quote!(
-                calls.extend(self.#field_name.call(rng, network));
+                transactions.extend(self.#field_name.call(rng, env));
             ));
             record_tokens.extend(quote!(
-                self.#field_name.record();
+                self.#field_name.record(env);
             ));
         }
     }
@@ -37,13 +37,13 @@ fn impl_sim_state_macro(ast: &syn::DeriveInput) -> TokenStream {
     let output = quote! {
         impl SimState for #name {
             fn call_agents<D: DB>(
-                &mut self, rng: &mut Rng, network: &mut Env<D>
+                &mut self, rng: &mut Rng, env: &mut Env<D>
             ) -> Vec<Transaction> {
-                let mut calls = Vec::<Transaction>::new();
+                let mut transactions = Vec::<Transaction>::new();
                 #call_tokens
-                calls
+                transactions
             }
-            fn record_agents(&mut self){
+            fn record_agents<D: DB>(&mut self, env: &mut Env<D>){
                 #record_tokens
             }
         }

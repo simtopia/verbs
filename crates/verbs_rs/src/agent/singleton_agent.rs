@@ -1,3 +1,5 @@
+//! Implementation of [Agent] for single agent
+
 use crate::agent::traits::{Agent, AgentSet, RecordedAgent, RecordedAgentSet};
 use crate::contract::Transaction;
 use crate::env::Env;
@@ -46,12 +48,12 @@ impl<R: 'static, A: Agent + RecordedAgent<R> + 'static> AgentSet for SingletonAg
     /// * `rng` - Fastrand rng state
     /// * `network` - Protocol deployment(s)
     ///
-    fn call<D: DB>(&mut self, rng: &mut fastrand::Rng, network: &mut Env<D>) -> Vec<Transaction> {
-        self.agent.update(rng, network)
+    fn call<D: DB>(&mut self, rng: &mut fastrand::Rng, env: &mut Env<D>) -> Vec<Transaction> {
+        self.agent.update(rng, env)
     }
     /// Record the current state of the agent.
-    fn record(&mut self) {
-        self.records.push(self.agent.record());
+    fn record<D: DB>(&mut self, env: &mut Env<D>) {
+        self.records.push(self.agent.record(env));
     }
     /// Get the ethers-core addresses of the agent.
     fn get_addresses(&self) -> Vec<Address> {

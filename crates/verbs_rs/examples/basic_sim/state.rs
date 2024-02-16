@@ -67,7 +67,7 @@ impl Agent for SimpleAgent {
 }
 
 impl RecordedAgent<U256> for SimpleAgent {
-    fn record(&mut self) -> U256 {
+    fn record<D: DB>(&mut self, _env: &mut Env<D>) -> U256 {
         self.current_balance
     }
 }
