@@ -19,14 +19,26 @@ use revm::primitives::{AccountInfo, Bytecode, ExecutionResult, Log, ResultAndSta
 use revm::EVM;
 pub use utils::{create_call, decode_event, process_events, RevertError};
 
+/// Simulation environment
+///
+/// Environment wrapping an in-memory EVM and
+/// functionality to update the state of the
+/// environment.
 pub struct Env<D: DB> {
+    /// Local EVM
     pub evm: EVM<D>,
+    /// Events/updates in the last block
     pub last_events: Vec<Event>,
+    /// History of events/updates over the
+    /// lifetime of the environment
     pub event_history: Vec<Event>,
 }
 
+/// EVM update methods
 trait CallEVM {
+    /// Execute a transaction, and update the EVM state
     fn execute(&mut self, tx: TxEnv) -> ExecutionResult;
+    /// Execute a transaction without updating the EVM
     fn call(&mut self, tx: TxEnv) -> ResultAndState;
 }
 
@@ -51,6 +63,21 @@ impl<D: DB> CallEVM for EVM<D> {
 }
 
 impl Env<ForkDb> {
+    /// Initialise an environment with a forked DB
+    ///
+    /// Initialise a simulation environment with
+    /// a database that can request values from
+    /// a remote fork of the blockchain. During EVM
+    /// execution, if a contract or storage value
+    /// does not exist locally the db will attempt
+    /// to request it from the remote endpoint.
+    ///
+    /// # Arguments
+    ///
+    /// * `node_url` - Url of service to make db requests
+    /// * `block_number` - Block number to fork from, value
+    ///   of 0 will select the latest available block.
+    ///
     pub fn init(node_url: &str, block_number: u64) -> Self {
         let db = ForkDb::new(node_url, block_number);
         let mut evm = EVM::new();
@@ -73,6 +100,12 @@ impl Env<ForkDb> {
         }
     }
 
+    /// Get history of data requests made by the DB
+    ///
+    /// Get a history of requests for data from the
+    /// remote fork. These requests can then be inserted
+    /// into an empty DB to speed up future simulations.
+    ///
     pub fn get_request_history(&self) -> &RequestCache {
         match &self.evm.db {
             Some(db) => &db.requests,
@@ -82,6 +115,18 @@ impl Env<ForkDb> {
 }
 
 impl Env<LocalDB> {
+    /// Initialise a simulation with an in-memory DB
+    ///
+    /// Initialises a simulation environment with an
+    /// empty in-memory database.
+    ///
+    /// # Arguments
+    ///
+    /// - `timestamp` - Timestamp to initialise the
+    ///   the simulation/EVM with
+    /// - `block_number` - Block number initialise the
+    ///   the simulation/EVM with
+    ///
     pub fn init(timestamp: U256, block_number: U256) -> Self {
         let mut evm = EVM::new();
         let db = LocalDB::new();
@@ -108,6 +153,13 @@ impl Env<LocalDB> {
 }
 
 impl<D: DB> Env<D> {
+    /// Insert a user account into the DB
+    ///
+    /// # Arguments
+    ///
+    /// - `address` - Address to create the account at
+    /// - `start_balance` - Starting balance of Eth of the account
+    ///
     pub fn insert_account(&mut self, address: Address, start_balance: U256) {
         self.evm.db().unwrap().insert_account_info(
             address,
@@ -115,6 +167,13 @@ impl<D: DB> Env<D> {
         );
     }
 
+    /// Insert multiple accounts into the DB
+    ///
+    /// # Arguments
+    ///
+    /// - `start_balance` - Starting balance of Eth of the account
+    /// - `addresses` - Vector of addresses to create accounts at
+    ///
     pub fn insert_accounts(&mut self, start_balance: u128, addresses: Vec<Address>) {
         let start_balance = U256::from(start_balance);
         for address in addresses {
@@ -122,6 +181,16 @@ impl<D: DB> Env<D> {
         }
     }
 
+    /// Deploy a contract to the EVM
+    ///
+    /// # Arguments
+    ///
+    /// - `deployer` - Address of contract deployer
+    /// - `contract_name` - Name of the contract, only used for
+    ///   error messaging
+    /// - `data` - Deployment bytecode, and abi encoded arguments
+    ///   if required
+    ///
     pub fn deploy_contract(
         &mut self,
         deployer: Address,
@@ -139,6 +208,16 @@ impl<D: DB> Env<D> {
         deploy_address
     }
 
+    /// Execute a contract function with ABI encoded arguments
+    ///
+    /// # Arguments
+    ///
+    /// - `callee` - Contract caller address
+    /// - `contract` -  Address of the contract to call
+    /// - `encoded_args` - ABI encoded function arguments and
+    ///   function selector
+    /// - `value` - Value attached to the transaction
+    ///
     pub fn direct_execute_raw(
         &mut self,
         callee: Address,
@@ -151,6 +230,15 @@ impl<D: DB> Env<D> {
         utils::result_to_raw_output(callee, execution_result)
     }
 
+    /// Execute a contract function for a specific ABI
+    ///
+    /// # Arguments
+    ///
+    /// - `callee` - Function caller address
+    /// - `contract` - Address of the contract
+    /// - `call_args` - Function arguments wrapped in a
+    ///   [SolCall] object
+    /// - `value` - Value attached to the transaction
     pub fn direct_execute<T: SolCall>(
         &mut self,
         callee: Address,
@@ -172,6 +260,14 @@ impl<D: DB> Env<D> {
         Ok((decoded, events))
     }
 
+    /// Call a contract function without committing changes
+    ///
+    /// # Arguments
+    ///
+    /// - `callee` - Address of the function caller
+    /// - `contract` - Address of the contract
+    /// - `encoded_args` - ABI encoded function selector and arguments
+    /// - `value` - Value attached to the transaction
     pub fn direct_call_raw(
         &mut self,
         callee: Address,
@@ -184,6 +280,15 @@ impl<D: DB> Env<D> {
         utils::result_to_raw_output(callee, result.result)
     }
 
+    /// Call a contract function without committing changes
+    ///
+    /// # Arguments
+    ///
+    /// - `callee` - Address of the function caller
+    /// - `contract` - Address of the contract
+    /// - `call_args` - Function arguments wrapped in a
+    ///   [SolCall] object
+    /// - `value` - Value attached to the transaction
     pub fn direct_call<T: SolCall>(
         &mut self,
         callee: Address,
@@ -206,6 +311,18 @@ impl<D: DB> Env<D> {
         Ok((decoded, events))
     }
 
+    /// Execute a function from a [Transaction] object
+    ///
+    /// This function is used during simulation execution
+    /// to process [Transaction] submitted for execution by
+    /// agents.
+    ///
+    /// # Arguments
+    ///
+    /// - `transaction` - Struct containing function call parameters
+    /// - `step` - Simulation step number
+    /// - `sequence` - Ordering of this transaction in the queue
+    ///
     fn call_from_transaction(&mut self, transaction: Transaction, step: usize, sequence: usize) {
         debug!(
             "Calling {:?} of {}",
@@ -231,12 +348,23 @@ impl<D: DB> Env<D> {
         self.last_events.push(result)
     }
 
+    /// Process a queue of [Transaction]
+    ///
+    /// # Arguments
+    /// - `transactions` - Vector of transactions
+    /// - `step` - Step number of the simulation
+    ///
     pub fn process_transactions(&mut self, transactions: Vec<Transaction>, step: usize) {
         for (i, call) in transactions.into_iter().enumerate() {
             self.call_from_transaction(call, step, i);
         }
     }
 
+    /// Store events from the last block
+    ///
+    /// Move events generated in the last block
+    /// into the historical storage.
+    ///
     pub fn clear_events(&mut self) {
         self.event_history.append(&mut self.last_events);
     }
