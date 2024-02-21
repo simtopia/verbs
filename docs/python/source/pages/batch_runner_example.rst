@@ -72,7 +72,7 @@ In this example we will re-use the previous example
 which initialises a set of agents, transfers tokens to one of the agents, then
 runs the simulation.
 
-The sampling can then be run using the :py:meth:`verbs.sim.batch_runner.batch_run`
+The sampling can then be run using the :py:meth:`verbs.batch_runner.batch_run`
 function, providing the ``sim_func`` function and a set of parameters to sample over
 
 .. code-block:: python

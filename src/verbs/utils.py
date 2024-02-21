@@ -2,6 +2,7 @@
 Ethereum ABI and numerical utilities
 """
 
+import json
 import typing
 
 import eth_abi
@@ -217,6 +218,28 @@ def cache_from_json(cache_json: typing.List) -> verbs.types.Cache:
         for x in cache_json[3]
     ]
     return (cache_json[0], cache_json[1], accounts, storage)
+
+
+def cache_from_file(cache_file: str) -> verbs.types.Cache:
+    """
+    Loads a cache from a JSON file and converts the loaded
+    cache JSON data into compatible env compatible format
+
+    Parameters
+    ----------
+    cache_file: str
+        Cache JSON file.
+
+    Returns
+    -------
+    verbs.types.Cache
+        Cache converted to format for initialisation of a
+        simulation environment.
+    """
+    with open(cache_file, "r") as f:
+        cache_json = json.load(f)
+
+    return cache_from_json(cache_json)
 
 
 def events_to_dataframe(events: typing.List[typing.Tuple]) -> pd.DataFrame:
