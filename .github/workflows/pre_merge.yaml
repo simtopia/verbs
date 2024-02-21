@@ -22,6 +22,8 @@ jobs:
           run: cargo fmt --all -- --check
         - name: Clippy
           run: cargo clippy -- -Dwarnings
+        - name: Build docs 📚
+          run: cargo doc --no-deps
 
   maturin_build:
     if: github.event.pull_request.draft == false
