@@ -222,7 +222,7 @@ def cache_from_json(cache_json: typing.List) -> verbs.types.Cache:
 
 def cache_from_file(cache_file: str) -> verbs.types.Cache:
     """
-    Loads a cache from a JSON file and converts a
+    Loads a cache from a JSON file and converts the loaded
     cache JSON data into compatible env compatible format
 
     Parameters
