@@ -17,11 +17,13 @@ jobs:
         - name: Rust tests
           run: cargo test
         - name: Rust example
-          run: cargo run --example basic_sim 200 100
+          run: cargo run --example basic_sim -- -s 200 -n 100
         - name: Rust formatting
           run: cargo fmt --all -- --check
         - name: Clippy
           run: cargo clippy -- -Dwarnings
+        - name: Build docs 📚
+          run: cargo doc --no-deps
 
   maturin_build:
     if: github.event.pull_request.draft == false

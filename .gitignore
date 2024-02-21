@@ -1,6 +1,6 @@
-core/db/target
-core/macros/target
-core/rust_sim/target
+crates/verbs_db/target
+crates/verbs_macros/target
+crates/verbs_rs/target
 
 /target
 .vscode
@@ -26,7 +26,6 @@ __pycache__/
 # Distribution / packaging
 .Python
 .venv/
-env/
 build/
 develop-eggs/
 dist/

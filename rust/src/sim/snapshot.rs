@@ -1,11 +1,11 @@
 use alloy_primitives::{Address, Bytes, B256, U256};
-use db::{LocalDB, Requests, DB};
 use pyo3::{types::PyBytes, Python};
 use revm::{
     db::{AccountState, DbAccount},
     primitives::{AccountInfo, BlobExcessGasAndPrice, BlockEnv, Bytecode, Log},
 };
-use rust_sim::network::Network;
+use verbs_rs::env::Env;
+use verbs_rs::{LocalDB, RequestCache, DB};
 
 use crate::types::{address_to_py, bytes_to_py};
 
@@ -87,7 +87,7 @@ pub type PyRequests<'a> = (
     Vec<(&'a PyBytes, &'a PyBytes, &'a PyBytes)>,
 );
 
-pub fn create_py_request_history<'a>(py: Python<'a>, requests: &Requests) -> PyRequests<'a> {
+pub fn create_py_request_history<'a>(py: Python<'a>, requests: &RequestCache) -> PyRequests<'a> {
     let timestamp: u128 = requests.start_timestamp.try_into().unwrap();
     let block_number: u128 = requests.start_block_number.try_into().unwrap();
 
@@ -112,7 +112,7 @@ pub fn create_py_request_history<'a>(py: Python<'a>, requests: &Requests) -> PyR
     (timestamp, block_number, py_accounts, py_storage)
 }
 
-pub fn create_py_snapshot<'a, D: DB>(py: Python<'a>, network: &mut Network<D>) -> PyDbState<'a> {
+pub fn create_py_snapshot<'a, D: DB>(py: Python<'a>, network: &mut Env<D>) -> PyDbState<'a> {
     let block = network.evm.env.block.clone();
 
     let block_env = (

@@ -1,9 +1,9 @@
 [workspace]
 
 members = [
-    "core/rust_sim",
-    "core/macros",
-    "core/db",
+    "crates/verbs_rs",
+    "crates/verbs_macros",
+    "crates/verbs_db",
     "rust"
 ]
 resolver = "2"
