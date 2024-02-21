@@ -3,7 +3,7 @@ use alloy_primitives::{Address, Uint, U256};
 use fastrand::Rng;
 use verbs_rs::agent::{Agent, AgentSet, AgentVec, RecordedAgent, SimState};
 use verbs_rs::contract::Transaction;
-use verbs_rs::env::{create_call, Env};
+use verbs_rs::env::Env;
 use verbs_rs::DB;
 
 pub struct SimpleAgent {
@@ -45,7 +45,7 @@ impl Agent for SimpleAgent {
             let receiver = rng.u64(0..self.n_agents);
             let receiver = Address::from(Uint::from(receiver));
             let send_amount = std::cmp::min(self.current_balance, U256::from(1000));
-            let send_call = create_call(
+            let send_call = Transaction::new(
                 self.address,
                 self.token_address,
                 ecr20::ABI::transferCall {

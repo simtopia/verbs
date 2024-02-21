@@ -4,7 +4,7 @@
 //! EVM & database with tracking of simulation
 //! events. It also provides functionality to
 //! deploy contracts, interact contracts and
-//! process quees of transcations.
+//! process queues of transactions.
 //!
 
 mod utils;
@@ -17,7 +17,7 @@ pub use ethereum_types::U64;
 use log::debug;
 use revm::primitives::{AccountInfo, Bytecode, ExecutionResult, Log, ResultAndState, TxEnv};
 use revm::EVM;
-pub use utils::{create_call, decode_event, process_events, RevertError};
+pub use utils::{decode_event, process_events, RevertError};
 
 /// Simulation environment
 ///

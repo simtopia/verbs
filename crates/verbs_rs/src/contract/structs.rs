@@ -1,6 +1,7 @@
 //! Transaction related data types
 
 use alloy_primitives::{Address, U256};
+use alloy_sol_types::SolCall;
 use revm::primitives::{Log, Output};
 
 /// EVM transaction argument data
@@ -19,6 +20,25 @@ pub struct Transaction {
     /// Flag, if `true` the simulation will halt (panic)
     /// if this transaction is reverted.
     pub checked: bool,
+}
+
+impl Transaction {
+    pub fn new<T: SolCall>(
+        callee: Address,
+        contract: Address,
+        args: T,
+        value: U256,
+        checked: bool,
+    ) -> Self {
+        Transaction {
+            function_selector: T::SELECTOR,
+            callee,
+            transact_to: contract,
+            args: args.abi_encode(),
+            value,
+            checked,
+        }
+    }
 }
 
 /// Result of a transaction included any generated events
