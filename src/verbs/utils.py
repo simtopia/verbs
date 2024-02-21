@@ -239,7 +239,7 @@ def cache_from_file(cache_file: str) -> verbs.types.Cache:
     with open(cache_file, "r") as f:
         cache_json = json.load(f)
 
-    return verbs.utils.cache_from_json(cache_json)
+    return cache_from_json(cache_json)
 
 
 def events_to_dataframe(events: typing.List[typing.Tuple]) -> pd.DataFrame:
