@@ -95,3 +95,5 @@ jobs:
         run: pip install hatch
       - name: Install verbs and build docs 📚
         run: hatch run sphinx:build
+      - name: Test doc examples
+        run: hatch run sphinx:test
