@@ -3,7 +3,7 @@ API Reference
 *************
 
 .. autosummary::
-   :toctree:
+   :toctree: generated/
    :template: custom-module-template.rst
    :recursive:
 
@@ -16,7 +16,7 @@ The ``verbs.envs`` module also exposes simulation
 environments implemented in Rust:
 
 .. autosummary::
-   :toctree:
+   :toctree: generated/
    :template: custom-class-template.rst
    :nosignatures:
 

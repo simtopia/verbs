@@ -5,7 +5,7 @@ Events & Logs
 The simulation environment stores events
 generated during the update/processing of
 a block, and the history of events generated
-over the course.
+over the course of the simulation.
 
 Data from events is wrapped with additional
 data on the step and function that generated
