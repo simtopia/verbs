@@ -19,15 +19,15 @@
 //! ````
 //!
 
-mod traits;
 mod error;
 mod fork_db;
 mod local_db;
 mod provider;
 mod runtime_client;
+mod traits;
 mod types;
 
-pub use traits::DB;
 pub use fork_db::ForkDb;
 pub use local_db::LocalDB;
+pub use traits::DB;
 pub use types::RequestCache;

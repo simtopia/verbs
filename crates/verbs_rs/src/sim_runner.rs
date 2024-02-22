@@ -30,11 +30,11 @@ const BLOCK_INTERVAL: u32 = 15;
 ///
 /// # Arguments
 ///
-/// * `env`: Reference to an [Env] simulation environment
-/// * `agents`: Reference to a set of agents implementing
+/// * `env` - Reference to an [Env] simulation environment
+/// * `agents` - Reference to a set of agents implementing
 ///   the [SimState] trait
-/// * `seed`: Random seed
-/// * `n_steps`: Number of simulation steps
+/// * `seed` - Random seed
+/// * `n_steps` - Number of simulation steps
 ///
 pub fn run<S: SimState, D: DB>(env: &mut Env<D>, agents: &mut S, seed: u64, n_steps: usize) {
     let mut rng = fastrand::Rng::with_seed(seed);

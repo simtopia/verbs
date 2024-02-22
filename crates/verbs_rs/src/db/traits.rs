@@ -5,6 +5,11 @@ use revm::{
     DatabaseCommit,
 };
 
+/// Combined `Revm` database trait with data export methods
+///
+/// Extends the [Database] and [DatabaseCommit] traits with
+/// methods to export the state of the DB. These methods
+/// allow the Db state to be exported from the Python API.
 pub trait DB: Database + DatabaseCommit {
     fn insert_account_info(&mut self, address: Address, account_info: AccountInfo);
     fn accounts(&self) -> &HashMap<Address, DbAccount>;

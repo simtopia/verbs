@@ -1,5 +1,5 @@
-use super::traits::DB;
 use super::error::DatabaseError;
+use super::traits::DB;
 use revm::db::in_memory_db::DbAccount;
 use revm::db::{AccountState, DatabaseCommit};
 use revm::primitives::{
@@ -8,6 +8,7 @@ use revm::primitives::{
 };
 use revm::Database;
 
+/// Local in-memory EVm database
 #[derive(Debug, Clone)]
 pub struct LocalDB {
     pub accounts: HashMap<Address, DbAccount>,

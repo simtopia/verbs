@@ -1,7 +1,7 @@
-use super::traits::DB;
 use super::error::DatabaseError;
 use super::provider::ProviderBuilder;
 use super::runtime_client::RuntimeClient;
+use super::traits::DB;
 use super::types::RequestCache;
 use super::types::{ToAlloy, ToEthers};
 use alloy_primitives::{keccak256, Bytes};
@@ -16,6 +16,22 @@ use revm::primitives::{
 };
 use revm::Database;
 
+/// Database with ability to load data from a remote fork
+///
+/// In memory database that has the ability to request
+/// missing account/storage values from a remote
+/// endpoint (e.g. [Alchemy](https://www.alchemy.com/)).
+/// This means simulations can be run from live deployments
+/// of contracts and protocols.
+///
+/// <div class="warning">
+///
+/// Since it makes requests from a remote endpoint
+/// this database can be significantly slower than
+/// a purely local DB like [super::LocalDB].
+///
+/// </div>
+///
 #[derive(Debug, Clone)]
 pub struct ForkDb {
     pub accounts: HashMap<Address, DbAccount>,

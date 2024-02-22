@@ -49,6 +49,16 @@ impl ToEthers for B256 {
     }
 }
 
+/// Cache of requests made by a [super::ForkDb]
+///
+/// Data structure designed to store a history
+/// of data/account requests made by a
+/// [super::ForkDb] over the course of a
+/// simulation. This cache can be inserted into
+/// [super::LocalDB] in subsequent simulations
+/// to avoid the overhead of making remote
+/// requests.
+///
 #[derive(Debug, Clone)]
 pub struct RequestCache {
     pub start_timestamp: AlloyU256,
