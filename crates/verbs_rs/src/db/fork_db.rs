@@ -45,10 +45,10 @@ pub struct ForkDb {
 }
 
 impl ForkDb {
-    pub fn new(node_url: &str, block_number: u64) -> Self {
+    pub fn new(node_url: &str, block_number: Option<u64>) -> Self {
         let block_number = match block_number {
-            0 => BlockNumber::Latest,
-            n => BlockNumber::Number(n.into()),
+            Some(n) => BlockNumber::Number(n.into()),
+            None => BlockNumber::Latest,
         };
 
         let provider = ProviderBuilder::new(node_url).build().unwrap();

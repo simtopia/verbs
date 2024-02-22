@@ -75,10 +75,10 @@ impl Env<ForkDb> {
     /// # Arguments
     ///
     /// * `node_url` - Url of service to make db requests
-    /// * `block_number` - Block number to fork from, value
-    ///   of 0 will select the latest available block.
+    /// * `block_number` - Block number to fork from, if None
+    ///    latest available block will be used.
     ///
-    pub fn init(node_url: &str, block_number: u64) -> Self {
+    pub fn init(node_url: &str, block_number: Option<u64>) -> Self {
         let db = ForkDb::new(node_url, block_number);
         let mut evm = EVM::new();
 

@@ -20,7 +20,7 @@ pub fn main() {
 
     let url_str = format!("https://eth-mainnet.g.alchemy.com/v2/{}", args.key);
 
-    let mut env = Env::<ForkDb>::init(&url_str, 0);
+    let mut env = Env::<ForkDb>::init(&url_str, None);
 
     let dai_address = address_from_hex("0x6B175474E89094C44Da98b954EedeAC495271d0F");
 
