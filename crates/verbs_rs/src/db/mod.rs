@@ -10,10 +10,10 @@
 //! # Examples
 //!
 //! ````
-//! use verbs_db;
+//! use verbs_rs;
 //! use revm::EVM;
 //!
-//! let db = verbs_db::LocalDB::new();
+//! let db = verbs_rs::LocalDB::new();
 //! let mut evm = EVM::new();
 //! evm.database(db);
 //! ````

@@ -15,6 +15,40 @@
 //! EVM, avoiding the overhead of messaging
 //! or multi-threading.
 //!
+//! ## Loading Contracts
+//!
+//! Verbs makes use of [alloy_sol_types] to convert
+//! ABI strings/files to Rust classes that can
+//! encode/decode function arguments etc.
+//!
+//! An ABI rust representation can generated using the `sol!`
+//! macro, for example
+//!
+//! ```
+//! use alloy_sol_types::sol;
+//!
+//! sol!(
+//!     ContractName,
+//!     r#"[
+//!         {
+//!             "inputs": [],
+//!             "name": "getValue",
+//!             "outputs": [
+//!                 {
+//!                     "internalType": "int256",
+//!                     "name": "",
+//!                     "type": "int256"
+//!                 }
+//!             ],
+//!             "stateMutability": "view",
+//!             "type": "function"
+//!         }
+//!     ]"#
+//! );
+//!
+//! // Encodes call arguments
+//! ContractName::getValueCall {};
+//! ```
 
 pub mod agent;
 pub mod contract;
