@@ -21,7 +21,7 @@ jobs:
         - name: Rust formatting
           run: cargo fmt --all -- --check
         - name: Clippy
-          run: cargo clippy -- -Dwarnings
+          run: cargo clippy --no-deps -- -Dwarnings
         - name: Build docs 📚
           run: cargo doc --no-deps
 

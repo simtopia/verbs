@@ -8,8 +8,14 @@ members = [
 resolver = "2"
 
 [workspace.package]
-version = "0.1.0"
+version = "0.2.1"
 edition = "2021"
+license = "MIT"
+description = "Ethereum Agent based simulation library"
+readme = "README.md"
+repository = "https://github.com/simtopia/verbs/"
+keywords = ["agent-based-model", "abm", "multi-agent", "simulation", "web3", "ethereum"]
+categories = ["simulation", "finance", "science"]
 
 [workspace.dependencies]
 revm = { version="3.5.0", default-features = false, features = ["memory_limit", "optional_eip3607", "optional_block_gas_limit", "optional_no_base_fee", "arbitrary"]}
