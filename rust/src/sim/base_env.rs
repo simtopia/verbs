@@ -75,7 +75,7 @@ impl BaseEnv<LocalDB> {
 }
 
 impl BaseEnv<ForkDb> {
-    pub fn new(node_url: &str, seed: u64, block_number: u64) -> Self {
+    pub fn new(node_url: &str, seed: u64, block_number: Option<u64>) -> Self {
         let network = Env::<ForkDb>::init(node_url, block_number);
         BaseEnv {
             network,

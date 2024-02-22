@@ -51,7 +51,7 @@ and block number, for example:
 
 .. code-block:: python
 
-   env = verbs.envs.ForkEnv(url, 1234, 1000)
+   env = verbs.envs.ForkEnv(url, 1234, block_number=1000)
 
 will create an environment with a fork backend, with
 random seed `1234`, from block number `1000`.
@@ -76,7 +76,7 @@ used to initialise an :py:class:`verbs.envs.EmptyEnv`
 
 .. code-block:: python
 
-   env = verbs.envs.ForkEnv(url, 1234, 1000)
+   env = verbs.envs.ForkEnv(url, 1234, block_number=1000)
    # Initialise & run a simulation
    snapshot = env.export_snapshot()
    # Use this snapshot to initialise a new environment
@@ -104,7 +104,7 @@ can be used to directly initialise a
 
 .. code-block:: python
 
-   env = verbs.envs.ForkEnv(url, 1234, 1000)
+   env = verbs.envs.ForkEnv(url, 1234, block_number=1000)
    # Initialise & run a simulation
    ...
    # Export the cached requests

@@ -26,7 +26,7 @@ use verbs_rs::ForkDb;
 /// .. code-block:: python
 ///
 ///    # Here alchemy_url is url string to the alchemy API
-///    env = verbs.envs.ForkEnv(alchemy_url, 101, 12345)
+///    env = verbs.envs.ForkEnv(alchemy_url, 101, block_number=12345)
 ///    ...
 ///    env.submit_call(...)
 ///
@@ -45,7 +45,8 @@ pub struct ForkEnv(BaseEnv<ForkDb>);
 #[pymethods]
 impl ForkEnv {
     #[new]
-    pub fn new(node_url: &str, seed: u64, block_number: u64) -> PyResult<Self> {
+    #[pyo3(signature = (node_url, seed, block_number = None))]
+    pub fn new(node_url: &str, seed: u64, block_number: Option<u64>) -> PyResult<Self> {
         Ok(Self(BaseEnv::<ForkDb>::new(node_url, seed, block_number)))
     }
 
@@ -70,7 +71,7 @@ impl ForkEnv {
     ///
     /// .. code-block:: python
     ///
-    ///    env = verbs.envs.ForkEnv(alchemy_url, 101, 12345)
+    ///    env = verbs.envs.ForkEnv(alchemy_url, 101, block_number=12345)
     ///    # Run simulation from fork
     ///    ...
     ///    # Get cache of requests
