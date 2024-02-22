@@ -1,4 +1,4 @@
-use super::db::DB;
+use super::traits::DB;
 use super::error::DatabaseError;
 use revm::db::in_memory_db::DbAccount;
 use revm::db::{AccountState, DatabaseCommit};

@@ -1,4 +1,4 @@
-use super::db::DB;
+use super::traits::DB;
 use super::error::DatabaseError;
 use super::provider::ProviderBuilder;
 use super::runtime_client::RuntimeClient;
