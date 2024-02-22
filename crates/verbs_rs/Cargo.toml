@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-revm = { workspace = true, features = ["ethersdb"] }
+revm = { workspace = true, features = ["ethersdb", "std", "serde"] }
 
 alloy-primitives.workspace = true
 alloy-sol-types.workspace = true
@@ -23,7 +23,20 @@ kdam = "0.3.0"
 log = "0.4.19"
 
 verbs-macros = { path="../verbs_macros" }
-verbs-db = { path="../verbs_db" }
+
+# Encoding/decoding
+serde_json = "1"
+serde = "1"
+
+# Error handling
+eyre = "0.6"
+thiserror = "1"
+
+url = "2"
+itertools = "0.11.0"
+async-trait = "0.1.74"
+reqwest = { version = "0.11.22", default-features = false }
+
 
 [dev-dependencies]
 assert_approx_eq = "1.1.0"

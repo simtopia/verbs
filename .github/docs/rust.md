@@ -13,9 +13,6 @@ It currently consists of 3 sub-crates
 
 * `crates/verbs_rs/`: Rust Ethereum ABM library.
 * `crates/verbs_macros/`: Macros used by the `verbs-rs crate`.
-* `crates/verbs_db`: Streamlined single threaded EVM database
-  backend that allows for both in-memory and forking
-  from deployed chains.
 
 Cargo commands can be run from the repo root.
 

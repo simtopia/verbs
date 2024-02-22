@@ -17,4 +17,3 @@ fastrand.workspace = true
 pyo3 = { version="0.20.0", features = ["extension-module"] }
 
 verbs-rs = { path = "../crates/verbs_rs" }
-verbs-db = { path = "../crates/verbs_db" }

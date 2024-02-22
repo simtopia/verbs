@@ -18,8 +18,9 @@
 
 pub mod agent;
 pub mod contract;
+mod db;
 pub mod env;
 pub mod sim_runner;
 pub mod utils;
 
-pub use verbs_db::{ForkDb, LocalDB, RequestCache, DB};
+pub use db::{ForkDb, LocalDB, RequestCache, DB};

@@ -3,7 +3,6 @@
 members = [
     "crates/verbs_rs",
     "crates/verbs_macros",
-    "crates/verbs_db",
     "rust"
 ]
 resolver = "2"
