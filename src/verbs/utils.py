@@ -22,9 +22,9 @@ def encode_args(
 
     Parameters
     ----------
-    types: typing.List[str]
+    types: list[str]
         List of solidity types
-    args: typing.List[typing.Any]
+    args: list
         List of Python arguments
 
     Returns
@@ -45,11 +45,11 @@ def encode_function_args(
 
     Parameters
     ----------
-    f_abi: typing.Dict
+    f_abi: dict
         Parsed function ABI JSON.
-    types: typing.List[str]
+    types: list[str]
         List of solidity types.
-    args: typing.List[typing.Any]
+    args: list
         List of Python arguments.
 
     Returns
@@ -117,7 +117,7 @@ def process_contract(contract_path: str, solc_version: str) -> typing.List[typin
 
     Returns
     -------
-    typing.List[typing.Dict]
+    list
         List of dictionary containing the contract name,
         abi JSON and bytecode hex string.
     """
@@ -162,7 +162,7 @@ def cache_to_json(cache: verbs.types.Cache) -> typing.List:
 
     Returns
     -------
-    typing.List
+    list
         JSON compatible data structure with bytes replaces with
         corresponding hex string.
     """
@@ -192,7 +192,7 @@ def cache_from_json(cache_json: typing.List) -> verbs.types.Cache:
 
     Parameters
     ----------
-    cache_json: typing.List
+    cache_json: list
         Cache JSON data structure.
 
     Returns
@@ -259,7 +259,7 @@ def events_to_dataframe(events: typing.List[typing.Tuple]) -> pd.DataFrame:
     Returns
     -------
     pd.DataFrame
-        Dataframe containing records of simulation events
+        DataFrame containing records of simulation events
     """
 
     columns = ["success", "selector", "step", "sequence"]

@@ -73,7 +73,7 @@ class BaseAgent:
 
         Returns
         -------
-        typing.List[Transaction]
+        list[Transaction]
             List of transactions to be processed in the next block
             of the simulation. This can be an empty list if the
             agent is not submitting any transactions.
@@ -95,8 +95,7 @@ class BaseAgent:
 
         Returns
         -------
-        typing.Any
-            Current recorded state for this agent.
+        Current recorded state for this agent.
         """
         raise NotImplementedError
 
@@ -126,7 +125,7 @@ class Sim:
             and key for use during execution
         network:
             Initialised simulation environment/network
-        agents: typing.List[BaseAgent], optional
+        agents: list[BaseAgent], optional
             List of agents to include in the simulation. Default
             value is an empty list, allowing agents to be pushed
             after the simulation is initialised.
@@ -158,14 +157,14 @@ class Sim:
         seed: int
             Random seed to initialise the simulation
             and key for use during execution.
-        agents: typing.List[BaseAgent], optional
+        agents: list[BaseAgent], optional
             List of agents to include in the simulation. Default
             value is an empty list, allowing agents to be pushed
             after the simulation is initialised.
         snapshot
             Optional snapshot used to initialise the simulation
             environment.
-        cache
+        cache:
             Optional cache used to initialise the simulation
             environment.
 
@@ -207,7 +206,7 @@ class Sim:
         seed: int
             Random seed to initialise the simulation
             and key for use during execution.
-        agents: typing.List[BaseAgent], optional
+        agents: list[BaseAgent], optional
             List of agents to include in the simulation. Default
             value is an empty list, allowing agents to be pushed
             after the simulation is initialised.
@@ -239,7 +238,7 @@ class Sim:
 
         Returns
         -------
-        typing.List[typing.List[typing.Any]]
+        list[list]
             List of records collected from agents at each step of
             the simulation.
         """

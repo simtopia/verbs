@@ -26,8 +26,8 @@ def batch_run(
     parameters_samples: typing.List[typing.Dict],
     snapshot=None,
     cache=None,
-    n_jobs=-2,
-    verbose=10,
+    n_jobs: int = -2,
+    verbose: int = 10,
     **sim_kwargs,
 ):
     """
@@ -49,7 +49,7 @@ def batch_run(
 
     Parameters
     ----------
-    sim_func: typing.Callable
+    sim_func:
         Simulation execution function, should
         have the signature
 
@@ -74,11 +74,11 @@ def batch_run(
     n_samples: int
         Number of monte-carlo samples to create for
         each parameter sample.
-    parameters_samples: typing.List[typing.Dict]
+    parameters_samples: list[dict]
         List of dictionaries containing simulation
         parameters. These parameters will be passed as
         keyword arguments to the ``sim_func`` function.
-    snapshot: typing.Tuple , optional
+    snapshot: tuple , optional
         Optional snapshot used to initialise the
         simulation environment for each execution.
     cache: verbs.types.Cache, optional
@@ -98,7 +98,7 @@ def batch_run(
 
     Returns
     -------
-    typing.List[typing.Dict]
+    list[dict]
         List of results, grouped by their parameters. Each
         entry is a dictionary containing ``"params"`` the
         parameters to produce the samples, and ``"samples"``
