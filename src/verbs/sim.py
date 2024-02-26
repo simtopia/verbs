@@ -219,7 +219,9 @@ class Sim:
         env = ForkEnv(node_url, seed, block_number)
         return Sim(seed, env, agents)
 
-    def run(self, n_steps: int) -> typing.List[typing.List[typing.Any]]:
+    def run(
+        self, n_steps: int, show_progress: bool = True
+    ) -> typing.List[typing.List[typing.Any]]:
         """
         Run the simulation and return telemetry data
 
@@ -235,6 +237,9 @@ class Sim:
         ----------
         n_steps: int
             Number of steps (i.e. blocks) to run the simulation for.
+        show_progress: bool, optional
+            If ``False`` printing a simulation progress bar will be
+            disabled, default ``True``.
 
         Returns
         -------
@@ -245,7 +250,7 @@ class Sim:
 
         records = list()
 
-        for _ in trange(n_steps):
+        for _ in trange(n_steps, disable=not show_progress):
 
             for agent in self.agents:
                 calls = agent.update(self.rng, self.env)
