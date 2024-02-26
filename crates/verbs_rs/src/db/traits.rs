@@ -1,3 +1,4 @@
+use super::error::DatabaseError;
 use alloy_primitives::Address;
 use revm::{
     db::{Database, DbAccount},
@@ -10,7 +11,7 @@ use revm::{
 /// Extends the [Database] and [DatabaseCommit] traits with
 /// methods to export the state of the DB. These methods
 /// allow the Db state to be exported from the Python API.
-pub trait DB: Database + DatabaseCommit {
+pub trait DB: Database<Error = DatabaseError> + DatabaseCommit {
     fn insert_account_info(&mut self, address: Address, account_info: AccountInfo);
     fn accounts(&self) -> &HashMap<Address, DbAccount>;
     fn contracts(&self) -> &HashMap<B256, Bytecode>;

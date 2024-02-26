@@ -8,6 +8,7 @@
 //!
 
 mod utils;
+
 use crate::contract::{Event, Transaction};
 use crate::utils::Eth;
 use crate::{ForkDb, LocalDB, RequestCache, DB};
@@ -48,7 +49,17 @@ impl<D: DB> CallEVM for EVM<D> {
 
         match self.transact_commit() {
             Ok(val) => val,
-            Err(_) => panic!("Execution failed"),
+            Err(e) => match e {
+                revm::primitives::EVMError::Transaction(t) => {
+                    panic!("Call failed: Invalid transaction {:?}", t)
+                }
+                revm::primitives::EVMError::Header(h) => {
+                    panic!("Call failed: Invalid header {:?}", h)
+                }
+                revm::primitives::EVMError::Database(d) => {
+                    panic!("Call failed: Database error {:?}", d)
+                }
+            },
         }
     }
 
@@ -57,7 +68,17 @@ impl<D: DB> CallEVM for EVM<D> {
 
         match self.transact() {
             Ok(val) => val,
-            Err(_) => panic!("Call failed"),
+            Err(e) => match e {
+                revm::primitives::EVMError::Transaction(t) => {
+                    panic!("Call failed: Invalid transaction {:?}", t)
+                }
+                revm::primitives::EVMError::Header(h) => {
+                    panic!("Call failed: Invalid header {:?}", h)
+                }
+                revm::primitives::EVMError::Database(d) => {
+                    panic!("Call failed: Database error {:?}", d)
+                }
+            },
         }
     }
 }
