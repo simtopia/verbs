@@ -68,3 +68,9 @@ The core rust simulation engine can be used to write simulation
 purely in Rust, with a significant gain in performance over
 Python in most cases. See [here](https://github.com/simtopia/verbs/blob/main/.github/docs/rust.md)
 for usage notes.
+
+## Acknowledgements
+
+VERBS simulation environments make extensive use of [revm](https://github.com/bluealloy/revm) a
+Rust implementation of the Ethereum virtual machine, and [alloy](https://github.com/alloy-rs/)
+Rust Ethereum libraries.
