@@ -47,8 +47,8 @@ pub fn run<S: SimState, D: DB>(env: &mut Env<D>, agents: &mut S, seed: u64, n_st
         // Shuffle calls
         rng.shuffle(transactions.as_mut_slice());
         // Update the block-time and number
-        env.evm.env.block.timestamp += U256::from(BLOCK_INTERVAL);
-        env.evm.env.block.number += U256::from(1);
+        env.evm.context.evm.env.block.timestamp += U256::from(BLOCK_INTERVAL);
+        env.evm.context.evm.env.block.number += U256::from(1);
         // Process calls in order
         env.process_transactions(transactions, i);
         // Record data from agents

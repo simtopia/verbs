@@ -13,9 +13,9 @@ use verbs_rs::{ForkDb, LocalDB, DB};
 // Represents blocks updating every 15s
 const BLOCK_INTERVAL: u32 = 15;
 
-pub struct BaseEnv<D: DB> {
+pub struct BaseEnv<'a, D: DB> {
     // EVM and deployed protocol
-    pub network: Env<D>,
+    pub network: Env<'a, D>,
     // Queue of calls submitted from Python
     pub call_queue: Vec<Transaction>,
     // RNG source
@@ -24,7 +24,7 @@ pub struct BaseEnv<D: DB> {
     pub step: usize,
 }
 
-impl BaseEnv<LocalDB> {
+impl<'a> BaseEnv<'a, LocalDB> {
     pub fn new(timestamp: u128, block_number: u128, seed: u64) -> Self {
         let network = Env::<LocalDB>::init(
             U256::try_from(timestamp).unwrap(),
@@ -74,7 +74,7 @@ impl BaseEnv<LocalDB> {
     }
 }
 
-impl BaseEnv<ForkDb> {
+impl<'a> BaseEnv<'a, ForkDb> {
     pub fn new(node_url: &str, seed: u64, block_number: Option<u64>) -> Self {
         let network = Env::<ForkDb>::init(node_url, block_number);
         BaseEnv {
@@ -86,7 +86,7 @@ impl BaseEnv<ForkDb> {
     }
 }
 
-impl<D: DB> BaseEnv<D> {
+impl<D: DB> BaseEnv<'_, D> {
     pub fn process_block(&mut self) {
         // Update the block-time and number
         self.network.evm.env.block.timestamp += U256::from(BLOCK_INTERVAL);

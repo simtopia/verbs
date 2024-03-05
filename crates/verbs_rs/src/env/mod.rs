@@ -17,7 +17,7 @@ use alloy_sol_types::SolCall;
 pub use ethereum_types::U64;
 use log::debug;
 use revm::primitives::{AccountInfo, Bytecode, ExecutionResult, Log, ResultAndState, TxEnv};
-use revm::EVM;
+use revm::Evm;
 pub use utils::{decode_event, process_events, RevertError};
 
 /// Simulation environment
@@ -25,9 +25,9 @@ pub use utils::{decode_event, process_events, RevertError};
 /// Environment wrapping an in-memory EVM and
 /// functionality to update the state of the
 /// environment.
-pub struct Env<D: DB> {
+pub struct Env<'a, D: DB> {
     /// Local EVM
-    pub evm: EVM<D>,
+    pub evm: Evm<'a, (), D>,
     /// Events/updates in the last block
     pub last_events: Vec<Event>,
     /// History of events/updates over the
@@ -43,9 +43,9 @@ trait CallEVM {
     fn call(&mut self, tx: TxEnv) -> ResultAndState;
 }
 
-impl<D: DB> CallEVM for EVM<D> {
+impl<'a, D: DB> CallEVM for Evm<'a, (), D> {
     fn execute(&mut self, tx: TxEnv) -> ExecutionResult {
-        self.env.tx = tx;
+        self.context.evm.env.tx = tx;
 
         match self.transact_commit() {
             Ok(val) => val,
@@ -59,12 +59,15 @@ impl<D: DB> CallEVM for EVM<D> {
                 revm::primitives::EVMError::Database(d) => {
                     panic!("Call failed: Database error {:?}", d)
                 }
+                revm::primitives::EVMError::Custom(c) => {
+                    panic!("Call failed: Custom error {:?}", c)
+                }
             },
         }
     }
 
     fn call(&mut self, tx: TxEnv) -> ResultAndState {
-        self.env.tx = tx;
+        self.context.evm.env.tx = tx;
 
         match self.transact() {
             Ok(val) => val,
@@ -78,12 +81,15 @@ impl<D: DB> CallEVM for EVM<D> {
                 revm::primitives::EVMError::Database(d) => {
                     panic!("Call failed: Database error {:?}", d)
                 }
+                revm::primitives::EVMError::Custom(c) => {
+                    panic!("Call failed: Custom error {:?}", c)
+                }
             },
         }
     }
 }
 
-impl Env<ForkDb> {
+impl<'a> Env<'a, ForkDb> {
     /// Initialise an environment with a forked DB
     ///
     /// Initialise a simulation environment with
@@ -100,19 +106,25 @@ impl Env<ForkDb> {
     ///    latest available block will be used.
     ///
     pub fn init(node_url: &str, block_number: Option<u64>) -> Self {
-        let db = ForkDb::new(node_url, block_number);
-        let mut evm = EVM::new();
-
-        evm.env.cfg.limit_contract_code_size = Some(0x1000000);
-        evm.env.cfg.disable_eip3607 = true;
-        evm.env.block.gas_limit = U256::MAX;
-        evm.env.block.timestamp = U256::try_from(db.block.timestamp.as_u128()).unwrap();
-        evm.env.block.number = match db.block.number {
+        let db = ForkDb::new(node_url, block_number.clone());
+        let timestamp = db.block.timestamp.as_u128();
+        let block_number = match db.block.number {
             Some(n) => U256::try_from(n.as_u64()).unwrap(),
             None => U256::ZERO,
         };
 
-        evm.database(db);
+        let evm = Evm::builder()
+            .with_db(db)
+            .modify_cfg_env(|cfg| {
+                cfg.limit_contract_code_size = Some(0x1000000);
+                cfg.disable_eip3607 = true;
+            })
+            .modify_block_env(|block| {
+                block.gas_limit = U256::MAX;
+                block.timestamp = U256::try_from(timestamp).unwrap();
+                block.number = block_number;
+            })
+            .build();
 
         Self {
             evm,
@@ -128,14 +140,11 @@ impl Env<ForkDb> {
     /// into an empty DB to speed up future simulations.
     ///
     pub fn get_request_history(&self) -> &RequestCache {
-        match &self.evm.db {
-            Some(db) => &db.requests,
-            None => panic!("No DB set"),
-        }
+        &self.evm.context.evm.db.requests
     }
 }
 
-impl Env<LocalDB> {
+impl<'a> Env<'a, LocalDB> {
     /// Initialise a simulation with an in-memory DB
     ///
     /// Initialises a simulation environment with an
@@ -149,17 +158,20 @@ impl Env<LocalDB> {
     ///   the simulation/EVM with
     ///
     pub fn init(timestamp: U256, block_number: U256) -> Self {
-        let mut evm = EVM::new();
-        let db = LocalDB::new();
-
-        evm.env.cfg.limit_contract_code_size = Some(0x1000000);
-        evm.env.cfg.disable_eip3607 = true;
-        evm.env.block.gas_limit = U256::MAX;
-        evm.env.block.timestamp = timestamp;
-        evm.env.block.number = block_number;
+        let evm = Evm::builder()
+            .with_db(LocalDB::new())
+            .modify_cfg_env(|cfg| {
+                cfg.limit_contract_code_size = Some(0x1000000);
+                cfg.disable_eip3607 = true;
+            })
+            .modify_block_env(|block| {
+                block.gas_limit = U256::MAX;
+                block.timestamp = timestamp;
+                block.number = block_number;
+            })
+            .build();
 
         let start_balance = U256::to_weth(10_000);
-        evm.database(db);
 
         let mut network = Self {
             evm,
@@ -173,7 +185,7 @@ impl Env<LocalDB> {
     }
 }
 
-impl<D: DB> Env<D> {
+impl<'a, D: DB> Env<'a, D> {
     /// Insert a user account into the DB
     ///
     /// # Arguments
@@ -182,7 +194,7 @@ impl<D: DB> Env<D> {
     /// - `start_balance` - Starting balance of Eth of the account
     ///
     pub fn insert_account(&mut self, address: Address, start_balance: U256) {
-        self.evm.db().unwrap().insert_account_info(
+        self.evm.context.evm.db.insert_account_info(
             address,
             AccountInfo::new(start_balance, 0, B256::default(), Bytecode::default()),
         );
@@ -444,7 +456,7 @@ mod tests {
     );
 
     #[fixture]
-    fn deployment() -> (Env<LocalDB>, Address, Address) {
+    fn deployment() -> (Env<'static, LocalDB>, Address, Address) {
         let mut network = Env::<LocalDB>::init(U256::ZERO, U256::ZERO);
 
         let constructor_args = <i128>::abi_encode(&101);
