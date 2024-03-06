@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # aarch64, ppc64le and s390x fail?
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
         target: [x86_64, x86, armv7]
     needs: [check_main]
     steps:
@@ -27,7 +27,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist --find-interpreter
+          args: -i ${{ matrix.python-version }} --release --out dist --find-interpreter
           sccache: 'true'
           manylinux: auto
           maturin-version: v1.4.0
@@ -41,6 +41,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
         target: [x64, x86]
     needs: [check_main]
     steps:
@@ -49,7 +50,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist --find-interpreter
+          args: -i ${{ matrix.python-version }} --release --out dist --find-interpreter
           sccache: 'true'
           maturin-version: v1.4.0
       - name: Upload wheels
@@ -62,6 +63,7 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
         target: [x86_64, aarch64]
     needs: [check_main]
     steps:
@@ -70,7 +72,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist --find-interpreter
+          args: -i ${{ matrix.python-version }} --release --out dist --find-interpreter
           sccache: 'true'
           maturin-version: v1.4.0
       - name: Upload wheels
