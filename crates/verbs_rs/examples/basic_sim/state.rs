@@ -1,6 +1,7 @@
 use crate::ecr20;
 use alloy_primitives::{Address, Uint, U256};
-use fastrand::Rng;
+use rand::Rng;
+use rand::RngCore;
 use verbs_rs::agent::{Agent, AgentSet, AgentVec, RecordedAgent, SimState};
 use verbs_rs::contract::Transaction;
 use verbs_rs::env::Env;
@@ -27,7 +28,7 @@ impl SimpleAgent {
 }
 
 impl Agent for SimpleAgent {
-    fn update<D: DB>(&mut self, rng: &mut Rng, network: &mut Env<D>) -> Vec<Transaction> {
+    fn update<D: DB, R: RngCore>(&mut self, rng: &mut R, network: &mut Env<D>) -> Vec<Transaction> {
         self.current_balance = network
             .direct_call(
                 self.address,
@@ -42,7 +43,7 @@ impl Agent for SimpleAgent {
             .balance;
 
         if self.current_balance > U256::from(0u64) {
-            let receiver = rng.u64(0..self.n_agents);
+            let receiver = rng.gen_range(0..self.n_agents);
             let receiver = Address::from(Uint::from(receiver));
             let send_amount = std::cmp::min(self.current_balance, U256::from(1000));
             let send_call = Transaction::new(

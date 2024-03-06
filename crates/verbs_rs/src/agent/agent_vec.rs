@@ -11,6 +11,7 @@ use crate::contract::Transaction;
 use crate::env::Env;
 use crate::DB;
 use alloy_primitives::Address;
+use rand::RngCore;
 use std::mem;
 
 /// Implementation of agent set storing agents as a vector
@@ -21,7 +22,7 @@ use std::mem;
 /// # Examples
 ///
 /// ```
-/// use fastrand::Rng;
+/// use rand::RngCore;
 /// use alloy_primitives::Address;
 /// use verbs_rs::{DB, env::Env};
 /// use verbs_rs::agent::{Agent, RecordedAgent, AgentVec, AgentSet};
@@ -30,8 +31,8 @@ use std::mem;
 /// struct DummyAgent{}
 ///
 /// impl Agent for DummyAgent {
-///     fn update<D: DB>(
-///         &mut self, rng: &mut Rng, network: &mut Env<D>
+///     fn update<D: DB, R: RngCore>(
+///         &mut self, rng: &mut R, network: &mut Env<D>
 ///     ) -> Vec<Transaction> {
 ///         Vec::default()
 ///     }
@@ -124,7 +125,7 @@ impl<R: 'static, A: Agent + RecordedAgent<R> + 'static> AgentSet for AgentVec<R,
     /// * `rng` - Fastrand rng state
     /// * `network` - Protocol deployment(s)
     ///
-    fn call<D: DB>(&mut self, rng: &mut fastrand::Rng, network: &mut Env<D>) -> Vec<Transaction> {
+    fn call<D: DB, RG: RngCore>(&mut self, rng: &mut RG, network: &mut Env<D>) -> Vec<Transaction> {
         self.agents
             .iter_mut()
             .flat_map(|x| x.update(rng, network))
@@ -147,6 +148,7 @@ mod tests {
     use crate::agent::traits;
     use crate::LocalDB;
     use alloy_primitives::{Uint, U256};
+    use rand::SeedableRng;
     use rstest::*;
 
     struct TestAgent {
@@ -155,9 +157,9 @@ mod tests {
     }
 
     impl traits::Agent for TestAgent {
-        fn update<D: DB>(
+        fn update<D: DB, RG: RngCore>(
             &mut self,
-            _rng: &mut fastrand::Rng,
+            _rng: &mut RG,
             _network: &mut crate::env::Env<D>,
         ) -> Vec<crate::contract::Transaction> {
             self.value += 1;
@@ -198,12 +200,12 @@ mod tests {
     }
 
     #[fixture]
-    fn rng() -> fastrand::Rng {
-        fastrand::Rng::default()
+    fn rng() -> rand_xoshiro::Xoroshiro128StarStar {
+        rand_xoshiro::Xoroshiro128StarStar::seed_from_u64(101)
     }
 
     #[rstest]
-    fn test_agent_vec(mut env: Env<LocalDB>, mut rng: fastrand::Rng) {
+    fn test_agent_vec(mut env: Env<LocalDB>, mut rng: rand_xoshiro::Xoroshiro128StarStar) {
         let a = Address::from(Uint::from(101u128));
         let b = Address::from(Uint::from(202u128));
 

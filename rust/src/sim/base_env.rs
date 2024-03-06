@@ -4,6 +4,9 @@ use super::snapshot::{
 use crate::types::{event_to_py, result_to_py, PyAddress, PyEvent, PyExecutionResult};
 use alloy_primitives::{Address, U256};
 use pyo3::prelude::*;
+use rand::seq::SliceRandom;
+use rand::SeedableRng;
+use rand_xoshiro::Xoroshiro128StarStar;
 
 use std::mem;
 use verbs_rs::contract::Transaction;
@@ -19,7 +22,7 @@ pub struct BaseEnv<D: DB> {
     // Queue of calls submitted from Python
     pub call_queue: Vec<Transaction>,
     // RNG source
-    pub rng: fastrand::Rng,
+    pub rng: Xoroshiro128StarStar,
     // Current step of the simulation
     pub step: usize,
 }
@@ -34,7 +37,7 @@ impl BaseEnv<LocalDB> {
         BaseEnv {
             network,
             call_queue: Vec::new(),
-            rng: fastrand::Rng::with_seed(seed),
+            rng: Xoroshiro128StarStar::seed_from_u64(seed),
             step: 0,
         }
     }
@@ -49,7 +52,7 @@ impl BaseEnv<LocalDB> {
         BaseEnv {
             network,
             call_queue: Vec::new(),
-            rng: fastrand::Rng::with_seed(seed),
+            rng: Xoroshiro128StarStar::seed_from_u64(seed),
             step: 0,
         }
     }
@@ -68,7 +71,7 @@ impl BaseEnv<LocalDB> {
         BaseEnv {
             network,
             call_queue: Vec::new(),
-            rng: fastrand::Rng::with_seed(seed),
+            rng: Xoroshiro128StarStar::seed_from_u64(seed),
             step: 0,
         }
     }
@@ -80,7 +83,7 @@ impl BaseEnv<ForkDb> {
         BaseEnv {
             network,
             call_queue: Vec::new(),
-            rng: fastrand::Rng::with_seed(seed),
+            rng: Xoroshiro128StarStar::seed_from_u64(seed),
             step: 0,
         }
     }
@@ -94,7 +97,7 @@ impl<D: DB> BaseEnv<D> {
         // Clear events from last block
         self.network.clear_events();
         // Shuffle and process calls
-        self.rng.shuffle(self.call_queue.as_mut_slice());
+        self.call_queue.as_mut_slice().shuffle(&mut self.rng);
         self.network
             .process_transactions(mem::take(&mut self.call_queue), self.step);
         // Tick step
