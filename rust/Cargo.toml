@@ -12,7 +12,8 @@ doctest = false
 revm.workspace = true
 alloy-primitives.workspace = true
 alloy-sol-types.workspace = true
-fastrand.workspace = true
+rand_xoshiro.workspace = true
+rand.workspace = true
 
 pyo3 = { version="0.20.0", features = ["extension-module"] }
 

@@ -28,7 +28,9 @@ ethers-core = { version = "2.0.10", default-features = false }
 ethers-providers = "2.0.10"
 ethers-middleware = "2.0.10"
 
-fastrand = "2.0.0"
 hex = "0.4.3"
 tokio = "1.33.0"
 futures = "0.3"
+
+rand_xoshiro = "0.6.0"
+rand = "0.8.5"

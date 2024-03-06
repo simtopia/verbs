@@ -20,10 +20,12 @@ ethereum-types.workspace = true
 ethers-core.workspace = true
 ethers-providers.workspace = true
 
-fastrand.workspace = true
 hex.workspace = true
 tokio.workspace = true
 futures.workspace = true
+
+rand_xoshiro.workspace = true
+rand.workspace = true
 
 kdam = "0.3.0"
 log = "0.4.19"
