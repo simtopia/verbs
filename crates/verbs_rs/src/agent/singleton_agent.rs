@@ -89,7 +89,7 @@ impl<R: 'static, A: Agent + RecordedAgent<R> + 'static> AgentSet for SingletonAg
     ///
     /// # Arguments
     ///
-    /// * `rng` - Fastrand rng state
+    /// * `rng` - Random generator
     /// * `network` - Protocol deployment(s)
     ///
     fn call<D: DB, RG: RngCore>(&mut self, rng: &mut RG, env: &mut Env<D>) -> Vec<Transaction> {

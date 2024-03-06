@@ -118,7 +118,7 @@ pub trait Agent {
     ///
     /// # Arguments
     ///
-    /// * `rng`: Fastrand rng state
+    /// * `rng`: Random generate
     /// * `env`: Simulation environment
     ///
     fn update<D: DB, R: RngCore>(&mut self, rng: &mut R, env: &mut Env<D>) -> Vec<Transaction>;
@@ -166,7 +166,7 @@ pub trait AgentSet {
     ///
     /// # Arguments
     ///
-    /// * `rng` - Fastrand rng state
+    /// * `rng` - Random generate
     /// * `env` - Simulation environment
     ///
     fn call<D: DB, R: RngCore>(&mut self, rng: &mut R, env: &mut Env<D>) -> Vec<Transaction>;
