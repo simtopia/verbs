@@ -15,7 +15,7 @@ authors = ["Jordan <jordan@simtopia.ai>", "Marc <marc@simtopia.ai>"]
 description = "Ethereum Agent based simulation library"
 readme = "README.md"
 repository = "https://github.com/simtopia/verbs/"
-keywords = ["agent-based-model", "abm", "multi-agent", "simulation", "web3", "ethereum"]
+keywords = ["agent-based-model", "abm", "simulation", "web3", "ethereum"]
 categories = ["simulation", "finance", "science"]
 
 [workspace.dependencies]

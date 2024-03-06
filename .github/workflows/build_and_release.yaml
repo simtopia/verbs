@@ -30,6 +30,7 @@ jobs:
           args: --release --out dist --find-interpreter
           sccache: 'true'
           manylinux: auto
+          maturin-version: v1.4.0
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
@@ -50,6 +51,7 @@ jobs:
           target: ${{ matrix.target }}
           args: --release --out dist --find-interpreter
           sccache: 'true'
+          maturin-version: v1.4.0
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
@@ -70,6 +72,7 @@ jobs:
           target: ${{ matrix.target }}
           args: --release --out dist --find-interpreter
           sccache: 'true'
+          maturin-version: v1.4.0
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
@@ -86,6 +89,7 @@ jobs:
         with:
           command: sdist
           args: --out dist
+          maturin-version: v1.4.0
       - name: Upload sdist
         uses: actions/upload-artifact@v4
         with:
