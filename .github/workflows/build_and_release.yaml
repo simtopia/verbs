@@ -27,7 +27,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: -i ${{ matrix.python-version }} --release --out dist --find-interpreter
+          args: -i ${{ matrix.python-version }} --release --out dist
           sccache: 'true'
           manylinux: auto
           maturin-version: v1.4.0
@@ -50,7 +50,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: -i ${{ matrix.python-version }} --release --out dist --find-interpreter
+          args: -i ${{ matrix.python-version }} --release --out dist
           sccache: 'true'
           maturin-version: v1.4.0
       - name: Upload wheels
@@ -72,7 +72,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: -i ${{ matrix.python-version }} --release --out dist --find-interpreter
+          args: -i ${{ matrix.python-version }} --release --out dist
           sccache: 'true'
           maturin-version: v1.4.0
       - name: Upload wheels
