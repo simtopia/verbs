@@ -13,76 +13,72 @@ jobs:
       - name: No release
         if: github.ref != 'refs/heads/main'
         run: echo '::warning ::Release can only be run from the main branch!' && exit 1
+
   linux:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # aarch64, ppc64le and s390x fail?
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
         target: [x86_64, x86, armv7]
     needs: [check_main]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist --find-interpreter
+          args: -i ${{ matrix.python-version }} --release --out dist
           sccache: 'true'
           manylinux: auto
+          maturin-version: v1.4.0
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels-linux-${{ matrix.target }}
+          name: wheels-linux-${{ matrix.target }}-${{ matrix.python-version }}
           path: dist
 
   windows:
     runs-on: windows-latest
     strategy:
       matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
         target: [x64, x86]
     needs: [check_main]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          architecture: ${{ matrix.target }}
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist --find-interpreter
+          args: -i ${{ matrix.python-version }} --release --out dist
           sccache: 'true'
+          maturin-version: v1.4.0
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels-windows-${{ matrix.target }}
+          name: wheels-windows-${{ matrix.target }}-${{ matrix.python-version }}
           path: dist
 
   macos:
     runs-on: macos-latest
     strategy:
       matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
         target: [x86_64, aarch64]
     needs: [check_main]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: --release --out dist --find-interpreter
+          args: -i ${{ matrix.python-version }} --release --out dist
           sccache: 'true'
+          maturin-version: v1.4.0
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels-macos-${{ matrix.target }}
+          name: wheels-macos-${{ matrix.target }}-${{ matrix.python-version }}
           path: dist
 
   sdist:
@@ -95,15 +91,63 @@ jobs:
         with:
           command: sdist
           args: --out dist
+          maturin-version: v1.4.0
       - name: Upload sdist
         uses: actions/upload-artifact@v4
         with:
           name: wheels-sdist
           path: dist
 
-  release:
+  rust_publish_dry_run:
+      runs-on: ubuntu-latest
+      needs: [check_main]
+      container: rust:latest
+      steps:
+        - uses: actions/checkout@v4
+        - uses: dtolnay/rust-toolchain@stable
+        - name: Build docs 📚
+          run: cargo doc --no-deps
+        # - name: Test publish verbs simulation library
+        #   run: cargo publish --dry-run -p verbs-rs
+        # - name: Test publish verbs macros
+        #   run: cargo publish --dry-run -p verbs-macros
+
+  build_docs:
     runs-on: ubuntu-latest
-    needs: [linux, windows, macos, sdist]
+    needs: [check_main]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Install hatch 🐣
+        run: pip install hatch
+      - name: Build docs 📚
+        run: hatch run sphinx:build
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3.0.0
+        with:
+          path: docs/python/build/html
+
+  release_rust:
+    runs-on: ubuntu-latest
+    needs: [linux, windows, macos, sdist, build_docs, rust_publish_dry_run]
+    container: rust:latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Publish verbs macros
+        run: cargo publish -p verbs-macros --token ${CRATES_TOKEN}
+        env:
+          CRATES_TOKEN: ${{ secrets.CARGO_API_KEY }}
+      - name: Publish verbs
+        run: cargo publish -p verbs-rs --token ${CRATES_TOKEN}
+        env:
+          CRATES_TOKEN: ${{ secrets.CARGO_API_KEY }}
+
+  release_python:
+    runs-on: ubuntu-latest
+    needs: [linux, windows, macos, sdist, build_docs, rust_publish_dry_run]
     environment:
       name: pypi
       url: https://pypi.org/p/verbs
@@ -119,26 +163,9 @@ jobs:
     - name: Publish distribution 📦 to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
 
-  build_docs:
-    runs-on: ubuntu-latest
-    needs: release
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-      - name: Install hatch 🐣
-        run: pip install hatch
-      - name: Build docs 📚
-        run: hatch run sphinx:build
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3.0.0
-        with:
-          path: docs/python/build/html
-
   publish_docs:
     runs-on: ubuntu-latest
-    needs: build_docs
+    needs: [linux, windows, macos, sdist, build_docs, rust_publish_dry_run]
     # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
     permissions:
       pages: write      # to deploy to Pages

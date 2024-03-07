@@ -24,7 +24,7 @@ use crate::contract::Transaction;
 use crate::env::Env;
 use crate::DB;
 use alloy_primitives::Address;
-use fastrand::Rng;
+use rand::RngCore;
 pub use verbs_macros::SimState;
 
 /// Simulation agent state trait
@@ -41,7 +41,7 @@ pub use verbs_macros::SimState;
 /// # Examples
 ///
 /// ```
-/// use fastrand::Rng;
+/// use rand::RngCore;
 /// use alloy_primitives::Address;
 /// use verbs_rs::{DB, env::Env};
 /// use verbs_rs::agent::{Agent, RecordedAgent, AgentVec, AgentSet, SimState};
@@ -50,8 +50,8 @@ pub use verbs_macros::SimState;
 /// struct DummyAgent{}
 ///
 /// impl Agent for DummyAgent {
-///     fn update<D: DB>(
-///         &mut self, rng: &mut Rng, network: &mut Env<D>
+///     fn update<D: DB, R: RngCore>(
+///         &mut self, rng: &mut R, network: &mut Env<D>
 ///     ) -> Vec<Transaction> {
 ///         Vec::default()
 ///     }
@@ -75,7 +75,8 @@ pub use verbs_macros::SimState;
 /// ```
 pub trait SimState {
     /// Update the state of all agents, and return any transactions
-    fn call_agents<D: DB>(&mut self, rng: &mut Rng, env: &mut Env<D>) -> Vec<Transaction>;
+    fn call_agents<D: DB, R: RngCore>(&mut self, rng: &mut R, env: &mut Env<D>)
+        -> Vec<Transaction>;
     /// Record the current state of the agents in this set
     fn record_agents<D: DB>(&mut self, env: &mut Env<D>);
 }
@@ -88,7 +89,7 @@ pub trait SimState {
 /// # Examples
 ///
 /// ```
-/// use fastrand::Rng;
+/// use rand::RngCore;
 /// use alloy_primitives::Address;
 /// use verbs_rs::{DB, env::Env};
 /// use verbs_rs::agent::{Agent, RecordedAgent, AgentVec, AgentSet};
@@ -99,8 +100,8 @@ pub trait SimState {
 /// }
 ///
 /// impl Agent for DummyAgent {
-///     fn update<D: DB>(
-///         &mut self, rng: &mut Rng, network: &mut Env<D>
+///     fn update<D: DB, R: RngCore>(
+///         &mut self, rng: &mut R, network: &mut Env<D>
 ///     ) -> Vec<Transaction> {
 ///         self.state += 1;
 ///         Vec::default()
@@ -117,10 +118,10 @@ pub trait Agent {
     ///
     /// # Arguments
     ///
-    /// * `rng`: Fastrand rng state
+    /// * `rng`: Random generate
     /// * `env`: Simulation environment
     ///
-    fn update<D: DB>(&mut self, rng: &mut Rng, env: &mut Env<D>) -> Vec<Transaction>;
+    fn update<D: DB, R: RngCore>(&mut self, rng: &mut R, env: &mut Env<D>) -> Vec<Transaction>;
     /// Get the address of the agent.
     fn get_address(&self) -> Address;
 }
@@ -135,7 +136,6 @@ pub trait Agent {
 /// # Examples
 ///
 /// ```
-/// use fastrand::Rng;
 /// use verbs_rs::{DB, env::Env};
 /// use verbs_rs::agent::RecordedAgent;
 ///
@@ -144,7 +144,7 @@ pub trait Agent {
 /// }
 ///
 /// impl RecordedAgent<i32> for DummyAgent {
-///     fn record<D: DB>(&mut self, _env: &mut Env<D>) -> i32 {
+///     fn record<D: DB,>(&mut self, _env: &mut Env<D>) -> i32 {
 ///         self.current_state
 ///     }
 /// }
@@ -166,10 +166,10 @@ pub trait AgentSet {
     ///
     /// # Arguments
     ///
-    /// * `rng` - Fastrand rng state
+    /// * `rng` - Random generate
     /// * `env` - Simulation environment
     ///
-    fn call<D: DB>(&mut self, rng: &mut fastrand::Rng, env: &mut Env<D>) -> Vec<Transaction>;
+    fn call<D: DB, R: RngCore>(&mut self, rng: &mut R, env: &mut Env<D>) -> Vec<Transaction>;
     /// Record the state of all the agents
     fn record<D: DB>(&mut self, env: &mut Env<D>);
     /// Get a vector of agent addresses contained in this set
@@ -195,7 +195,7 @@ mod tests {
     }
 
     impl AgentSet for DummyAgentSet {
-        fn call<D: DB>(&mut self, _rng: &mut Rng, _env: &mut Env<D>) -> Vec<Transaction> {
+        fn call<D: DB, R: RngCore>(&mut self, _rng: &mut R, _env: &mut Env<D>) -> Vec<Transaction> {
             vec![Transaction {
                 function_selector: [0, 0, 0, 0],
                 callee: Address::ZERO,
@@ -226,7 +226,7 @@ mod tests {
             b: DummyAgentSet { v: false },
         };
 
-        let mut rng = fastrand::Rng::with_seed(101);
+        let mut rng = <rand_xoshiro::Xoroshiro128StarStar as rand::SeedableRng>::seed_from_u64(101);
         let mut network = &mut Env::<LocalDB>::init(U256::ZERO, U256::ZERO);
 
         let calls = x.call_agents(&mut rng, &mut network);

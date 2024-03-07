@@ -5,6 +5,7 @@ use crate::contract::Transaction;
 use crate::env::Env;
 use crate::DB;
 use alloy_primitives::Address;
+use rand::RngCore;
 use std::mem;
 
 /// Implementation of agent set for a single agent
@@ -15,7 +16,7 @@ use std::mem;
 /// # Examples
 ///
 /// ```
-/// use fastrand::Rng;
+/// use rand::RngCore;
 /// use alloy_primitives::Address;
 /// use verbs_rs::{DB, env::Env};
 /// use verbs_rs::agent::{Agent, RecordedAgent, SingletonAgent, AgentSet};
@@ -24,8 +25,8 @@ use std::mem;
 /// struct DummyAgent{}
 ///
 /// impl Agent for DummyAgent {
-///     fn update<D: DB>(
-///         &mut self, rng: &mut Rng, network: &mut Env<D>
+///     fn update<D: DB, R: RngCore>(
+///         &mut self, rng: &mut R, network: &mut Env<D>
 ///     ) -> Vec<Transaction> {
 ///         Vec::default()
 ///     }
@@ -88,10 +89,10 @@ impl<R: 'static, A: Agent + RecordedAgent<R> + 'static> AgentSet for SingletonAg
     ///
     /// # Arguments
     ///
-    /// * `rng` - Fastrand rng state
+    /// * `rng` - Random generator
     /// * `network` - Protocol deployment(s)
     ///
-    fn call<D: DB>(&mut self, rng: &mut fastrand::Rng, env: &mut Env<D>) -> Vec<Transaction> {
+    fn call<D: DB, RG: RngCore>(&mut self, rng: &mut RG, env: &mut Env<D>) -> Vec<Transaction> {
         self.agent.update(rng, env)
     }
     /// Record the current state of the agent

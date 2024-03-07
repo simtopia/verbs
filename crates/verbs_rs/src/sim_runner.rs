@@ -11,6 +11,9 @@ use crate::env::Env;
 use crate::DB;
 use alloy_primitives::U256;
 use kdam::tqdm;
+use rand::seq::SliceRandom;
+use rand::SeedableRng;
+use rand_xoshiro::Xoroshiro128StarStar;
 
 // Represents blocks updating every 15s
 const BLOCK_INTERVAL: u32 = 15;
@@ -37,7 +40,7 @@ const BLOCK_INTERVAL: u32 = 15;
 /// * `n_steps` - Number of simulation steps
 ///
 pub fn run<S: SimState, D: DB>(env: &mut Env<D>, agents: &mut S, seed: u64, n_steps: usize) {
-    let mut rng = fastrand::Rng::with_seed(seed);
+    let mut rng = Xoroshiro128StarStar::seed_from_u64(seed);
 
     for i in tqdm!(0..n_steps) {
         // Move the events from the previous block into historical storage
@@ -45,7 +48,7 @@ pub fn run<S: SimState, D: DB>(env: &mut Env<D>, agents: &mut S, seed: u64, n_st
         // Update all agents
         let mut transactions = agents.call_agents(&mut rng, env);
         // Shuffle calls
-        rng.shuffle(transactions.as_mut_slice());
+        transactions.as_mut_slice().shuffle(&mut rng);
         // Update the block-time and number
         env.evm.context.evm.env.block.timestamp += U256::from(BLOCK_INTERVAL);
         env.evm.context.evm.env.block.number += U256::from(1);
