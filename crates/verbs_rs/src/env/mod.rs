@@ -191,15 +191,24 @@ impl Env<LocalDB> {
 }
 
 impl<D: DB> Env<D> {
+
     fn evm(&mut self) -> Evm<(), D> {
-        let state = self.evm_state.take().unwrap();
-        let ContextWithHandlerCfg { context, cfg } = state;
-        Evm {
-            context,
-            handler: Handler::new(cfg),
+        let state = self.evm_state.take();
+
+        match state {
+            Some(s) => {
+                let ContextWithHandlerCfg { context, cfg } = s;
+                Evm {
+                    context,
+                    handler: Handler::new(cfg),
+                }
+            },
+            None => panic!("No EVM state set (this should not happen!)"),
         }
+
     }
 
+    /// Get a mutable reference to the stored evm-state
     pub fn evm_state(&mut self) -> &mut ContextWithHandlerCfg<(), D> {
         match &mut self.evm_state {
             Some(e) => e,
@@ -215,9 +224,7 @@ impl<D: DB> Env<D> {
     /// - `start_balance` - Starting balance of Eth of the account
     ///
     pub fn insert_account(&mut self, address: Address, start_balance: U256) {
-        self.evm_state
-            .as_mut()
-            .unwrap()
+        self.evm_state()
             .context
             .evm
             .db
@@ -320,7 +327,7 @@ impl<D: DB> Env<D> {
         let decoded = T::abi_decode_returns(&output_data, true);
         let decoded = match decoded {
             Ok(x) => x,
-            Err(_) => panic!("Decoding error from {}", function_name),
+            Err(e) => panic!("Decoding error from {} {:?}", function_name, e),
         };
         self.evm_state = Some(evm.into_context_with_handler_cfg());
         Ok((decoded, events))
