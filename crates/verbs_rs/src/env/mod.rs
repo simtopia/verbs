@@ -17,7 +17,7 @@ use alloy_sol_types::SolCall;
 pub use ethereum_types::U64;
 use log::debug;
 use revm::primitives::{AccountInfo, Bytecode, ExecutionResult, Log, ResultAndState, TxEnv};
-use revm::Evm;
+use revm::{ContextWithHandlerCfg, Evm, Handler};
 pub use utils::{decode_event, process_events, RevertError};
 
 /// Simulation environment
@@ -25,9 +25,9 @@ pub use utils::{decode_event, process_events, RevertError};
 /// Environment wrapping an in-memory EVM and
 /// functionality to update the state of the
 /// environment.
-pub struct Env<'a, D: DB> {
-    /// Local EVM
-    pub evm: Evm<'a, (), D>,
+pub struct Env<D: DB> {
+    /// Local EVM state
+    pub evm_state: Option<ContextWithHandlerCfg<(), D>>,
     /// Events/updates in the last block
     pub last_events: Vec<Event>,
     /// History of events/updates over the
@@ -89,7 +89,7 @@ impl<'a, D: DB> CallEVM for Evm<'a, (), D> {
     }
 }
 
-impl<'a> Env<'a, ForkDb> {
+impl Env<ForkDb> {
     /// Initialise an environment with a forked DB
     ///
     /// Initialise a simulation environment with
@@ -106,7 +106,7 @@ impl<'a> Env<'a, ForkDb> {
     ///    latest available block will be used.
     ///
     pub fn init(node_url: &str, block_number: Option<u64>) -> Self {
-        let db = ForkDb::new(node_url, block_number.clone());
+        let db = ForkDb::new(node_url, block_number);
         let timestamp = db.block.timestamp.as_u128();
         let block_number = match db.block.number {
             Some(n) => U256::try_from(n.as_u64()).unwrap(),
@@ -126,8 +126,10 @@ impl<'a> Env<'a, ForkDb> {
             })
             .build();
 
+        let context = evm.into_context_with_handler_cfg();
+
         Self {
-            evm,
+            evm_state: Some(context),
             last_events: Vec::new(),
             event_history: Vec::new(),
         }
@@ -140,11 +142,14 @@ impl<'a> Env<'a, ForkDb> {
     /// into an empty DB to speed up future simulations.
     ///
     pub fn get_request_history(&self) -> &RequestCache {
-        &self.evm.context.evm.db.requests
+        match &self.evm_state {
+            Some(e) => &e.context.evm.db.requests,
+            None => panic!("No EVM state set"),
+        }
     }
 }
 
-impl<'a> Env<'a, LocalDB> {
+impl Env<LocalDB> {
     /// Initialise a simulation with an in-memory DB
     ///
     /// Initialises a simulation environment with an
@@ -174,7 +179,7 @@ impl<'a> Env<'a, LocalDB> {
         let start_balance = U256::to_weth(10_000);
 
         let mut network = Self {
-            evm,
+            evm_state: Some(evm.into_context_with_handler_cfg()),
             last_events: Vec::new(),
             event_history: Vec::new(),
         };
@@ -185,7 +190,23 @@ impl<'a> Env<'a, LocalDB> {
     }
 }
 
-impl<'a, D: DB> Env<'a, D> {
+impl<D: DB> Env<D> {
+    fn evm(&mut self) -> Evm<(), D> {
+        let state = self.evm_state.take().unwrap();
+        let ContextWithHandlerCfg { context, cfg } = state;
+        Evm {
+            context,
+            handler: Handler::new(cfg),
+        }
+    }
+
+    pub fn evm_state(&mut self) -> &mut ContextWithHandlerCfg<(), D> {
+        match &mut self.evm_state {
+            Some(e) => e,
+            None => panic!("No EVM state set (this should not happen!)"),
+        }
+    }
+
     /// Insert a user account into the DB
     ///
     /// # Arguments
@@ -194,10 +215,16 @@ impl<'a, D: DB> Env<'a, D> {
     /// - `start_balance` - Starting balance of Eth of the account
     ///
     pub fn insert_account(&mut self, address: Address, start_balance: U256) {
-        self.evm.context.evm.db.insert_account_info(
-            address,
-            AccountInfo::new(start_balance, 0, B256::default(), Bytecode::default()),
-        );
+        self.evm_state
+            .as_mut()
+            .unwrap()
+            .context
+            .evm
+            .db
+            .insert_account_info(
+                address,
+                AccountInfo::new(start_balance, 0, B256::default(), Bytecode::default()),
+            );
     }
 
     /// Insert multiple accounts into the DB
@@ -231,13 +258,15 @@ impl<'a, D: DB> Env<'a, D> {
         data: Vec<u8>,
     ) -> Address {
         let tx = utils::init_create_transaction(deployer, data);
-        let result = self.evm.execute(tx);
+        let mut evm = self.evm();
+        let result = evm.execute(tx);
         let output = utils::deployment_output(contract_name, result);
         let deploy_address = match output {
             revm::primitives::Output::Create(_, address) => address.unwrap(),
             _ => panic!("Deployment of {} failed", contract_name),
         };
         debug!("Deployed {} to {}", contract_name, deploy_address);
+        self.evm_state = Some(evm.into_context_with_handler_cfg());
         deploy_address
     }
 
@@ -259,7 +288,9 @@ impl<'a, D: DB> Env<'a, D> {
         value: U256,
     ) -> Result<ExecutionResult, RevertError> {
         let tx = utils::init_call_transaction(callee, contract, encoded_args, value);
-        let execution_result = self.evm.execute(tx);
+        let mut evm = self.evm();
+        let execution_result = evm.execute(tx);
+        self.evm_state = Some(evm.into_context_with_handler_cfg());
         utils::result_to_raw_output(callee, execution_result)
     }
 
@@ -282,7 +313,8 @@ impl<'a, D: DB> Env<'a, D> {
         let function_name = T::SIGNATURE;
         let call_args = call_args.abi_encode();
         let tx = utils::init_call_transaction(callee, contract, call_args, value);
-        let execution_result = self.evm.execute(tx);
+        let mut evm = self.evm();
+        let execution_result = evm.execute(tx);
         let (output, events) = utils::result_to_output(function_name, callee, execution_result)?;
         let output_data = output.into_data();
         let decoded = T::abi_decode_returns(&output_data, true);
@@ -290,6 +322,7 @@ impl<'a, D: DB> Env<'a, D> {
             Ok(x) => x,
             Err(_) => panic!("Decoding error from {}", function_name),
         };
+        self.evm_state = Some(evm.into_context_with_handler_cfg());
         Ok((decoded, events))
     }
 
@@ -309,7 +342,9 @@ impl<'a, D: DB> Env<'a, D> {
         value: U256,
     ) -> Result<ExecutionResult, RevertError> {
         let tx = utils::init_call_transaction(callee, contract, encoded_args, value);
-        let result = self.evm.call(tx);
+        let mut evm = self.evm();
+        let result = evm.call(tx);
+        self.evm_state = Some(evm.into_context_with_handler_cfg());
         utils::result_to_raw_output(callee, result.result)
     }
 
@@ -332,7 +367,8 @@ impl<'a, D: DB> Env<'a, D> {
         let function_name = T::SIGNATURE;
         let call_args = call_args.abi_encode();
         let tx = utils::init_call_transaction(callee, contract, call_args, value);
-        let execution_result = self.evm.call(tx);
+        let mut evm = self.evm();
+        let execution_result = evm.call(tx);
         let (output, events) =
             utils::result_to_output(function_name, callee, execution_result.result)?;
         let output_data = output.into_data();
@@ -341,6 +377,7 @@ impl<'a, D: DB> Env<'a, D> {
             Ok(x) => x,
             Err(_) => panic!("Decoding error from {}", function_name),
         };
+        self.evm_state = Some(evm.into_context_with_handler_cfg());
         Ok((decoded, events))
     }
 
@@ -356,7 +393,13 @@ impl<'a, D: DB> Env<'a, D> {
     /// - `step` - Simulation step number
     /// - `sequence` - Ordering of this transaction in the queue
     ///
-    fn call_from_transaction(&mut self, transaction: Transaction, step: usize, sequence: usize) {
+    fn call_from_transaction(
+        evm: &mut Evm<'_, (), D>,
+        last_events: &mut Vec<Event>,
+        transaction: Transaction,
+        step: usize,
+        sequence: usize,
+    ) {
         debug!(
             "Calling {:?} of {}",
             transaction.function_selector, transaction.transact_to
@@ -369,7 +412,7 @@ impl<'a, D: DB> Env<'a, D> {
             transaction.args,
             transaction.value,
         );
-        let execution_result = self.evm.execute(tx);
+        let execution_result = evm.execute(tx);
         let result = utils::result_to_output_with_events(
             step,
             sequence,
@@ -378,7 +421,7 @@ impl<'a, D: DB> Env<'a, D> {
             execution_result,
             check_call,
         );
-        self.last_events.push(result)
+        last_events.push(result);
     }
 
     /// Process a queue of [Transaction]
@@ -388,9 +431,14 @@ impl<'a, D: DB> Env<'a, D> {
     /// - `step` - Step number of the simulation
     ///
     pub fn process_transactions(&mut self, transactions: Vec<Transaction>, step: usize) {
+        let mut evm = self.evm();
+        let mut events = Vec::<Event>::new();
+
         for (i, call) in transactions.into_iter().enumerate() {
-            self.call_from_transaction(call, step, i);
+            Self::call_from_transaction(&mut evm, &mut events, call, step, i);
         }
+        self.evm_state = Some(evm.into_context_with_handler_cfg());
+        self.last_events.extend(events);
     }
 
     /// Store events from the last block
@@ -456,7 +504,7 @@ mod tests {
     );
 
     #[fixture]
-    fn deployment() -> (Env<'static, LocalDB>, Address, Address) {
+    fn deployment() -> (Env<LocalDB>, Address, Address) {
         let mut network = Env::<LocalDB>::init(U256::ZERO, U256::ZERO);
 
         let constructor_args = <i128>::abi_encode(&101);

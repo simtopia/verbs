@@ -195,7 +195,7 @@ mod tests {
     }
 
     #[fixture]
-    fn env() -> Env<'static, LocalDB> {
+    fn env() -> Env<LocalDB> {
         Env::<LocalDB>::init(U256::ZERO, U256::ZERO)
     }
 

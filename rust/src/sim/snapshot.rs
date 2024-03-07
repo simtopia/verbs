@@ -1,4 +1,4 @@
-use alloy_primitives::{Address, Bytes, B256, U256};
+use alloy_primitives::{Address, Bytes, LogData, B256, U256};
 use pyo3::{types::PyBytes, Python};
 use revm::{
     db::{AccountState, DbAccount},
@@ -112,8 +112,16 @@ pub fn create_py_request_history<'a>(py: Python<'a>, requests: &RequestCache) ->
     (timestamp, block_number, py_accounts, py_storage)
 }
 
-pub fn create_py_snapshot<'a, D: DB>(py: Python<'a>, network: &mut Env<D>) -> PyDbState<'a> {
-    let block = network.evm.env.block.clone();
+pub fn create_py_snapshot<'a, D: DB>(py: Python<'a>, network: &Env<D>) -> PyDbState<'a> {
+    let block = network
+        .evm_state
+        .as_ref()
+        .unwrap()
+        .context
+        .evm
+        .env
+        .block
+        .clone();
 
     let block_env = (
         PyBytes::new(py, block.number.as_le_slice()),
@@ -128,7 +136,7 @@ pub fn create_py_snapshot<'a, D: DB>(py: Python<'a>, network: &mut Env<D>) -> Py
             .map(|x| (x.excess_blob_gas, x.blob_gasprice)),
     );
 
-    let db = network.evm.db().unwrap();
+    let db = &network.evm_state.as_ref().unwrap().context.evm.db;
 
     let accounts: Vec<(&'a PyBytes, PyDbAccount<'a>)> = db
         .accounts()
@@ -170,11 +178,11 @@ pub fn create_py_snapshot<'a, D: DB>(py: Python<'a>, network: &mut Env<D>) -> Py
         .map(|x| {
             (
                 address_to_py(py, x.address),
-                x.topics
+                x.topics()
                     .iter()
                     .map(|x| PyBytes::new(py, x.as_slice()))
                     .collect(),
-                bytes_to_py(py, x.data.clone()),
+                bytes_to_py(py, x.data.data.0.clone().into()),
             )
         })
         .collect();
@@ -262,12 +270,13 @@ pub fn load_snapshot(db: &mut LocalDB, snapshot: PyDbState) {
     for log in snapshot.3.into_iter() {
         db.logs.push(Log {
             address: Address::from_slice(log.0.as_bytes()),
-            topics: log
-                .1
-                .into_iter()
-                .map(|x| B256::from_slice(x.as_bytes()))
-                .collect(),
-            data: Bytes::copy_from_slice(log.2.as_bytes()),
+            // topics: log
+            //     .1
+            //     .into_iter()
+            //     .map(|x| B256::from_slice(x.as_bytes()))
+            //     .collect(),
+            // data: Bytes::copy_from_slice(log.2.as_bytes()),
+            data: LogData::empty(),
         })
     }
 

@@ -30,7 +30,7 @@ use verbs_rs::LocalDB;
 ///    env.submit_call(...)
 ///
 #[pyclass]
-pub struct EmptyEnv(BaseEnv<'a, LocalDB>);
+pub struct EmptyEnv(BaseEnv<LocalDB>);
 
 #[pymethods]
 impl EmptyEnv {
