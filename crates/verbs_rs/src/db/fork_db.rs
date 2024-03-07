@@ -146,15 +146,11 @@ impl ForkDb {
 }
 
 impl DB for ForkDb {
-    fn insert_account_info(
-        &mut self,
-        address: alloy_primitives::Address,
-        account_info: AccountInfo,
-    ) {
+    fn insert_account_info(&mut self, address: Address, account_info: AccountInfo) {
         self.insert_account_info(address, account_info)
     }
 
-    fn accounts(&self) -> &HashMap<alloy_primitives::Address, DbAccount> {
+    fn accounts(&self) -> &HashMap<Address, DbAccount> {
         &self.accounts
     }
 

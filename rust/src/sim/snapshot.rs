@@ -112,8 +112,8 @@ pub fn create_py_request_history<'a>(py: Python<'a>, requests: &RequestCache) ->
     (timestamp, block_number, py_accounts, py_storage)
 }
 
-pub fn create_py_snapshot<'a, D: DB>(py: Python<'a>, network: &Env<D>) -> PyDbState<'a> {
-    let block = network
+pub fn create_py_snapshot<'a, D: DB>(py: Python<'a>, env: &Env<D>) -> PyDbState<'a> {
+    let block = env
         .evm_state
         .as_ref()
         .unwrap()
@@ -136,7 +136,7 @@ pub fn create_py_snapshot<'a, D: DB>(py: Python<'a>, network: &Env<D>) -> PyDbSt
             .map(|x| (x.excess_blob_gas, x.blob_gasprice)),
     );
 
-    let db = &network.evm_state.as_ref().unwrap().context.evm.db;
+    let db = &env.evm_state.as_ref().unwrap().context.evm.db;
 
     let accounts: Vec<(&'a PyBytes, PyDbAccount<'a>)> = db
         .accounts()

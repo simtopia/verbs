@@ -191,7 +191,6 @@ impl Env<LocalDB> {
 }
 
 impl<D: DB> Env<D> {
-
     fn evm(&mut self) -> Evm<(), D> {
         let state = self.evm_state.take();
 
@@ -202,10 +201,9 @@ impl<D: DB> Env<D> {
                     context,
                     handler: Handler::new(cfg),
                 }
-            },
+            }
             None => panic!("No EVM state set (this should not happen!)"),
         }
-
     }
 
     /// Get a mutable reference to the stored evm-state
@@ -216,6 +214,13 @@ impl<D: DB> Env<D> {
         }
     }
 
+    /// Increment block number and time
+    pub fn increment_time(&mut self, interval: u64) {
+        let state = self.evm_state();
+        state.context.evm.env.block.timestamp += U256::from(interval);
+        state.context.evm.env.block.number += U256::from(1);
+    }
+
     /// Insert a user account into the DB
     ///
     /// # Arguments
@@ -224,14 +229,10 @@ impl<D: DB> Env<D> {
     /// - `start_balance` - Starting balance of Eth of the account
     ///
     pub fn insert_account(&mut self, address: Address, start_balance: U256) {
-        self.evm_state()
-            .context
-            .evm
-            .db
-            .insert_account_info(
-                address,
-                AccountInfo::new(start_balance, 0, B256::default(), Bytecode::default()),
-            );
+        self.evm_state().context.evm.db.insert_account_info(
+            address,
+            AccountInfo::new(start_balance, 0, B256::default(), Bytecode::default()),
+        );
     }
 
     /// Insert multiple accounts into the DB

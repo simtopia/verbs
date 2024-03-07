@@ -14,7 +14,7 @@ use verbs_rs::env::{Env, RevertError};
 use verbs_rs::{ForkDb, LocalDB, DB};
 
 // Represents blocks updating every 15s
-const BLOCK_INTERVAL: u32 = 15;
+const BLOCK_INTERVAL: u64 = 15;
 
 pub struct BaseEnv<D: DB> {
     // EVM and deployed protocol
@@ -29,13 +29,13 @@ pub struct BaseEnv<D: DB> {
 
 impl BaseEnv<LocalDB> {
     pub fn new(timestamp: u128, block_number: u128, seed: u64) -> Self {
-        let network = Env::<LocalDB>::init(
+        let env = Env::<LocalDB>::init(
             U256::try_from(timestamp).unwrap(),
             U256::try_from(block_number).unwrap(),
         );
 
         BaseEnv {
-            env: network,
+            env,
             call_queue: Vec::new(),
             rng: Xoroshiro128StarStar::seed_from_u64(seed),
             step: 0,
@@ -76,9 +76,9 @@ impl BaseEnv<LocalDB> {
 
 impl BaseEnv<ForkDb> {
     pub fn new(node_url: &str, seed: u64, block_number: Option<u64>) -> Self {
-        let network = Env::<ForkDb>::init(node_url, block_number);
+        let env = Env::<ForkDb>::init(node_url, block_number);
         BaseEnv {
-            env: network,
+            env,
             call_queue: Vec::new(),
             rng: Xoroshiro128StarStar::seed_from_u64(seed),
             step: 0,
@@ -89,8 +89,7 @@ impl BaseEnv<ForkDb> {
 impl<D: DB> BaseEnv<D> {
     pub fn process_block(&mut self) {
         // Update the block-time and number
-        self.env.evm_state().context.evm.env.block.timestamp += U256::from(BLOCK_INTERVAL);
-        self.env.evm_state().context.evm.env.block.number += U256::from(1);
+        self.env.increment_time(BLOCK_INTERVAL);
         // Clear events from last block
         self.env.clear_events();
         // Shuffle and process calls
