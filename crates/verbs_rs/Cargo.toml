@@ -30,7 +30,7 @@ rand.workspace = true
 kdam = "0.5.1"
 log = "0.4.19"
 
-verbs-macros = { path="../verbs_macros", version = "0.2.3"}
+verbs-macros = { path="../verbs_macros", version = "0.3.0"}
 
 # Encoding/decoding
 serde_json = "1"
