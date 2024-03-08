@@ -93,7 +93,7 @@ impl ForkEnv {
     pub fn export_cache<'a>(&mut self, py: Python<'a>) -> PyResult<snapshot::PyRequests<'a>> {
         Ok(snapshot::create_py_request_history(
             py,
-            self.0.network.get_request_history(),
+            self.0.env.get_request_history(),
         ))
     }
 

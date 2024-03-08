@@ -19,9 +19,9 @@ keywords = ["agent-based-model", "abm", "simulation", "web3", "ethereum"]
 categories = ["simulation", "finance", "science"]
 
 [workspace.dependencies]
-revm = { version="3.5.0", default-features = false, features = ["memory_limit", "optional_eip3607", "optional_block_gas_limit", "optional_no_base_fee", "arbitrary"]}
-alloy-primitives = "0.4.2"
-alloy-sol-types = { version="0.4.2", features=["json"]}
+revm = { version="6.1.0", default-features = false, features = ["memory_limit", "optional_eip3607", "optional_block_gas_limit", "optional_no_base_fee", "arbitrary"]}
+alloy-primitives = "0.6.4"
+alloy-sol-types = { version="0.6.4", features=["json"]}
 
 ethereum-types = "0.14.1"
 ethers-core = { version = "2.0.10", default-features = false }

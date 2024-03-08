@@ -34,7 +34,7 @@ pub fn event_to_py<'a>(py: Python<'a>, event: &Event) -> PyEvent<'a> {
             .map(|x| {
                 (
                     address_to_py(py, x.address),
-                    PyBytes::new(py, x.data.to_vec().as_slice()),
+                    PyBytes::new(py, x.data.data.to_vec().as_slice()),
                 )
             })
             .collect(),
@@ -52,7 +52,12 @@ pub fn result_to_py(
             x.output().map(|b| PyBytes::new(py, b.to_vec().as_slice())),
             x.logs()
                 .into_iter()
-                .map(|a| (address_to_py(py, a.address), bytes_to_py(py, a.data)))
+                .map(|a| {
+                    (
+                        address_to_py(py, a.address),
+                        bytes_to_py(py, a.data.data.0.into()),
+                    )
+                })
                 .collect(),
             x.gas_used(),
         )),

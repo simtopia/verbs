@@ -9,14 +9,13 @@
 use crate::agent::SimState;
 use crate::env::Env;
 use crate::DB;
-use alloy_primitives::U256;
 use kdam::tqdm;
 use rand::seq::SliceRandom;
 use rand::SeedableRng;
 use rand_xoshiro::Xoroshiro128StarStar;
 
 // Represents blocks updating every 15s
-const BLOCK_INTERVAL: u32 = 15;
+const BLOCK_INTERVAL: u64 = 15;
 
 /// Simulation execution function
 ///
@@ -50,8 +49,7 @@ pub fn run<S: SimState, D: DB>(env: &mut Env<D>, agents: &mut S, seed: u64, n_st
         // Shuffle calls
         transactions.as_mut_slice().shuffle(&mut rng);
         // Update the block-time and number
-        env.evm.env.block.timestamp += U256::from(BLOCK_INTERVAL);
-        env.evm.env.block.number += U256::from(1);
+        env.increment_time(BLOCK_INTERVAL);
         // Process calls in order
         env.process_transactions(transactions, i);
         // Record data from agents

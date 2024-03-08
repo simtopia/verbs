@@ -14,11 +14,11 @@ use verbs_rs::env::{Env, RevertError};
 use verbs_rs::{ForkDb, LocalDB, DB};
 
 // Represents blocks updating every 15s
-const BLOCK_INTERVAL: u32 = 15;
+const BLOCK_INTERVAL: u64 = 15;
 
 pub struct BaseEnv<D: DB> {
     // EVM and deployed protocol
-    pub network: Env<D>,
+    pub env: Env<D>,
     // Queue of calls submitted from Python
     pub call_queue: Vec<Transaction>,
     // RNG source
@@ -29,13 +29,13 @@ pub struct BaseEnv<D: DB> {
 
 impl BaseEnv<LocalDB> {
     pub fn new(timestamp: u128, block_number: u128, seed: u64) -> Self {
-        let network = Env::<LocalDB>::init(
+        let env = Env::<LocalDB>::init(
             U256::try_from(timestamp).unwrap(),
             U256::try_from(block_number).unwrap(),
         );
 
         BaseEnv {
-            network,
+            env,
             call_queue: Vec::new(),
             rng: Xoroshiro128StarStar::seed_from_u64(seed),
             step: 0,
@@ -45,12 +45,13 @@ impl BaseEnv<LocalDB> {
     pub fn from_snapshot(seed: u64, snapshot: PyDbState) -> Self {
         let block_env = load_block_env(&snapshot);
 
-        let mut network = Env::<LocalDB>::init(block_env.timestamp, block_env.number);
-        network.evm.env.block = block_env;
+        let mut env = Env::<LocalDB>::init(block_env.timestamp, block_env.number);
+        env.evm_state().context.evm.env.block = block_env;
 
-        load_snapshot(network.evm.db().unwrap(), snapshot);
+        load_snapshot(&mut env.evm_state().context.evm.db, snapshot);
+
         BaseEnv {
-            network,
+            env,
             call_queue: Vec::new(),
             rng: Xoroshiro128StarStar::seed_from_u64(seed),
             step: 0,
@@ -58,18 +59,14 @@ impl BaseEnv<LocalDB> {
     }
 
     pub fn from_cache(seed: u64, requests: PyRequests) -> Self {
-        let mut network = Env::<LocalDB>::init(
+        let mut env = Env::<LocalDB>::init(
             U256::try_from(requests.0).unwrap(),
             U256::try_from(requests.1).unwrap(),
         );
-
-        match network.evm.db() {
-            Some(db) => load_cache(requests, db),
-            None => panic!("Database required"),
-        };
+        load_cache(requests, &mut env.evm_state().context.evm.db);
 
         BaseEnv {
-            network,
+            env,
             call_queue: Vec::new(),
             rng: Xoroshiro128StarStar::seed_from_u64(seed),
             step: 0,
@@ -79,9 +76,9 @@ impl BaseEnv<LocalDB> {
 
 impl BaseEnv<ForkDb> {
     pub fn new(node_url: &str, seed: u64, block_number: Option<u64>) -> Self {
-        let network = Env::<ForkDb>::init(node_url, block_number);
+        let env = Env::<ForkDb>::init(node_url, block_number);
         BaseEnv {
-            network,
+            env,
             call_queue: Vec::new(),
             rng: Xoroshiro128StarStar::seed_from_u64(seed),
             step: 0,
@@ -92,20 +89,19 @@ impl BaseEnv<ForkDb> {
 impl<D: DB> BaseEnv<D> {
     pub fn process_block(&mut self) {
         // Update the block-time and number
-        self.network.evm.env.block.timestamp += U256::from(BLOCK_INTERVAL);
-        self.network.evm.env.block.number += U256::from(1);
+        self.env.increment_time(BLOCK_INTERVAL);
         // Clear events from last block
-        self.network.clear_events();
+        self.env.clear_events();
         // Shuffle and process calls
         self.call_queue.as_mut_slice().shuffle(&mut self.rng);
-        self.network
+        self.env
             .process_transactions(mem::take(&mut self.call_queue), self.step);
         // Tick step
         self.step += 1;
     }
 
     pub fn get_last_events<'a>(&'a self, py: Python<'a>) -> Vec<PyEvent> {
-        self.network
+        self.env
             .last_events
             .iter()
             .map(|e| event_to_py(py, e))
@@ -113,7 +109,7 @@ impl<D: DB> BaseEnv<D> {
     }
 
     pub fn get_event_history<'a>(&'a self, py: Python<'a>) -> Vec<PyEvent> {
-        self.network
+        self.env
             .event_history
             .iter()
             .map(|e| event_to_py(py, e))
@@ -121,7 +117,7 @@ impl<D: DB> BaseEnv<D> {
     }
 
     pub fn export_state<'a>(&mut self, py: Python<'a>) -> PyDbState<'a> {
-        create_py_snapshot(py, &mut self.network)
+        create_py_snapshot(py, &self.env)
     }
 
     pub fn submit_transaction(
@@ -163,12 +159,12 @@ impl<D: DB> BaseEnv<D> {
         contract_name: &str,
         bytecode: Vec<u8>,
     ) -> Address {
-        self.network
+        self.env
             .deploy_contract(Address::from_slice(&deployer), contract_name, bytecode)
     }
 
     pub fn create_account(&mut self, address: PyAddress, start_balance: u128) {
-        self.network
+        self.env
             .insert_account(Address::from_slice(&address), U256::from(start_balance))
     }
 
@@ -181,7 +177,7 @@ impl<D: DB> BaseEnv<D> {
         value: u128,
     ) -> Result<PyExecutionResult, RevertError> {
         let value = U256::try_from(value).unwrap();
-        let result = self.network.direct_call_raw(
+        let result = self.env.direct_call_raw(
             Address::from_slice(&sender),
             Address::from_slice(&contract_address),
             encoded_args,
@@ -199,7 +195,7 @@ impl<D: DB> BaseEnv<D> {
         value: u128,
     ) -> Result<PyExecutionResult, RevertError> {
         let value = U256::try_from(value).unwrap();
-        let result = self.network.direct_execute_raw(
+        let result = self.env.direct_execute_raw(
             Address::from_slice(&sender),
             Address::from_slice(&contract_address),
             encoded_args,

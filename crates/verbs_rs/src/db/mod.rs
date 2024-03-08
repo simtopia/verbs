@@ -11,11 +11,10 @@
 //!
 //! ````
 //! use verbs_rs;
-//! use revm::EVM;
+//! use revm::Evm;
 //!
 //! let db = verbs_rs::LocalDB::new();
-//! let mut evm = EVM::new();
-//! evm.database(db);
+//! let mut evm = Evm::builder().with_db(db).build();
 //! ````
 //!
 

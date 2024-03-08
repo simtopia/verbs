@@ -272,9 +272,9 @@ pub fn result_to_output(
 ///
 /// Panics if the data cannot be decoded for the given event
 ///
-pub fn decode_event<T: SolEvent>(event: &Event) -> (usize, usize, T) {
+pub fn decode_event<T: SolEvent>(event: &Event) -> (usize, usize, Log<T>) {
     let log = event.logs.last().unwrap();
-    let decoded_event = T::decode_log(log.topics.clone(), log.data.as_ref(), false);
+    let decoded_event = T::decode_log(log, false);
 
     let decoded_event = match decoded_event {
         Ok(e) => e,
@@ -290,7 +290,7 @@ pub fn decode_event<T: SolEvent>(event: &Event) -> (usize, usize, T) {
 ///
 /// - events - Vector of simulation [Event]
 ///
-pub fn process_events<S: SolCall, T: SolEvent>(events: &[Event]) -> Vec<(usize, usize, T)> {
+pub fn process_events<S: SolCall, T: SolEvent>(events: &[Event]) -> Vec<(usize, usize, Log<T>)> {
     let function_selector = S::SELECTOR;
     events
         .iter()
