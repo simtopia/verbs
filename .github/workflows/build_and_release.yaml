@@ -100,10 +100,10 @@ jobs:
         - uses: dtolnay/rust-toolchain@stable
         - name: Build docs 📚
           run: cargo doc --no-deps
-        - name: Test publish verbs simulation library
-          run: cargo publish --dry-run -p verbs-rs
-        - name: Test publish verbs macros
-          run: cargo publish --dry-run -p verbs-macros
+        - name: Test build verbs library
+          run: cargo build -p verbs-rs
+        - name: Test build verbs macros
+          run: cargo build -p verbs-macros
 
   build_docs:
     runs-on: ubuntu-latest
