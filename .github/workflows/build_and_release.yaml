@@ -18,7 +18,6 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
         target: [x86_64, x86, armv7]
     needs: [check_main]
     steps:
@@ -27,21 +26,19 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: -i ${{ matrix.python-version }} --release --out dist
+          args: --release --out dist --find-interpreter
           sccache: 'true'
           manylinux: auto
-          maturin-version: v1.4.0
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels-linux-${{ matrix.target }}-${{ matrix.python-version }}
+          name: wheels-linux-${{ matrix.target }}
           path: dist
 
   windows:
     runs-on: windows-latest
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
         target: [x64, x86]
     needs: [check_main]
     steps:
@@ -50,20 +47,18 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: -i ${{ matrix.python-version }} --release --out dist
+          args: --release --out dist --find-interpreter
           sccache: 'true'
-          maturin-version: v1.4.0
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels-windows-${{ matrix.target }}-${{ matrix.python-version }}
+          name: wheels-windows-${{ matrix.target }}
           path: dist
 
   macos:
     runs-on: macos-latest
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
         target: [x86_64, aarch64]
     needs: [check_main]
     steps:
@@ -72,13 +67,12 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.target }}
-          args: -i ${{ matrix.python-version }} --release --out dist
+          args: --release --out dist --find-interpreter
           sccache: 'true'
-          maturin-version: v1.4.0
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels-macos-${{ matrix.target }}-${{ matrix.python-version }}
+          name: wheels-macos-${{ matrix.target }}
           path: dist
 
   sdist:
@@ -91,7 +85,6 @@ jobs:
         with:
           command: sdist
           args: --out dist
-          maturin-version: v1.4.0
       - name: Upload sdist
         uses: actions/upload-artifact@v4
         with:
@@ -107,10 +100,10 @@ jobs:
         - uses: dtolnay/rust-toolchain@stable
         - name: Build docs 📚
           run: cargo doc --no-deps
-        # - name: Test publish verbs simulation library
-        #   run: cargo publish --dry-run -p verbs-rs
-        # - name: Test publish verbs macros
-        #   run: cargo publish --dry-run -p verbs-macros
+        - name: Test publish verbs simulation library
+          run: cargo publish --dry-run -p verbs-rs
+        - name: Test publish verbs macros
+          run: cargo publish --dry-run -p verbs-macros
 
   build_docs:
     runs-on: ubuntu-latest
@@ -161,7 +154,7 @@ jobs:
         merge-multiple: true
         path: dist/
     - name: Publish distribution 📦 to PyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
+      uses: pypa/gh-action-pypi-publish@release/v1.8.14
 
   publish_docs:
     runs-on: ubuntu-latest
