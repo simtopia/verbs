@@ -154,7 +154,7 @@ jobs:
         merge-multiple: true
         path: dist/
     - name: Publish distribution 📦 to PyPI
-      uses: pypa/gh-action-pypi-publish@release/v1.8.14
+      uses: pypa/gh-action-pypi-publish@v1.8.14
 
   publish_docs:
     runs-on: ubuntu-latest
