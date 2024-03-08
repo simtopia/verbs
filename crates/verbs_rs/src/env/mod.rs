@@ -14,7 +14,6 @@ use crate::utils::Eth;
 use crate::{ForkDb, LocalDB, RequestCache, DB};
 use alloy_primitives::{Address, B256, U256};
 use alloy_sol_types::SolCall;
-pub use ethereum_types::U64;
 use log::debug;
 use revm::primitives::{AccountInfo, Bytecode, ExecutionResult, Log, ResultAndState, TxEnv};
 use revm::{ContextWithHandlerCfg, Evm, Handler};

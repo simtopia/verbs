@@ -66,7 +66,9 @@ for developer notes.
 
 The core rust simulation engine can be used to write simulation
 purely in Rust, with a significant gain in performance over
-Python in most cases. See [here](https://github.com/simtopia/verbs/blob/main/.github/docs/rust.md)
+Python in most cases. See [here](https://docs.rs/verbs-rs/0.3.0/verbs_rs/index.html)
+for the Rust package API documentation and
+[here](https://github.com/simtopia/verbs/blob/main/.github/docs/rust.md)
 for usage notes.
 
 ## Acknowledgements
