@@ -270,13 +270,14 @@ pub fn load_snapshot(db: &mut LocalDB, snapshot: PyDbState) {
     for log in snapshot.3.into_iter() {
         db.logs.push(Log {
             address: Address::from_slice(log.0.as_bytes()),
-            // topics: log
-            //     .1
-            //     .into_iter()
-            //     .map(|x| B256::from_slice(x.as_bytes()))
-            //     .collect(),
-            // data: Bytes::copy_from_slice(log.2.as_bytes()),
-            data: LogData::empty(),
+            data: LogData::new(
+                log.1
+                    .into_iter()
+                    .map(|x| B256::from_slice(x.as_bytes()))
+                    .collect(),
+                Bytes::copy_from_slice(log.2.as_bytes()),
+            )
+            .unwrap(),
         })
     }
 
