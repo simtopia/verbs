@@ -51,11 +51,11 @@ pub fn result_to_py(
         Ok(x) => Ok((
             x.output().map(|b| PyBytes::new(py, b.to_vec().as_slice())),
             x.logs()
-                .into_iter()
+                .iter()
                 .map(|a| {
                     (
                         address_to_py(py, a.address),
-                        bytes_to_py(py, a.data.data.0.into()),
+                        bytes_to_py(py, a.data.data.0.clone().into()),
                     )
                 })
                 .collect(),
