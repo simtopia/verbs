@@ -55,7 +55,7 @@ pub fn result_to_py(
                 .map(|a| {
                     (
                         address_to_py(py, a.address),
-                        bytes_to_py(py, a.data.data.0.into()),
+                        bytes_to_py(py, a.data.data.0.clone().into()),
                     )
                 })
                 .collect(),
