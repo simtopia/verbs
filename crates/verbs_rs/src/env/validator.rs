@@ -1,8 +1,25 @@
+//! Validator trait and implementations
+//!
 use rand::{seq::SliceRandom, Rng};
 
 use crate::contract::Transaction;
 
+/// Trait for a block validator
+///
+/// Validators are (currently) responsible
+/// for the ordering of transactions in the
+/// next block during a simulation.
 pub trait Validator {
+    /// Sort transaction queue
+    ///
+    /// Sort a vector of transactions for processing
+    /// in the next simulated block.
+    ///
+    /// # Arguments
+    ///
+    /// - `rng` - Random generator.
+    /// - `transactions` Vector submitted transactions.
+    ///
     fn order_transactions<R: Rng>(
         &mut self,
         rng: &mut R,
@@ -10,6 +27,7 @@ pub trait Validator {
     ) -> Vec<Transaction>;
 }
 
+/// Validator that randomly shuffles transactions
 pub struct RandomValidator {}
 
 impl Validator for RandomValidator {
