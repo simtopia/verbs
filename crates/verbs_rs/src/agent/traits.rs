@@ -21,7 +21,7 @@
 //!
 
 use crate::contract::Transaction;
-use crate::env::Env;
+use crate::env::{Env, Validator};
 use crate::DB;
 use alloy_primitives::Address;
 use rand::RngCore;
@@ -43,15 +43,15 @@ pub use verbs_macros::SimState;
 /// ```
 /// use rand::RngCore;
 /// use alloy_primitives::Address;
-/// use verbs_rs::{DB, env::Env};
+/// use verbs_rs::{DB, env::{Env, Validator}};
 /// use verbs_rs::agent::{Agent, RecordedAgent, AgentVec, AgentSet, SimState};
 /// use verbs_rs::contract::Transaction;
 ///
 /// struct DummyAgent{}
 ///
 /// impl Agent for DummyAgent {
-///     fn update<D: DB, R: RngCore>(
-///         &mut self, rng: &mut R, network: &mut Env<D>
+///     fn update<D: DB, V: Validator, R: RngCore>(
+///         &mut self, rng: &mut R, network: &mut Env<D, V>
 ///     ) -> Vec<Transaction> {
 ///         Vec::default()
 ///     }
@@ -62,7 +62,7 @@ pub use verbs_macros::SimState;
 /// }
 ///
 /// impl RecordedAgent<bool> for DummyAgent {
-///     fn record<D: DB>(&mut self, _env: &mut Env<D>) -> bool {
+///     fn record<D: DB, V: Validator>(&mut self, _env: &mut Env<D, V>) -> bool {
 ///         true
 ///     }
 /// }
@@ -75,10 +75,13 @@ pub use verbs_macros::SimState;
 /// ```
 pub trait SimState {
     /// Update the state of all agents, and return any transactions
-    fn call_agents<D: DB, R: RngCore>(&mut self, rng: &mut R, env: &mut Env<D>)
-        -> Vec<Transaction>;
+    fn call_agents<D: DB, V: Validator, R: RngCore>(
+        &mut self,
+        rng: &mut R,
+        env: &mut Env<D, V>,
+    ) -> Vec<Transaction>;
     /// Record the current state of the agents in this set
-    fn record_agents<D: DB>(&mut self, env: &mut Env<D>);
+    fn record_agents<D: DB, V: Validator>(&mut self, env: &mut Env<D, V>);
 }
 
 /// Trait defining behaviour for a single agent
@@ -91,7 +94,7 @@ pub trait SimState {
 /// ```
 /// use rand::RngCore;
 /// use alloy_primitives::Address;
-/// use verbs_rs::{DB, env::Env};
+/// use verbs_rs::{DB, env::{Env, Validator}};
 /// use verbs_rs::agent::{Agent, RecordedAgent, AgentVec, AgentSet};
 /// use verbs_rs::contract::Transaction;
 ///
@@ -100,8 +103,8 @@ pub trait SimState {
 /// }
 ///
 /// impl Agent for DummyAgent {
-///     fn update<D: DB, R: RngCore>(
-///         &mut self, rng: &mut R, network: &mut Env<D>
+///     fn update<D: DB, V: Validator, R: RngCore>(
+///         &mut self, rng: &mut R, network: &mut Env<D, V>
 ///     ) -> Vec<Transaction> {
 ///         self.state += 1;
 ///         Vec::default()
@@ -121,7 +124,11 @@ pub trait Agent {
     /// * `rng`: Random generate
     /// * `env`: Simulation environment
     ///
-    fn update<D: DB, R: RngCore>(&mut self, rng: &mut R, env: &mut Env<D>) -> Vec<Transaction>;
+    fn update<D: DB, V: Validator, R: RngCore>(
+        &mut self,
+        rng: &mut R,
+        env: &mut Env<D, V>,
+    ) -> Vec<Transaction>;
     /// Get the address of the agent.
     fn get_address(&self) -> Address;
 }
@@ -136,7 +143,7 @@ pub trait Agent {
 /// # Examples
 ///
 /// ```
-/// use verbs_rs::{DB, env::Env};
+/// use verbs_rs::{DB, env::{Env, Validator}};
 /// use verbs_rs::agent::RecordedAgent;
 ///
 /// struct DummyAgent{
@@ -144,7 +151,7 @@ pub trait Agent {
 /// }
 ///
 /// impl RecordedAgent<i32> for DummyAgent {
-///     fn record<D: DB,>(&mut self, _env: &mut Env<D>) -> i32 {
+///     fn record<D: DB, V: Validator>(&mut self, _env: &mut Env<D, V>) -> i32 {
 ///         self.current_state
 ///     }
 /// }
@@ -153,7 +160,7 @@ pub trait RecordedAgent<R> {
     /// Get a record of the current state of the agent. Records are
     /// collected as a vector of vectors representing the state of a
     /// collection of agents over the history of the simulation.
-    fn record<D: DB>(&mut self, env: &mut Env<D>) -> R;
+    fn record<D: DB, V: Validator>(&mut self, env: &mut Env<D, V>) -> R;
 }
 
 /// A homogenous collection of agents
@@ -169,9 +176,13 @@ pub trait AgentSet {
     /// * `rng` - Random generate
     /// * `env` - Simulation environment
     ///
-    fn call<D: DB, R: RngCore>(&mut self, rng: &mut R, env: &mut Env<D>) -> Vec<Transaction>;
+    fn call<D: DB, V: Validator, R: RngCore>(
+        &mut self,
+        rng: &mut R,
+        env: &mut Env<D, V>,
+    ) -> Vec<Transaction>;
     /// Record the state of all the agents
-    fn record<D: DB>(&mut self, env: &mut Env<D>);
+    fn record<D: DB, V: Validator>(&mut self, env: &mut Env<D, V>);
     /// Get a vector of agent addresses contained in this set
     fn get_addresses(&self) -> Vec<Address>;
 }
@@ -187,7 +198,7 @@ pub trait RecordedAgentSet<R> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::LocalDB;
+    use crate::{env::RandomValidator, LocalDB};
     use alloy_primitives::{Address, U256};
 
     struct DummyAgentSet {
@@ -195,7 +206,11 @@ mod tests {
     }
 
     impl AgentSet for DummyAgentSet {
-        fn call<D: DB, R: RngCore>(&mut self, _rng: &mut R, _env: &mut Env<D>) -> Vec<Transaction> {
+        fn call<D: DB, V: Validator, R: RngCore>(
+            &mut self,
+            _rng: &mut R,
+            _env: &mut Env<D, V>,
+        ) -> Vec<Transaction> {
             vec![Transaction {
                 function_selector: [0, 0, 0, 0],
                 callee: Address::ZERO,
@@ -206,7 +221,7 @@ mod tests {
             }]
         }
 
-        fn record<D: DB>(&mut self, _env: &mut Env<D>) {}
+        fn record<D: DB, V: Validator>(&mut self, _env: &mut Env<D, V>) {}
 
         fn get_addresses(&self) -> Vec<Address> {
             vec![Address::ZERO]
@@ -227,7 +242,8 @@ mod tests {
         };
 
         let mut rng = <rand_xoshiro::Xoroshiro128StarStar as rand::SeedableRng>::seed_from_u64(101);
-        let mut network = &mut Env::<LocalDB>::init(U256::ZERO, U256::ZERO);
+        let mut network =
+            &mut Env::<LocalDB, RandomValidator>::init(U256::ZERO, U256::ZERO, RandomValidator {});
 
         let calls = x.call_agents(&mut rng, &mut network);
 

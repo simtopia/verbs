@@ -3,7 +3,7 @@ mod dai_abi;
 use alloy_primitives::{Address, U256};
 use clap::Parser;
 use dai_abi::ABI as DAI_ABI;
-use verbs_rs::env::Env;
+use verbs_rs::env::{Env, RandomValidator};
 use verbs_rs::utils::address_from_hex;
 use verbs_rs::ForkDb;
 
@@ -20,7 +20,7 @@ pub fn main() {
 
     let url_str = format!("https://eth-mainnet.g.alchemy.com/v2/{}", args.key);
 
-    let mut env = Env::<ForkDb>::init(&url_str, None);
+    let mut env = Env::<ForkDb, RandomValidator>::init(&url_str, None, RandomValidator {});
 
     let dai_address = address_from_hex("0x6B175474E89094C44Da98b954EedeAC495271d0F");
 

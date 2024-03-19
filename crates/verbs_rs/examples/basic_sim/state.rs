@@ -5,6 +5,7 @@ use rand::RngCore;
 use verbs_rs::agent::{Agent, AgentSet, AgentVec, RecordedAgent, SimState};
 use verbs_rs::contract::Transaction;
 use verbs_rs::env::Env;
+use verbs_rs::env::Validator;
 use verbs_rs::DB;
 
 pub struct SimpleAgent {
@@ -28,7 +29,11 @@ impl SimpleAgent {
 }
 
 impl Agent for SimpleAgent {
-    fn update<D: DB, R: RngCore>(&mut self, rng: &mut R, network: &mut Env<D>) -> Vec<Transaction> {
+    fn update<D: DB, V: Validator, R: RngCore>(
+        &mut self,
+        rng: &mut R,
+        network: &mut Env<D, V>,
+    ) -> Vec<Transaction> {
         self.current_balance = network
             .direct_call(
                 self.address,
@@ -68,7 +73,7 @@ impl Agent for SimpleAgent {
 }
 
 impl RecordedAgent<U256> for SimpleAgent {
-    fn record<D: DB>(&mut self, _env: &mut Env<D>) -> U256 {
+    fn record<D: DB, V: Validator>(&mut self, _env: &mut Env<D, V>) -> U256 {
         self.current_balance
     }
 }

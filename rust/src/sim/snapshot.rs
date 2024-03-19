@@ -4,7 +4,7 @@ use revm::{
     db::{AccountState, DbAccount},
     primitives::{AccountInfo, BlobExcessGasAndPrice, BlockEnv, Bytecode, Log},
 };
-use verbs_rs::env::Env;
+use verbs_rs::env::{Env, Validator};
 use verbs_rs::{LocalDB, RequestCache, DB};
 
 use crate::types::{address_to_py, bytes_to_py};
@@ -112,7 +112,10 @@ pub fn create_py_request_history<'a>(py: Python<'a>, requests: &RequestCache) ->
     (timestamp, block_number, py_accounts, py_storage)
 }
 
-pub fn create_py_snapshot<'a, D: DB>(py: Python<'a>, env: &Env<D>) -> PyDbState<'a> {
+pub fn create_py_snapshot<'a, D: DB, V: Validator>(
+    py: Python<'a>,
+    env: &Env<D, V>,
+) -> PyDbState<'a> {
     let block = env
         .evm_state
         .as_ref()
