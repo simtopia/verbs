@@ -10,7 +10,7 @@ use rand_xoshiro::Xoroshiro128StarStar;
 
 use std::mem;
 use verbs_rs::contract::Transaction;
-use verbs_rs::env::{Env, RevertError};
+use verbs_rs::env::{Env, RandomValidator, RevertError};
 use verbs_rs::{ForkDb, LocalDB, DB};
 
 // Represents blocks updating every 15s
@@ -18,7 +18,7 @@ const BLOCK_INTERVAL: u64 = 15;
 
 pub struct BaseEnv<D: DB> {
     // EVM and deployed protocol
-    pub env: Env<D>,
+    pub env: Env<D, RandomValidator>,
     // Queue of calls submitted from Python
     pub call_queue: Vec<Transaction>,
     // RNG source
@@ -29,9 +29,10 @@ pub struct BaseEnv<D: DB> {
 
 impl BaseEnv<LocalDB> {
     pub fn new(timestamp: u128, block_number: u128, seed: u64) -> Self {
-        let env = Env::<LocalDB>::init(
+        let env = Env::<LocalDB, RandomValidator>::init(
             U256::try_from(timestamp).unwrap(),
             U256::try_from(block_number).unwrap(),
+            RandomValidator {},
         );
 
         BaseEnv {
@@ -45,7 +46,11 @@ impl BaseEnv<LocalDB> {
     pub fn from_snapshot(seed: u64, snapshot: PyDbState) -> Self {
         let block_env = load_block_env(&snapshot);
 
-        let mut env = Env::<LocalDB>::init(block_env.timestamp, block_env.number);
+        let mut env = Env::<LocalDB, RandomValidator>::init(
+            block_env.timestamp,
+            block_env.number,
+            RandomValidator {},
+        );
         env.evm_state().context.evm.env.block = block_env;
 
         load_snapshot(&mut env.evm_state().context.evm.db, snapshot);
@@ -59,9 +64,10 @@ impl BaseEnv<LocalDB> {
     }
 
     pub fn from_cache(seed: u64, requests: PyRequests) -> Self {
-        let mut env = Env::<LocalDB>::init(
+        let mut env = Env::<LocalDB, RandomValidator>::init(
             U256::try_from(requests.0).unwrap(),
             U256::try_from(requests.1).unwrap(),
+            RandomValidator {},
         );
         load_cache(requests, &mut env.evm_state().context.evm.db);
 
@@ -76,7 +82,7 @@ impl BaseEnv<LocalDB> {
 
 impl BaseEnv<ForkDb> {
     pub fn new(node_url: &str, seed: u64, block_number: Option<u64>) -> Self {
-        let env = Env::<ForkDb>::init(node_url, block_number);
+        let env = Env::<ForkDb, RandomValidator>::init(node_url, block_number, RandomValidator {});
         BaseEnv {
             env,
             call_queue: Vec::new(),
@@ -95,7 +101,7 @@ impl<D: DB> BaseEnv<D> {
         // Shuffle and process calls
         self.call_queue.as_mut_slice().shuffle(&mut self.rng);
         self.env
-            .process_transactions(mem::take(&mut self.call_queue), self.step);
+            .process_transactions(mem::take(&mut self.call_queue), &mut self.rng, self.step);
         // Tick step
         self.step += 1;
     }

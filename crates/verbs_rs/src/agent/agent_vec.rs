@@ -8,7 +8,7 @@
 
 use crate::agent::traits::{Agent, AgentSet, RecordedAgent, RecordedAgentSet};
 use crate::contract::Transaction;
-use crate::env::Env;
+use crate::env::{Env, Validator};
 use crate::DB;
 use alloy_primitives::Address;
 use rand::RngCore;
@@ -24,15 +24,15 @@ use std::mem;
 /// ```
 /// use rand::RngCore;
 /// use alloy_primitives::Address;
-/// use verbs_rs::{DB, env::Env};
+/// use verbs_rs::{DB, env::{Env, Validator}};
 /// use verbs_rs::agent::{Agent, RecordedAgent, AgentVec, AgentSet};
 /// use verbs_rs::contract::Transaction;
 ///
 /// struct DummyAgent{}
 ///
 /// impl Agent for DummyAgent {
-///     fn update<D: DB, R: RngCore>(
-///         &mut self, rng: &mut R, network: &mut Env<D>
+///     fn update<D: DB, V: Validator, R: RngCore>(
+///         &mut self, rng: &mut R, network: &mut Env<D, V>
 ///     ) -> Vec<Transaction> {
 ///         Vec::default()
 ///     }
@@ -43,7 +43,7 @@ use std::mem;
 /// }
 ///
 /// impl RecordedAgent<bool> for DummyAgent {
-///     fn record<D: DB>(&mut self, _env: &mut Env<D>) -> bool {
+///     fn record<D: DB, V: Validator>(&mut self, _env: &mut Env<D, V>) -> bool {
 ///         true
 ///     }
 /// }
@@ -125,14 +125,18 @@ impl<R: 'static, A: Agent + RecordedAgent<R> + 'static> AgentSet for AgentVec<R,
     /// * `rng` - Random generator
     /// * `network` - Protocol deployment(s)
     ///
-    fn call<D: DB, RG: RngCore>(&mut self, rng: &mut RG, network: &mut Env<D>) -> Vec<Transaction> {
+    fn call<D: DB, V: Validator, RG: RngCore>(
+        &mut self,
+        rng: &mut RG,
+        network: &mut Env<D, V>,
+    ) -> Vec<Transaction> {
         self.agents
             .iter_mut()
             .flat_map(|x| x.update(rng, network))
             .collect()
     }
     /// Record the current state of the agents in this set
-    fn record<D: DB>(&mut self, env: &mut Env<D>) {
+    fn record<D: DB, V: Validator>(&mut self, env: &mut Env<D, V>) {
         let records: Vec<R> = self.agents.iter_mut().map(|x| x.record(env)).collect();
         self.records.push(records);
     }
@@ -145,8 +149,8 @@ impl<R: 'static, A: Agent + RecordedAgent<R> + 'static> AgentSet for AgentVec<R,
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::agent::traits;
     use crate::LocalDB;
+    use crate::{agent::traits, env::RandomValidator};
     use alloy_primitives::{Uint, U256};
     use rand::SeedableRng;
     use rstest::*;
@@ -157,10 +161,10 @@ mod tests {
     }
 
     impl traits::Agent for TestAgent {
-        fn update<D: DB, RG: RngCore>(
+        fn update<D: DB, V: Validator, RG: RngCore>(
             &mut self,
             _rng: &mut RG,
-            _network: &mut crate::env::Env<D>,
+            _network: &mut crate::env::Env<D, V>,
         ) -> Vec<crate::contract::Transaction> {
             self.value += 1;
             vec![
@@ -189,14 +193,14 @@ mod tests {
     }
 
     impl traits::RecordedAgent<u64> for TestAgent {
-        fn record<D: DB>(&mut self, _env: &mut Env<D>) -> u64 {
+        fn record<D: DB, V: Validator>(&mut self, _env: &mut Env<D, V>) -> u64 {
             self.value
         }
     }
 
     #[fixture]
-    fn env() -> Env<LocalDB> {
-        Env::<LocalDB>::init(U256::ZERO, U256::ZERO)
+    fn env() -> Env<LocalDB, RandomValidator> {
+        Env::<LocalDB, RandomValidator>::init(U256::ZERO, U256::ZERO, RandomValidator {})
     }
 
     #[fixture]
@@ -205,7 +209,10 @@ mod tests {
     }
 
     #[rstest]
-    fn test_agent_vec(mut env: Env<LocalDB>, mut rng: rand_xoshiro::Xoroshiro128StarStar) {
+    fn test_agent_vec(
+        mut env: Env<LocalDB, RandomValidator>,
+        mut rng: rand_xoshiro::Xoroshiro128StarStar,
+    ) {
         let a = Address::from(Uint::from(101u128));
         let b = Address::from(Uint::from(202u128));
 

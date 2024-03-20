@@ -2,7 +2,7 @@
 
 use crate::agent::traits::{Agent, AgentSet, RecordedAgent, RecordedAgentSet};
 use crate::contract::Transaction;
-use crate::env::Env;
+use crate::env::{Env, Validator};
 use crate::DB;
 use alloy_primitives::Address;
 use rand::RngCore;
@@ -18,15 +18,15 @@ use std::mem;
 /// ```
 /// use rand::RngCore;
 /// use alloy_primitives::Address;
-/// use verbs_rs::{DB, env::Env};
+/// use verbs_rs::{DB, env::{Env, Validator}};
 /// use verbs_rs::agent::{Agent, RecordedAgent, SingletonAgent, AgentSet};
 /// use verbs_rs::contract::Transaction;
 ///
 /// struct DummyAgent{}
 ///
 /// impl Agent for DummyAgent {
-///     fn update<D: DB, R: RngCore>(
-///         &mut self, rng: &mut R, network: &mut Env<D>
+///     fn update<D: DB, V: Validator, R: RngCore>(
+///         &mut self, rng: &mut R, network: &mut Env<D, V>
 ///     ) -> Vec<Transaction> {
 ///         Vec::default()
 ///     }
@@ -37,7 +37,7 @@ use std::mem;
 /// }
 ///
 /// impl RecordedAgent<bool> for DummyAgent {
-///     fn record<D: DB>(&mut self, _env: &mut Env<D>) -> bool {
+///     fn record<D: DB, V: Validator>(&mut self, _env: &mut Env<D, V>) -> bool {
 ///         true
 ///     }
 /// }
@@ -92,11 +92,15 @@ impl<R: 'static, A: Agent + RecordedAgent<R> + 'static> AgentSet for SingletonAg
     /// * `rng` - Random generator
     /// * `network` - Protocol deployment(s)
     ///
-    fn call<D: DB, RG: RngCore>(&mut self, rng: &mut RG, env: &mut Env<D>) -> Vec<Transaction> {
+    fn call<D: DB, V: Validator, RG: RngCore>(
+        &mut self,
+        rng: &mut RG,
+        env: &mut Env<D, V>,
+    ) -> Vec<Transaction> {
         self.agent.update(rng, env)
     }
     /// Record the current state of the agent
-    fn record<D: DB>(&mut self, env: &mut Env<D>) {
+    fn record<D: DB, V: Validator>(&mut self, env: &mut Env<D, V>) {
         self.records.push(self.agent.record(env));
     }
     /// Get the address of the agent as a vector

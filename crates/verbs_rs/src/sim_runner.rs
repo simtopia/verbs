@@ -7,10 +7,9 @@
 //!
 
 use crate::agent::SimState;
-use crate::env::Env;
+use crate::env::{Env, Validator};
 use crate::DB;
 use kdam::tqdm;
-use rand::seq::SliceRandom;
 use rand::SeedableRng;
 use rand_xoshiro::Xoroshiro128StarStar;
 
@@ -38,20 +37,23 @@ const BLOCK_INTERVAL: u64 = 15;
 /// * `seed` - Random seed
 /// * `n_steps` - Number of simulation steps
 ///
-pub fn run<S: SimState, D: DB>(env: &mut Env<D>, agents: &mut S, seed: u64, n_steps: usize) {
+pub fn run<S: SimState, D: DB, V: Validator>(
+    env: &mut Env<D, V>,
+    agents: &mut S,
+    seed: u64,
+    n_steps: usize,
+) {
     let mut rng = Xoroshiro128StarStar::seed_from_u64(seed);
 
     for i in tqdm!(0..n_steps) {
         // Move the events from the previous block into historical storage
         env.clear_events();
         // Update all agents
-        let mut transactions = agents.call_agents(&mut rng, env);
-        // Shuffle calls
-        transactions.as_mut_slice().shuffle(&mut rng);
+        let transactions = agents.call_agents(&mut rng, env);
         // Update the block-time and number
         env.increment_time(BLOCK_INTERVAL);
         // Process calls in order
-        env.process_transactions(transactions, i);
+        env.process_transactions(transactions, &mut rng, i);
         // Record data from agents
         agents.record_agents(env);
     }

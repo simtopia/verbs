@@ -8,6 +8,7 @@
 //!
 
 mod utils;
+mod validator;
 
 use crate::contract::{Event, Transaction};
 use crate::utils::Eth;
@@ -15,16 +16,18 @@ use crate::{ForkDb, LocalDB, RequestCache, DB};
 use alloy_primitives::{Address, B256, U256};
 use alloy_sol_types::SolCall;
 use log::debug;
+use rand::Rng;
 use revm::primitives::{AccountInfo, Bytecode, ExecutionResult, Log, ResultAndState, TxEnv};
 use revm::{ContextWithHandlerCfg, Evm, Handler};
 pub use utils::{decode_event, process_events, RevertError};
+pub use validator::{RandomValidator, Validator};
 
 /// Simulation environment
 ///
 /// Environment wrapping an in-memory EVM and
 /// functionality to update the state of the
 /// environment.
-pub struct Env<D: DB> {
+pub struct Env<D: DB, V: Validator> {
     /// Local EVM state
     pub evm_state: Option<ContextWithHandlerCfg<(), D>>,
     /// Events/updates in the last block
@@ -32,6 +35,8 @@ pub struct Env<D: DB> {
     /// History of events/updates over the
     /// lifetime of the environment
     pub event_history: Vec<Event>,
+    /// Validator responsbile for transaction ordering
+    pub validator: V,
 }
 
 /// EVM update methods
@@ -88,7 +93,7 @@ impl<'a, D: DB> CallEVM for Evm<'a, (), D> {
     }
 }
 
-impl Env<ForkDb> {
+impl<V: Validator> Env<ForkDb, V> {
     /// Initialise an environment with a forked DB
     ///
     /// Initialise a simulation environment with
@@ -104,7 +109,7 @@ impl Env<ForkDb> {
     /// * `block_number` - Block number to fork from, if None
     ///    latest available block will be used.
     ///
-    pub fn init(node_url: &str, block_number: Option<u64>) -> Self {
+    pub fn init(node_url: &str, block_number: Option<u64>, validator: V) -> Self {
         let db = ForkDb::new(node_url, block_number);
         let timestamp = db.block.timestamp.as_u128();
         let block_number = match db.block.number {
@@ -131,6 +136,7 @@ impl Env<ForkDb> {
             evm_state: Some(context),
             last_events: Vec::new(),
             event_history: Vec::new(),
+            validator,
         }
     }
 
@@ -148,7 +154,7 @@ impl Env<ForkDb> {
     }
 }
 
-impl Env<LocalDB> {
+impl<V: Validator> Env<LocalDB, V> {
     /// Initialise a simulation with an in-memory DB
     ///
     /// Initialises a simulation environment with an
@@ -161,7 +167,7 @@ impl Env<LocalDB> {
     /// - `block_number` - Block number initialise the
     ///   the simulation/EVM with
     ///
-    pub fn init(timestamp: U256, block_number: U256) -> Self {
+    pub fn init(timestamp: U256, block_number: U256, validator: V) -> Self {
         let evm = Evm::builder()
             .with_db(LocalDB::new())
             .modify_cfg_env(|cfg| {
@@ -177,19 +183,20 @@ impl Env<LocalDB> {
 
         let start_balance = U256::to_weth(10_000);
 
-        let mut network = Self {
+        let mut env = Self {
             evm_state: Some(evm.into_context_with_handler_cfg()),
             last_events: Vec::new(),
             event_history: Vec::new(),
+            validator,
         };
 
-        network.insert_account(Address::ZERO, start_balance);
+        env.insert_account(Address::ZERO, start_balance);
 
-        network
+        env
     }
 }
 
-impl<D: DB> Env<D> {
+impl<D: DB, V: Validator> Env<D, V> {
     fn evm(&mut self) -> Evm<(), D> {
         let state = self.evm_state.take();
 
@@ -437,7 +444,14 @@ impl<D: DB> Env<D> {
     /// - `transactions` - Vector of transactions
     /// - `step` - Step number of the simulation
     ///
-    pub fn process_transactions(&mut self, transactions: Vec<Transaction>, step: usize) {
+    pub fn process_transactions<R: Rng>(
+        &mut self,
+        transactions: Vec<Transaction>,
+        rng: &mut R,
+        step: usize,
+    ) {
+        let transactions = self.validator.order_transactions(rng, transactions);
+
         let mut evm = self.evm();
         let mut events = Vec::<Event>::new();
 
@@ -465,6 +479,8 @@ mod tests {
     use crate::utils;
     use alloy_primitives::{Address, Signed, Uint};
     use alloy_sol_types::{sol, SolValue};
+    use rand::SeedableRng;
+    use rand_xoshiro::Xoroshiro128StarStar;
     use rstest::*;
 
     sol!(
@@ -511,8 +527,9 @@ mod tests {
     );
 
     #[fixture]
-    fn deployment() -> (Env<LocalDB>, Address, Address) {
-        let mut network = Env::<LocalDB>::init(U256::ZERO, U256::ZERO);
+    fn deployment() -> (Env<LocalDB, RandomValidator>, Address, Address) {
+        let mut network =
+            Env::<LocalDB, RandomValidator>::init(U256::ZERO, U256::ZERO, RandomValidator {});
 
         let constructor_args = <i128>::abi_encode(&101);
         let bytecode_hex = "608060405234801561001057600080fd5b50\
@@ -545,7 +562,7 @@ mod tests {
     }
 
     #[rstest]
-    fn direct_execute_and_call(deployment: (Env<LocalDB>, Address, Address)) {
+    fn direct_execute_and_call(deployment: (Env<LocalDB, RandomValidator>, Address, Address)) {
         let (mut network, contract_address, user_address) = deployment;
 
         let (v, _) = network
@@ -581,7 +598,7 @@ mod tests {
     }
 
     #[rstest]
-    fn processing_calls(deployment: (Env<LocalDB>, Address, Address)) {
+    fn processing_calls(deployment: (Env<LocalDB, RandomValidator>, Address, Address)) {
         let (mut network, contract_address, user_address) = deployment;
 
         let calls = vec![
@@ -609,7 +626,9 @@ mod tests {
             },
         ];
 
-        network.process_transactions(calls, 1);
+        let mut rng = Xoroshiro128StarStar::seed_from_u64(101);
+
+        network.process_transactions(calls, &mut rng, 1);
 
         let (v, _) = network
             .direct_call(
