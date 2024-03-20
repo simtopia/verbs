@@ -2,7 +2,7 @@ use super::snapshot::PyDbState;
 
 use super::base_env::BaseEnv;
 use super::snapshot;
-use crate::types::{PyAddress, PyEvent, PyExecutionResult, PyRevertError};
+use crate::types::{PyAddress, PyEvent, PyExecutionResult, PyRevertError, PyTransaction};
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
 use pyo3::types::PyBytes;
@@ -125,14 +125,17 @@ impl EmptyEnv {
         Ok(self.0.get_event_history(py))
     }
 
-    /// submit_transaction(sender: bytes,  transact_to: bytes, encoded_args: bytes, value: int, checked: bool)
+    #[pyo3(signature = (sender, transact_to, encoded_args, checked, gas_priority_fee=None, nonce=None, value=None))]
+    #[allow(clippy::too_many_arguments)]
+    /// submit_transaction(sender: bytes, transact_to: bytes, encoded_args: bytes, checked: bool, gas_priority_fee: int = None, nonce: int = None, value: int = None)
     ///
-    /// Submit a call into the next block
+    /// Submit a transaction into the next block
     ///
     /// Submit a transaction into the queue to be processed
     /// in the next block. Each simulation step agents submit
     /// calls which are then shuffled and processed to update
-    /// the EVM state.
+    /// the EVM state.Value, nonce and gas-priority-fee are
+    /// optional values required for a transaction.
     ///
     /// Parameters
     /// ----------
@@ -142,26 +145,38 @@ impl EmptyEnv {
     ///     Byte encoded address of the contract to call.
     /// encoded_args: bytes
     ///     ABI encoded function selector and arguments.
-    /// value: int
-    ///     Value attached to the transaction.
     /// checked: bool
     ///     If ``True`` the simulation will halt if this transaction
     ///     is reverted.
+    /// gas_priority_fee: int, optional
+    ///     Transaction priority fee, default value is ``None``
+    /// nonce: int, optional
+    ///     Transaction nonce
+    /// value: int, optional
     ///
     pub fn submit_transaction(
         &mut self,
         sender: PyAddress,
         transact_to: PyAddress,
         encoded_args: Vec<u8>,
-        value: u128,
         checked: bool,
+        gas_priority_fee: Option<u128>,
+        nonce: Option<u64>,
+        value: Option<u128>,
     ) -> PyResult<()> {
-        self.0
-            .submit_transaction(sender, transact_to, encoded_args, value, checked);
+        self.0.submit_transaction(
+            sender,
+            transact_to,
+            encoded_args,
+            gas_priority_fee,
+            nonce,
+            value,
+            checked,
+        );
         Ok(())
     }
 
-    /// submit_transactions(transactions: list[tuple])
+    /// submit_basic_transactions(transactions: list[tuple[bytes, bytes, bytes, bool, int, int, int]])
     ///
     /// Submit a list of transactions into the next block
     ///
@@ -172,21 +187,20 @@ impl EmptyEnv {
     ///
     /// Parameters
     /// ----------
-    /// transactions: list[tuple[bytes, bytes, bytes, int, bool]]
+    /// transactions: list[tuple[bytes, bytes, bytes, bool]]
     ///     List of transactions, where a transaction is a tuple
     ///     containing:
     ///
     ///     * The byte encoded address of the sender
     ///     * The byte encoded address of the contract
     ///     * The ABI byte encoded arguments and function selector
-    ///     * The value attached to the transaction
     ///     * Flag if ``True`` means the simulation will halt if this
     ///       transaction fails
+    ///     * Gas-priority-fee, integer or a value of ``None`` means no fee provided
+    ///     * Transaction nonce, integer or a value of ``None`` is ignored
+    ///     * Value assigned to the transaction, integer or ``None`` is treated as ``0``
     ///
-    pub fn submit_transactions(
-        &mut self,
-        transactions: Vec<(PyAddress, PyAddress, Vec<u8>, u128, bool)>,
-    ) -> PyResult<()> {
+    pub fn submit_transactions(&mut self, transactions: Vec<PyTransaction>) -> PyResult<()> {
         self.0.submit_transactions(transactions);
         Ok(())
     }

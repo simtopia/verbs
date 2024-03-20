@@ -40,3 +40,18 @@ impl Validator for RandomValidator {
         transactions
     }
 }
+
+pub struct GasPriorityValidator {}
+
+impl Validator for GasPriorityValidator {
+    fn order_transactions<R: Rng>(
+        &mut self,
+        rng: &mut R,
+        mut transactions: Vec<Transaction>,
+    ) -> Vec<Transaction> {
+        // Shuffle first to remove any dependency on agent ordering
+        transactions.as_mut_slice().shuffle(rng);
+
+        transactions
+    }
+}

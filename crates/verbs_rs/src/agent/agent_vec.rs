@@ -175,6 +175,8 @@ mod tests {
                     args: Vec::default(),
                     value: U256::ZERO,
                     checked: false,
+                    gas_priority_fee: None,
+                    nonce: None,
                 },
                 Transaction {
                     function_selector: [0, 0, 0, 0],
@@ -183,6 +185,8 @@ mod tests {
                     args: Vec::default(),
                     value: U256::ZERO,
                     checked: false,
+                    gas_priority_fee: None,
+                    nonce: None,
                 },
             ]
         }

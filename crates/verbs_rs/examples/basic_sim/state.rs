@@ -51,14 +51,13 @@ impl Agent for SimpleAgent {
             let receiver = rng.gen_range(0..self.n_agents);
             let receiver = Address::from(Uint::from(receiver));
             let send_amount = std::cmp::min(self.current_balance, U256::from(1000));
-            let send_call = Transaction::new(
+            let send_call = Transaction::basic(
                 self.address,
                 self.token_address,
                 ecr20::ABI::transferCall {
                     to: receiver,
                     tokens: send_amount,
                 },
-                U256::ZERO,
                 true,
             );
             vec![send_call]

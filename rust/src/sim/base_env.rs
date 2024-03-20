@@ -1,7 +1,9 @@
 use super::snapshot::{
     create_py_snapshot, load_block_env, load_cache, load_snapshot, PyDbState, PyRequests,
 };
-use crate::types::{event_to_py, result_to_py, PyAddress, PyEvent, PyExecutionResult};
+use crate::types::{
+    event_to_py, result_to_py, PyAddress, PyEvent, PyExecutionResult, PyTransaction,
+};
 use alloy_primitives::{Address, U256};
 use pyo3::prelude::*;
 use rand::seq::SliceRandom;
@@ -126,12 +128,15 @@ impl<D: DB> BaseEnv<D> {
         create_py_snapshot(py, &self.env)
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn submit_transaction(
         &mut self,
         sender: PyAddress,
         transact_to: PyAddress,
         encoded_args: Vec<u8>,
-        value: u128,
+        gas_priority_fee: Option<u128>,
+        nonce: Option<u64>,
+        value: Option<u128>,
         checked: bool,
     ) {
         self.call_queue.push(Transaction {
@@ -139,23 +144,30 @@ impl<D: DB> BaseEnv<D> {
             callee: Address::from_slice(&sender),
             transact_to: Address::from_slice(&transact_to),
             args: encoded_args,
-            value: U256::try_from(value).unwrap(),
+            gas_priority_fee: gas_priority_fee.map(U256::from),
+            nonce,
+            value: match value {
+                Some(x) => U256::from(x),
+                None => U256::ZERO,
+            },
             checked,
         })
     }
 
-    pub fn submit_transactions(
-        &mut self,
-        transactions: Vec<(PyAddress, PyAddress, Vec<u8>, u128, bool)>,
-    ) {
+    pub fn submit_transactions(&mut self, transactions: Vec<PyTransaction>) {
         self.call_queue
             .extend(transactions.into_iter().map(|x| Transaction {
                 function_selector: x.2[..4].try_into().unwrap(),
                 callee: Address::from_slice(&x.0),
                 transact_to: Address::from_slice(&x.1),
                 args: x.2,
-                value: U256::try_from(x.3).unwrap(),
-                checked: x.4,
+                checked: x.3,
+                gas_priority_fee: x.4.map(U256::from),
+                nonce: x.5,
+                value: match x.6 {
+                    Some(x) => U256::from(x),
+                    None => U256::ZERO,
+                },
             }))
     }
 

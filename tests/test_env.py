@@ -49,7 +49,7 @@ def test_sim_update(env, bytecode, constructor_args, test_abi):
 
     # Submit contract update call
     call_args = a.setValue.encode([202])
-    env.submit_transaction(admin, address, call_args, 0, True)
+    env.submit_transaction(admin, address, call_args, True)
 
     env.process_block()
 
