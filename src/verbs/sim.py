@@ -10,7 +10,12 @@ import typing
 import numpy as np
 from tqdm import trange
 
-from verbs.envs import EmptyEnv, ForkEnv
+from verbs.envs import (
+    EmptyEnvGasPriority,
+    EmptyEnvRandom,
+    ForkEnvGasPriority,
+    ForkEnvRandom,
+)
 from verbs.types import Cache, Env, Transaction
 
 
@@ -145,6 +150,7 @@ class Sim:
         agents: typing.Optional[typing.List[BaseAgent]] = None,
         snapshot=None,
         cache: Cache = None,
+        gas_priority: bool = False,
     ):
         """
         Initialise a simulation with an empty environment
@@ -167,13 +173,21 @@ class Sim:
         cache:
             Optional cache used to initialise the simulation
             environment.
+        gas_priority: bool, optional
+            If ``True`` gas-priority sorting will be used to
+            order transactions in each new simulation step/block.
+            Otherwise transactions will be randomly shuffled.
+            Default value if ``False``.
 
         Returns
         -------
         Sim
             Initialised empty simulation.
         """
-        env = EmptyEnv(seed, snapshot=snapshot, cache=cache)
+        if gas_priority:
+            env = EmptyEnvGasPriority(seed, snapshot=snapshot, cache=cache)
+        else:
+            env = EmptyEnvRandom(seed, snapshot=snapshot, cache=cache)
         return Sim(seed, env, agents)
 
     @classmethod
@@ -182,6 +196,7 @@ class Sim:
         block_number: int,
         seed: int,
         agents: typing.Optional[typing.List[BaseAgent]] = None,
+        gas_priority: bool = False,
     ):
         """
         Initialise a simulation from a fork
@@ -210,13 +225,21 @@ class Sim:
             List of agents to include in the simulation. Default
             value is an empty list, allowing agents to be pushed
             after the simulation is initialised.
+        gas_priority: bool, optional
+            If ``True`` gas-priority sorting will be used to
+            order transactions in each new simulation step/block.
+            Otherwise transactions will be randomly shuffled.
+            Default value if ``False``.
 
         Returns
         -------
         Sim
             Initialised simulation with fork backend.
         """
-        env = ForkEnv(node_url, seed, block_number)
+        if gas_priority:
+            env = ForkEnvGasPriority(node_url, seed, block_number)
+        else:
+            env = ForkEnvRandom(node_url, seed, block_number)
         return Sim(seed, env, agents)
 
     def run(

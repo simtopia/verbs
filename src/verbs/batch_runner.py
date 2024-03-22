@@ -26,6 +26,7 @@ def batch_run(
     parameters_samples: typing.List[typing.Dict],
     snapshot=None,
     cache=None,
+    gas_priority: bool = False,
     n_jobs: int = -2,
     verbose: int = 10,
     **sim_kwargs,
@@ -84,6 +85,11 @@ def batch_run(
     cache: verbs.types.Cache, optional
         Optional cache used to initialise the simulation
         environment for each execution.
+    gas_priority: bool, optional
+        If ``True`` gas-priority sorting will be used to
+        order transactions in each new simulation step/block.
+        Otherwise transactions will be randomly shuffled.
+        Default value if ``False``.
     n_jobs: int, optional
         Number of jobs to run simultaneously, default is
         ``-2`` i.e. 1 less than the number of available
@@ -112,7 +118,11 @@ def batch_run(
     arg_set = itertools.product(parameters_samples, range(n_samples))
 
     def inner_runner(params, seed):
-        env = verbs.envs.EmptyEnv(seed, cache=cache, snapshot=snapshot)
+        if gas_priority:
+            env = verbs.envs.EmptyEnvGasPriority(seed, cache=cache, snapshot=snapshot)
+        else:
+            env = verbs.envs.EmptyEnvRandom(seed, cache=cache, snapshot=snapshot)
+
         return sim_func(env, seed, n_steps, **params, **sim_kwargs)
 
     results = joblib.Parallel(n_jobs=n_jobs, verbose=verbose)(

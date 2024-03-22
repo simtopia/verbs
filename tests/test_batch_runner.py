@@ -5,7 +5,7 @@ def test_batch_runner(bytecode, constructor_args, test_abi, agent_type):
 
     test_abi = abi.get_abi("TEST", test_abi)
 
-    env = envs.EmptyEnv(1234)
+    env = envs.EmptyEnvRandom(1234)
     admin = utils.int_to_address(99)
     env.create_account(admin, int(1e19))
     contract_address = env.deploy_contract(

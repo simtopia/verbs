@@ -4,9 +4,16 @@ Type aliases
 
 import typing
 
-from verbs.envs import EmptyEnv, ForkEnv
+from verbs.envs import (
+    EmptyEnvGasPriority,
+    EmptyEnvRandom,
+    ForkEnvGasPriority,
+    ForkEnvRandom,
+)
 
-Env = typing.Union[EmptyEnv, ForkEnv]
+Env = typing.Union[
+    EmptyEnvRandom, EmptyEnvGasPriority, ForkEnvRandom, ForkEnvGasPriority
+]
 
 Transaction = typing.Tuple[
     bytes,
