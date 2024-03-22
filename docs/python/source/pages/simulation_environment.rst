@@ -8,6 +8,20 @@ with the simulated EVM. It also has functionality
 to update the state of the simulation, and track logs
 generated during execution.
 
+Simulation environments are also parametrised by a
+*validator* that decides how transactions are ordered
+for processing in each simulated block/step. Currently
+two methods are supported:
+
+- Randomly shuffle transactions
+- Order transactions by nonce an gas-priority fee, each
+  step
+
+  - Transactions are grouped by sender address
+  - Each group is individually sorted by nonce
+  - Groups are sorted by the priority fee of the first transaction
+  - The groups are flattened into a single queue of transactions
+
 Initialisation
 ==============
 
@@ -29,7 +43,10 @@ random seed
 
 .. code-block:: python
 
-   env = verbs.envs.EmptyEnv(1234)
+   # Using random transaction sorting
+   env = verbs.envs.EmptyEnvRandom(1234)
+   # Using gas-priority transaction ordering
+   env = verbs.envs.EmptyEnvGasPriority(1234)
 
 Remote fork
 -----------
@@ -51,7 +68,10 @@ and block number, for example:
 
 .. code-block:: python
 
-   env = verbs.envs.ForkEnv(url, 1234, block_number=1000)
+   # Using random transaction sorting
+   env = verbs.envs.ForkEnvRandom(url, 1234, block_number=1000)
+   # Using gas-priority transaction ordering
+   env = verbs.envs.ForkEnvGasPriority(url, 1234, block_number=1000)
 
 will create an environment with a fork backend, with
 random seed `1234`, from block number `1000`.
@@ -76,11 +96,11 @@ used to initialise an :py:class:`verbs.envs.EmptyEnv`
 
 .. code-block:: python
 
-   env = verbs.envs.ForkEnv(url, 1234, block_number=1000)
+   env = verbs.envs.ForkEnvRandom(url, 1234, block_number=1000)
    # Initialise & run a simulation
    snapshot = env.export_snapshot()
    # Use this snapshot to initialise a new environment
-   new_env = verbs.envs.EmptyEnv(1234, snapshot=snapshot)
+   new_env = verbs.envs.EmptyEnvRandom(1234, snapshot=snapshot)
 
 Cache
 -----
@@ -104,13 +124,13 @@ can be used to directly initialise a
 
 .. code-block:: python
 
-   env = verbs.envs.ForkEnv(url, 1234, block_number=1000)
+   env = verbs.envs.ForkEnvRandom(url, 1234, block_number=1000)
    # Initialise & run a simulation
    ...
    # Export the cached requests
    cache = env.export_cache()
    # Use this cache to initialise a new environment
-   faster_env = verbs.envs.EmptyEnv(1234, cache=cache)
+   faster_env = verbs.envs.EmptyEnvRandom(1234, cache=cache)
 
 .. warning::
 
@@ -133,5 +153,11 @@ to interact with and retrieve data from the Rust environment.
 * Retrieve logs/events generated in the last block and
   over the course of the simulation
 
-See :py:class:`verbs.envs.EmptyEnv` or :py:class:`verbs.envs.ForkEnv`
+See
+
+- :py:class:`verbs.envs.EmptyEnvRandom`
+- :py:class:`verbs.envs.EmptyEnvGasPriority`
+- :py:class:`verbs.envs.ForkEnvRandom`
+- :py:class:`verbs.envs.ForkEnvGasPriority`
+
 for full details of the API.
