@@ -13,7 +13,7 @@ mod validator;
 use crate::contract::{Event, Transaction};
 use crate::utils::Eth;
 use crate::{ForkDb, LocalDB, RequestCache, DB};
-use alloy_primitives::{Address, B256, U256};
+use alloy_primitives::{Address, FixedBytes, B256, U256};
 use alloy_sol_types::SolCall;
 use log::debug;
 use rand::Rng;
@@ -220,11 +220,12 @@ impl<D: DB, V: Validator> Env<D, V> {
         }
     }
 
-    /// Increment block number and time
-    pub fn increment_time(&mut self, interval: u64) {
+    /// Increment block number, time and prevarando
+    pub fn increment_time<R: Rng>(&mut self, rng: &mut R, interval: u64) {
         let state = self.evm_state();
         state.context.evm.env.block.timestamp += U256::from(interval);
         state.context.evm.env.block.number += U256::from(1);
+        state.context.evm.env.block.prevrandao = Some(FixedBytes(rng.gen::<[u8; 32]>()));
     }
 
     /// Insert a user account into the DB

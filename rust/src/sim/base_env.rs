@@ -94,7 +94,7 @@ impl<V: Validator> BaseEnv<ForkDb, V> {
 impl<D: DB, V: Validator> BaseEnv<D, V> {
     pub fn process_block(&mut self) {
         // Update the block-time and number
-        self.env.increment_time(BLOCK_INTERVAL);
+        self.env.increment_time(&mut self.rng, BLOCK_INTERVAL);
         // Clear events from last block
         self.env.clear_events();
         // Shuffle and process calls
