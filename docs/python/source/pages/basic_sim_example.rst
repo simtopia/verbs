@@ -112,7 +112,7 @@ are collected across the agents at each step.
    An agent does not necessarily have to represent a single entity in a
    simulation, but could also represent a group of agents of the same
    type. In this case the agent can submit multiple calls from its
-   update function from the multiple agents it represents.
+   update function from the set of agents it represents.
 
 Initialise Simulation
 ---------------------
@@ -122,7 +122,7 @@ contract (the token ABI and bytecode have been omitted for brevity)
 
 .. code-block:: python
 
-   env = verbs.EmptyEnv(1234)
+   env = verbs.EmptyEnvRandom(1234)
 
    erc20_abi = verbs.abi.get_abi("ERC20", ERC20_ABI)
 

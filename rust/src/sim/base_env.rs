@@ -1,7 +1,9 @@
 use super::snapshot::{
     create_py_snapshot, load_block_env, load_cache, load_snapshot, PyDbState, PyRequests,
 };
-use crate::types::{event_to_py, result_to_py, PyAddress, PyEvent, PyExecutionResult};
+use crate::types::{
+    event_to_py, result_to_py, PyAddress, PyEvent, PyExecutionResult, PyTransaction,
+};
 use alloy_primitives::{Address, U256};
 use pyo3::prelude::*;
 use rand::seq::SliceRandom;
@@ -10,15 +12,15 @@ use rand_xoshiro::Xoroshiro128StarStar;
 
 use std::mem;
 use verbs_rs::contract::Transaction;
-use verbs_rs::env::{Env, RandomValidator, RevertError};
+use verbs_rs::env::{Env, RevertError, Validator};
 use verbs_rs::{ForkDb, LocalDB, DB};
 
 // Represents blocks updating every 15s
 const BLOCK_INTERVAL: u64 = 15;
 
-pub struct BaseEnv<D: DB> {
+pub struct BaseEnv<D: DB, V: Validator> {
     // EVM and deployed protocol
-    pub env: Env<D, RandomValidator>,
+    pub env: Env<D, V>,
     // Queue of calls submitted from Python
     pub call_queue: Vec<Transaction>,
     // RNG source
@@ -27,15 +29,15 @@ pub struct BaseEnv<D: DB> {
     pub step: usize,
 }
 
-impl BaseEnv<LocalDB> {
-    pub fn new(timestamp: u128, block_number: u128, seed: u64) -> Self {
-        let env = Env::<LocalDB, RandomValidator>::init(
+impl<V: Validator> BaseEnv<LocalDB, V> {
+    pub fn new(timestamp: u128, block_number: u128, seed: u64, validator: V) -> Self {
+        let env = Env::<LocalDB, V>::init(
             U256::try_from(timestamp).unwrap(),
             U256::try_from(block_number).unwrap(),
-            RandomValidator {},
+            validator,
         );
 
-        BaseEnv {
+        Self {
             env,
             call_queue: Vec::new(),
             rng: Xoroshiro128StarStar::seed_from_u64(seed),
@@ -43,14 +45,10 @@ impl BaseEnv<LocalDB> {
         }
     }
 
-    pub fn from_snapshot(seed: u64, snapshot: PyDbState) -> Self {
+    pub fn from_snapshot(seed: u64, snapshot: PyDbState, validator: V) -> Self {
         let block_env = load_block_env(&snapshot);
 
-        let mut env = Env::<LocalDB, RandomValidator>::init(
-            block_env.timestamp,
-            block_env.number,
-            RandomValidator {},
-        );
+        let mut env = Env::<LocalDB, V>::init(block_env.timestamp, block_env.number, validator);
         env.evm_state().context.evm.env.block = block_env;
 
         load_snapshot(&mut env.evm_state().context.evm.db, snapshot);
@@ -63,11 +61,11 @@ impl BaseEnv<LocalDB> {
         }
     }
 
-    pub fn from_cache(seed: u64, requests: PyRequests) -> Self {
-        let mut env = Env::<LocalDB, RandomValidator>::init(
+    pub fn from_cache(seed: u64, requests: PyRequests, validator: V) -> Self {
+        let mut env = Env::<LocalDB, V>::init(
             U256::try_from(requests.0).unwrap(),
             U256::try_from(requests.1).unwrap(),
-            RandomValidator {},
+            validator,
         );
         load_cache(requests, &mut env.evm_state().context.evm.db);
 
@@ -80,9 +78,10 @@ impl BaseEnv<LocalDB> {
     }
 }
 
-impl BaseEnv<ForkDb> {
-    pub fn new(node_url: &str, seed: u64, block_number: Option<u64>) -> Self {
-        let env = Env::<ForkDb, RandomValidator>::init(node_url, block_number, RandomValidator {});
+impl<V: Validator> BaseEnv<ForkDb, V> {
+    pub fn new(node_url: &str, seed: u64, block_number: Option<u64>, validator: V) -> Self {
+        let env = Env::<ForkDb, V>::init(node_url, block_number, validator);
+
         BaseEnv {
             env,
             call_queue: Vec::new(),
@@ -92,7 +91,7 @@ impl BaseEnv<ForkDb> {
     }
 }
 
-impl<D: DB> BaseEnv<D> {
+impl<D: DB, V: Validator> BaseEnv<D, V> {
     pub fn process_block(&mut self) {
         // Update the block-time and number
         self.env.increment_time(BLOCK_INTERVAL);
@@ -126,12 +125,15 @@ impl<D: DB> BaseEnv<D> {
         create_py_snapshot(py, &self.env)
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn submit_transaction(
         &mut self,
         sender: PyAddress,
         transact_to: PyAddress,
         encoded_args: Vec<u8>,
-        value: u128,
+        gas_priority_fee: Option<u128>,
+        nonce: Option<u64>,
+        value: Option<u128>,
         checked: bool,
     ) {
         self.call_queue.push(Transaction {
@@ -139,23 +141,30 @@ impl<D: DB> BaseEnv<D> {
             callee: Address::from_slice(&sender),
             transact_to: Address::from_slice(&transact_to),
             args: encoded_args,
-            value: U256::try_from(value).unwrap(),
+            gas_priority_fee: gas_priority_fee.map(U256::from),
+            nonce,
+            value: match value {
+                Some(x) => U256::from(x),
+                None => U256::ZERO,
+            },
             checked,
         })
     }
 
-    pub fn submit_transactions(
-        &mut self,
-        transactions: Vec<(PyAddress, PyAddress, Vec<u8>, u128, bool)>,
-    ) {
+    pub fn submit_transactions(&mut self, transactions: Vec<PyTransaction>) {
         self.call_queue
             .extend(transactions.into_iter().map(|x| Transaction {
                 function_selector: x.2[..4].try_into().unwrap(),
                 callee: Address::from_slice(&x.0),
                 transact_to: Address::from_slice(&x.1),
                 args: x.2,
-                value: U256::try_from(x.3).unwrap(),
-                checked: x.4,
+                checked: x.3,
+                gas_priority_fee: x.4.map(U256::from),
+                nonce: x.5,
+                value: match x.6 {
+                    Some(x) => U256::from(x),
+                    None => U256::ZERO,
+                },
             }))
     }
 

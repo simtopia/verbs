@@ -18,7 +18,7 @@ a contract and minting some tokens:
 
 .. code-block:: python
 
-   env = verbs.EmptyEnv(1234)
+   env = verbs.EmptyEnvRandom(1234)
 
    admin_address = verbs.utils.int_to_address(99999999)
    env.create_account(admin_address, int(1e19))

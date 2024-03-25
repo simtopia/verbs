@@ -20,7 +20,7 @@ use rand::Rng;
 use revm::primitives::{AccountInfo, Bytecode, ExecutionResult, Log, ResultAndState, TxEnv};
 use revm::{ContextWithHandlerCfg, Evm, Handler};
 pub use utils::{decode_event, process_events, RevertError};
-pub use validator::{RandomValidator, Validator};
+pub use validator::{GasPriorityValidator, RandomValidator, Validator};
 
 /// Simulation environment
 ///
@@ -602,28 +602,22 @@ mod tests {
         let (mut network, contract_address, user_address) = deployment;
 
         let calls = vec![
-            Transaction {
-                function_selector: TestContract::setValueCall::SELECTOR,
-                callee: user_address,
-                transact_to: contract_address,
-                args: TestContract::setValueCall {
-                    x: Signed::try_from_be_slice(&202u128.to_be_bytes()).unwrap(),
-                }
-                .abi_encode(),
-                value: U256::ZERO,
-                checked: true,
-            },
-            Transaction {
-                function_selector: TestContract::setValueCall::SELECTOR,
-                callee: user_address,
-                transact_to: contract_address,
-                args: TestContract::setValueCall {
+            Transaction::basic(
+                user_address,
+                contract_address,
+                TestContract::setValueCall {
                     x: Signed::try_from_be_slice(&303u128.to_be_bytes()).unwrap(),
-                }
-                .abi_encode(),
-                value: U256::ZERO,
-                checked: true,
-            },
+                },
+                true,
+            ),
+            Transaction::basic(
+                user_address,
+                contract_address,
+                TestContract::setValueCall {
+                    x: Signed::try_from_be_slice(&303u128.to_be_bytes()).unwrap(),
+                },
+                true,
+            ),
         ];
 
         let mut rng = Xoroshiro128StarStar::seed_from_u64(101);

@@ -99,7 +99,7 @@ def constructor_args():
 
 @pytest.fixture
 def env():
-    return envs.EmptyEnv(1234)
+    return envs.EmptyEnvRandom(1234)
 
 
 @pytest.fixture

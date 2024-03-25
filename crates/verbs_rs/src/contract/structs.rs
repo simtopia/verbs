@@ -15,6 +15,10 @@ pub struct Transaction {
     pub transact_to: Address,
     /// ABI encoded arguments bytes
     pub args: Vec<u8>,
+    /// Gas priority `None` will be treated as 0 for sorting
+    pub gas_priority_fee: Option<U256>,
+    /// Transaction nonce, used for transaction ordering
+    pub nonce: Option<u64>,
     /// Value attached to the transaction
     pub value: U256,
     /// Flag, if `true` the simulation will halt (panic)
@@ -27,6 +31,8 @@ impl Transaction {
         callee: Address,
         contract: Address,
         args: T,
+        gas_priority_fee: Option<U256>,
+        nonce: Option<u64>,
         value: U256,
         checked: bool,
     ) -> Self {
@@ -35,7 +41,22 @@ impl Transaction {
             callee,
             transact_to: contract,
             args: args.abi_encode(),
+            gas_priority_fee,
+            nonce,
             value,
+            checked,
+        }
+    }
+
+    pub fn basic<T: SolCall>(callee: Address, contract: Address, args: T, checked: bool) -> Self {
+        Transaction {
+            function_selector: T::SELECTOR,
+            callee,
+            transact_to: contract,
+            args: args.abi_encode(),
+            gas_priority_fee: None,
+            nonce: None,
+            value: U256::ZERO,
             checked,
         }
     }

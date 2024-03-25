@@ -20,5 +20,7 @@ environments implemented in Rust:
    :template: custom-class-template.rst
    :nosignatures:
 
-   verbs.envs.EmptyEnv
-   verbs.envs.ForkEnv
+   verbs.envs.EmptyEnvRandom
+   verbs.envs.EmptyEnvGasPriority
+   verbs.envs.ForkEnvRandom
+   verbs.envs.ForkEnvGasPriority

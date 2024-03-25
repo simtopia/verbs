@@ -33,7 +33,7 @@ Each step of the simulation performs several steps:
 * The next block is processed:
 
   * The time and block number are incremented
-  * The queue of transactions is shuffled
+  * The queue of transactions is shuffled/sorted
   * The queue of transactions is processed, updating
     the state of the EVM
 
@@ -69,7 +69,7 @@ to be recorded over the course of the simulation.
 
 .. note::
 
-   An agent does not neccesarily have to represent a single
+   An agent does not necessarily have to represent a single
    user/entity as long as it returns a list of transactions
    when updated, e.g. it may be more computationally efficient
    for an "agent" to represent a homogenous set of agents.

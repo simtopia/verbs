@@ -12,7 +12,7 @@ def test_cache_to_json(cache_json):
 def test_env_from_cache(cache_json, cache_abi):
 
     cache = utils.cache_from_json(cache_json)
-    env = envs.EmptyEnv(101, cache=cache)
+    env = envs.EmptyEnvRandom(101, cache=cache)
 
     contract = utils.hex_to_bytes("0x6B175474E89094C44Da98b954EedeAC495271d0F")
 

@@ -218,6 +218,8 @@ mod tests {
                 args: Vec::default(),
                 value: U256::ZERO,
                 checked: self.v,
+                gas_priority_fee: None,
+                nonce: None,
             }]
         }
 

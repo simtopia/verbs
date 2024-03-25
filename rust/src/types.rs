@@ -10,6 +10,16 @@ create_exception!(envs, PyRevertError, PyException);
 
 pub type PyAddress<'a> = Cow<'a, [u8]>;
 
+pub type PyTransaction<'a> = (
+    PyAddress<'a>,
+    PyAddress<'a>,
+    Vec<u8>,
+    bool,
+    Option<u128>,
+    Option<u64>,
+    Option<u128>,
+);
+
 pub fn address_to_py(py: Python, address: Address) -> &PyBytes {
     PyBytes::new(py, address.as_slice())
 }

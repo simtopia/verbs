@@ -258,8 +258,10 @@ class Function:
         sender: bytes,
         address: bytes,
         args: typing.List[typing.Any],
-        value: int = 0,
         checked: bool = True,
+        gas_priority_fee: typing.Optional[int] = None,
+        nonce: typing.Optional[int] = None,
+        value: typing.Optional[int] = None,
     ) -> types.Transaction:
         """
         Create a transaction to submit to the current simulation block
@@ -277,6 +279,12 @@ class Function:
         checked: bool, optional
             If ``True`` the simulation will panic if the transaction
             from this call is reverted (default ``False``).
+        gas_priority_fee: int, optional
+            Transaction priority, default ``None`` is ignored
+        nonce: int, optional
+            Transaction nonce, default ``None`` is ignored
+        value: int, optional
+            Transaction value, default ``None`` is ignored
 
         Returns
         -------
@@ -285,7 +293,7 @@ class Function:
             for execution in the next block.
         """
         encoded_args = self.encode(args)
-        return (sender, address, encoded_args, value, checked)
+        return (sender, address, encoded_args, checked, gas_priority_fee, nonce, value)
 
     def call(
         self,

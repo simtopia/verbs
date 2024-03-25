@@ -47,7 +47,7 @@ class Agent:
 
 def run(n_steps):
 
-    env = verbs.envs.EmptyEnv(1234)
+    env = verbs.envs.EmptyEnvRandom(1234)
 
     admin = verbs.utils.int_to_address(99999999)
     env.create_account(admin, int(1e19))
