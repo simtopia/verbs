@@ -51,7 +51,7 @@ pub fn run<S: SimState, D: DB, V: Validator>(
         // Update all agents
         let transactions = agents.call_agents(&mut rng, env);
         // Update the block-time and number
-        env.increment_time(BLOCK_INTERVAL);
+        env.increment_time(&mut rng, BLOCK_INTERVAL);
         // Process calls in order
         env.process_transactions(transactions, &mut rng, i);
         // Record data from agents
