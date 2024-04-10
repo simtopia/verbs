@@ -4,15 +4,14 @@ use super::runtime_client::RuntimeClient;
 use super::traits::DB;
 use super::types::RequestCache;
 use super::types::{ToAlloy, ToEthers};
-use alloy_primitives::{keccak256, Bytes};
+use alloy_primitives::{keccak256, Address, Bytes};
 pub use ethers_core::types::BlockNumber;
 use ethers_core::types::{BigEndianHash, Block, BlockId, NameOrAddress, H256};
 use ethers_providers::{Middleware, Provider, ProviderError};
 use revm::db::in_memory_db::DbAccount;
 use revm::db::{AccountState, DatabaseCommit};
 use revm::primitives::{
-    hash_map::Entry, Account, AccountInfo, Address, Bytecode, HashMap, Log, B256, KECCAK_EMPTY,
-    U256,
+    hash_map::Entry, Account, AccountInfo, Bytecode, HashMap, Log, B256, KECCAK_EMPTY, U256,
 };
 use revm::Database;
 

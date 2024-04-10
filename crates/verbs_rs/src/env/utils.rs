@@ -2,9 +2,9 @@
 //!
 
 use crate::contract::Event;
-use alloy_primitives::{Address, Bytes, U256};
+use alloy_primitives::{Address, Bytes, Log, U256};
 use alloy_sol_types::{decode_revert_reason, SolCall, SolEvent};
-use revm::primitives::{ExecutionResult, Log, Output, TransactTo, TxEnv};
+use revm::primitives::{ExecutionResult, Output, TransactTo, TxEnv};
 use std::fmt;
 
 /// Error raised when an EVM transaction is reverted
