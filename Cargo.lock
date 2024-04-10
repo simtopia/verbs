@@ -3351,7 +3351,7 @@ dependencies = [
 
 [[package]]
 name = "verbs-macros"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "quote",
  "syn 1.0.109",
@@ -3359,7 +3359,7 @@ dependencies = [
 
 [[package]]
 name = "verbs-rs"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "alloy-primitives",
  "alloy-sol-types",
