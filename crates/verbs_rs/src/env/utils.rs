@@ -5,7 +5,7 @@ use crate::contract::Event;
 use alloy_primitives::{Address, Bytes, Log, U256};
 use alloy_sol_types::{decode_revert_reason, SolCall, SolEvent};
 use revm::primitives::{ExecutionResult, Output, TransactTo, TxEnv};
-use std::fmt;
+use std::{collections::HashMap, fmt};
 
 /// Error raised when an EVM transaction is reverted
 #[derive(Debug, Clone)]
@@ -90,6 +90,8 @@ pub fn init_create_transaction(caller: Address, data: Vec<u8>) -> TxEnv {
         access_list: Vec::new(),
         blob_hashes: Vec::default(),
         max_fee_per_blob_gas: None,
+        eof_initcodes: Vec::default(),
+        eof_initcodes_hashed: HashMap::default(),
     }
 }
 
@@ -124,6 +126,8 @@ pub fn init_call_transaction(
         access_list: Vec::new(),
         blob_hashes: Vec::default(),
         max_fee_per_blob_gas: None,
+        eof_initcodes: Vec::default(),
+        eof_initcodes_hashed: HashMap::default(),
     }
 }
 

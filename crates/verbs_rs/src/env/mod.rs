@@ -35,7 +35,7 @@ pub struct Env<D: DB, V: Validator> {
     /// History of events/updates over the
     /// lifetime of the environment
     pub event_history: Vec<Event>,
-    /// Validator responsbile for transaction ordering
+    /// Validator responsible for transaction ordering
     pub validator: V,
 }
 
