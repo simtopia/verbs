@@ -19,7 +19,7 @@ keywords = ["agent-based-model", "abm", "simulation", "web3", "ethereum"]
 categories = ["simulation", "finance", "science"]
 
 [workspace.dependencies]
-revm = { version="8.0.0", default-features = false, features = ["memory_limit", "optional_eip3607", "optional_block_gas_limit", "optional_no_base_fee", "arbitrary"]}
+revm = { version="9.0.0", default-features = false, features = ["memory_limit", "optional_eip3607", "optional_block_gas_limit", "optional_no_base_fee", "arbitrary"]}
 alloy-primitives = "0.7.0"
 alloy-sol-types = { version="0.7.0", features=["json"]}
 

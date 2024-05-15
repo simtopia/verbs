@@ -170,7 +170,7 @@ pub fn create_py_snapshot<'a, D: DB, V: Validator>(
         .map(|(k, v)| {
             (
                 PyBytes::new(py, k.as_slice()),
-                bytes_to_py(py, v.bytecode.clone()),
+                bytes_to_py(py, v.bytecode().clone()),
             )
         })
         .collect();

@@ -311,7 +311,7 @@ fn basic_from_fork(
         balance: balance.to_alloy(),
         nonce: nonce.as_u64(),
         code_hash,
-        code: Some(Bytecode::new_raw(code).to_checked()),
+        code: Some(Bytecode::new_raw(code)),
     })
 }
 
